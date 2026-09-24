@@ -1,0 +1,126 @@
+.auth {
+  min-height: calc(100dvh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.25rem;
+  background: var(--color-paper);
+}
+
+.auth__card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--color-paper-card);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 2.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.auth__title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.auth__subtitle {
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+  color: var(--color-text-soft-on-light);
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.auth__field label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.auth__field input {
+  height: 46px;
+  padding: 0 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: var(--color-ink);
+  background: var(--color-paper);
+}
+
+.auth__field input:focus-visible {
+  border-color: var(--color-accent);
+}
+
+.auth__hint {
+  font-size: 0.82rem;
+  color: var(--color-text-soft-on-light);
+}
+
+.auth__error {
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  background: #fbeae8;
+  border: 1px solid #e2b3ac;
+  color: #7a2e27;
+  font-size: 0.88rem;
+}
+
+.auth__success {
+  padding: 0.75rem 0.9rem;
+  border-radius: 8px;
+  background: var(--color-accent-tint);
+  border: 1px solid var(--color-accent);
+  color: var(--color-accent-text);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.auth__submit {
+  height: 46px;
+  border-radius: 8px;
+  border: none;
+  background: var(--color-ink);
+  color: var(--color-text-on-dark);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease;
+}
+
+.auth__submit:hover:not(:disabled) {
+  background: #23273a;
+}
+
+.auth__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth__switch {
+  font-size: 0.88rem;
+  color: var(--color-text-soft-on-light);
+  text-align: center;
+}
+
+.auth__switch a {
+  color: var(--color-accent-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth__switch a:hover {
+  text-decoration: underline;
+}
