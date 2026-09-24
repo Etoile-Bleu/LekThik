@@ -1,0 +1,71 @@
+name: lekthik
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lekthik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD, copy .env.example to .env first}
+      APP_DB_USER: ${POSTGRES_USER:-lekthik}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-lekthik}
+      POSTGRES_USER: ${POSTGRES_USER:-lekthik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD, copy .env.example to .env first}
+    volumes:
+      - ./backend/migrations:/migrations:ro
+      - ./backend/scripts/migrate.sh:/migrate.sh:ro
+    entrypoint: ["bash", "/migrate.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  server:
+    build:
+      context: ./backend
+      target: dev
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-lekthik}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lekthik}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      JWT_SECRET: ${JWT_SECRET:?Missing JWT_SECRET, copy .env.example to .env first}
+    volumes:
+      - ./backend:/app
+      - backend_target:/app/target
+    ports:
+      - "8080:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      target: development-dependencies-env
+    command: ["pnpm", "run", "dev"]
+    environment:
+      VITE_API_URL: http://localhost:8080
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
+
+volumes:
+  backend_target:
+  frontend_node_modules:
+  postgres_data:
