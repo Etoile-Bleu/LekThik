@@ -1,0 +1,20 @@
+[package]
+name = "application"
+version = "0.1.0"
+edition.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+domain = { path = "../domain" }
+argon2 = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+domain = { path = "../domain", features = ["test-utils"] }
+mockall = { workspace = true }
+tokio = { workspace = true }
