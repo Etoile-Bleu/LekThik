@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+
+import { logoutUser } from '@lib/api';
+import { useAuthStore } from '@lib/authStore';
 
 import './Navbar.css';
 
@@ -8,10 +12,12 @@ const NAV_LINKS = [
   { href: '#why', label: 'Why not Trello' },
 ];
 
-const REPO_URL = 'https://github.com/Etoile-Bleu/LekThik';
-
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const status = useAuthStore((state) => state.status);
+  const clearUser = useAuthStore((state) => state.clearUser);
+  const isAuthenticated = status === 'authenticated';
 
   useEffect(() => {
     document.body.style.overflow = isMenuOpen ? 'hidden' : '';
@@ -19,6 +25,13 @@ export function Navbar() {
       document.body.style.overflow = '';
     };
   }, [isMenuOpen]);
+
+  async function handleSignOut() {
+    setIsMenuOpen(false);
+    await logoutUser();
+    clearUser();
+    navigate('/');
+  }
 
   return (
     <header className="navbar">
@@ -36,9 +49,27 @@ export function Navbar() {
           ))}
         </nav>
 
-        <a className="navbar__cta" href={REPO_URL} target="_blank" rel="noreferrer">
-          View on GitHub
-        </a>
+        <div className="navbar__actions">
+          {isAuthenticated ? (
+            <>
+              <Link className="navbar__link-cta" to="/dashboard">
+                Dashboard
+              </Link>
+              <button className="navbar__cta" type="button" onClick={handleSignOut}>
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link className="navbar__link-cta" to="/login">
+                Sign in
+              </Link>
+              <Link className="navbar__cta" to="/signup">
+                Create account
+              </Link>
+            </>
+          )}
+        </div>
 
         <button
           type="button"
@@ -62,15 +93,33 @@ export function Navbar() {
               {link.label}
             </a>
           ))}
-          <a
-            className="navbar__cta navbar__cta--mobile"
-            href={REPO_URL}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            View on GitHub
-          </a>
+          {isAuthenticated ? (
+            <>
+              <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                Dashboard
+              </Link>
+              <button
+                className="navbar__cta navbar__cta--mobile"
+                type="button"
+                onClick={handleSignOut}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" onClick={() => setIsMenuOpen(false)}>
+                Sign in
+              </Link>
+              <Link
+                className="navbar__cta navbar__cta--mobile"
+                to="/signup"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Create account
+              </Link>
+            </>
+          )}
         </nav>
       </div>
     </header>
