@@ -2,24 +2,23 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::Router;
-use axum::http::HeaderValue;
+use axum::http::{HeaderValue, Method, header};
 use axum::middleware;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
 use utoipa_swagger_ui::SwaggerUi;
 
+use crate::handlers::*;
 use crate::rate_limit::{RateLimiter, rate_limit};
-use crate::session_handlers::*;
 use crate::state::AppState;
-use crate::user_handlers::*;
 
 #[derive(OpenApi)]
 #[openapi(
     info(title = "LekThik API", description = "Boards, lists, cards and account management"),
     tags(
-        (name = "users", description = "Email/password registration and confirmation"),
+        (name = "users", description = "Email/password registration and profile"),
         (name = "auth", description = "Login, logout and session management"),
     )
 )]
@@ -36,9 +35,9 @@ pub fn build(state: AppState) -> Router {
 
     let auth_router = OpenApiRouter::<AppState>::new()
         .routes(routes!(register_user))
-        .routes(routes!(confirm_user))
         .routes(routes!(login_user))
         .routes(routes!(logout))
+        .routes(routes!(get_current_user))
         .layer(middleware::from_fn_with_state(rate_limiter, rate_limit));
 
     let (router, api) = OpenApiRouter::<AppState>::with_openapi(ApiDoc::openapi())
@@ -51,8 +50,11 @@ pub fn build(state: AppState) -> Router {
         .layer(cors_layer())
 }
 
+const DEFAULT_CORS_ALLOWED_ORIGIN: &str = "http://localhost:5173";
+
 fn cors_layer() -> CorsLayer {
-    let allowed_origins = std::env::var("CORS_ALLOWED_ORIGINS").unwrap_or_default();
+    let allowed_origins = std::env::var("CORS_ALLOWED_ORIGINS")
+        .unwrap_or_else(|_| DEFAULT_CORS_ALLOWED_ORIGIN.to_string());
 
     let origins: Vec<HeaderValue> = allowed_origins
         .split(',')
@@ -61,15 +63,15 @@ fn cors_layer() -> CorsLayer {
         .filter_map(|origin| origin.parse().ok())
         .collect();
 
-    if origins.is_empty() {
-        return CorsLayer::new()
-            .allow_origin(Any)
-            .allow_methods(Any)
-            .allow_headers(Any);
-    }
-
+    // The session cookie only reaches the browser's fetch calls when the
+    // response names the exact origin, methods and headers, and explicitly
+    // allows credentials; none of these can be `Any` once credentials are
+    // allowed, per the fetch spec, hence the explicit lists below. An empty
+    // or unparseable origin list intentionally denies every origin rather
+    // than falling back to a wildcard.
     CorsLayer::new()
         .allow_origin(origins)
-        .allow_methods(Any)
-        .allow_headers(Any)
+        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
+        .allow_headers([header::CONTENT_TYPE])
+        .allow_credentials(true)
 }
