@@ -1,3 +1,5 @@
+name: lekthik
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -46,17 +48,17 @@ services:
         condition: service_completed_successfully
     restart: unless-stopped
 
-  # The frontend service is added once the React app is scaffolded (Sprint 1).
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #   environment:
-  #     - PORT=3000
-  #   ports:
-  #     - "3000:3000"
-  #   depends_on:
-  #     - server
-  #   restart: unless-stopped
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+    environment:
+      VITE_API_URL: http://localhost:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server
+    restart: unless-stopped
 
 volumes:
   postgres_data:
