@@ -65,18 +65,40 @@
   color: var(--color-ink);
 }
 
-.navbar__cta {
+.navbar__actions {
   display: none;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navbar__link-cta {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-soft-on-light);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 200ms ease;
+}
+
+.navbar__link-cta:hover {
+  color: var(--color-ink);
+}
+
+.navbar__cta {
+  display: inline-flex;
   align-items: center;
   height: 44px;
   padding: 0 1.1rem;
+  border: none;
   border-radius: 8px;
   background: var(--color-ink);
   color: var(--color-text-on-dark);
+  font-family: inherit;
   font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
+  cursor: pointer;
   transition:
     transform 150ms ease,
     background 150ms ease;
@@ -193,8 +215,8 @@
     display: flex;
   }
 
-  .navbar__cta {
-    display: inline-flex;
+  .navbar__actions {
+    display: flex;
   }
 
   .navbar__toggle {

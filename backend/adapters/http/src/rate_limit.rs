@@ -9,7 +9,7 @@ use axum::http::StatusCode;
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 
-use crate::user_dto::ErrorResponseDto;
+use crate::dto::ErrorResponseDto;
 
 pub struct RateLimiter {
     max_requests: u32,

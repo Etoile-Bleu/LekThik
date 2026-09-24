@@ -7,6 +7,8 @@ use validator::Validate;
 pub struct RegisterUserRequestDto {
     #[validate(email)]
     pub email: String,
+    #[validate(length(min = 3, max = 32))]
+    pub username: String,
     #[validate(length(min = 8))]
     pub password: String,
 }
@@ -15,13 +17,14 @@ pub struct RegisterUserRequestDto {
 pub struct RegisteredUserResponseDto {
     pub id: Uuid,
     pub email: String,
+    pub username: String,
 }
 
 #[derive(Serialize, ToSchema)]
 pub struct UserResponseDto {
     pub id: Uuid,
     pub email: String,
-    pub confirmed: bool,
+    pub username: String,
 }
 
 #[derive(Deserialize, Validate, ToSchema)]
@@ -30,9 +33,4 @@ pub struct LoginUserRequestDto {
     pub email: String,
     #[validate(length(min = 1))]
     pub password: String,
-}
-
-#[derive(Serialize, ToSchema)]
-pub struct ErrorResponseDto {
-    pub message: String,
 }
