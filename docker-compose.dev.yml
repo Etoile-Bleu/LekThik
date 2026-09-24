@@ -1,3 +1,5 @@
+name: lekthik
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -48,20 +50,22 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  # The frontend service is added once the React app is scaffolded (Sprint 1).
-  # frontend:
-  #   build:
-  #     context: ./frontend
-  #     target: development-dependencies-env
-  #   command: ["npm", "run", "dev"]
-  #   volumes:
-  #     - ./frontend:/app
-  #     - frontend_node_modules:/app/node_modules
-  #   ports:
-  #     - "5173:5173"
-  #   depends_on:
-  #     - server
+  frontend:
+    build:
+      context: ./frontend
+      target: development-dependencies-env
+    command: ["pnpm", "run", "dev"]
+    environment:
+      VITE_API_URL: http://localhost:8080
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - server
 
 volumes:
   backend_target:
+  frontend_node_modules:
   postgres_data:
