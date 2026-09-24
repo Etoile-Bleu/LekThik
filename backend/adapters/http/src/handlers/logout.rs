@@ -1,7 +1,7 @@
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 
-pub const SESSION_COOKIE: &str = "session";
+use crate::state::SESSION_COOKIE;
 
 #[utoipa::path(
     post,

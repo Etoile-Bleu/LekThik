@@ -5,8 +5,8 @@ use axum::http::{StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use uuid::Uuid;
 
-use crate::state::AppState;
-use crate::user_dto::ErrorResponseDto;
+use crate::dto::ErrorResponseDto;
+use crate::state::{AppState, SESSION_COOKIE};
 
 pub struct AuthUser(pub Uuid);
 
@@ -24,7 +24,7 @@ fn extract_session_cookie(parts: &Parts) -> Option<String> {
     let cookie_header = parts.headers.get(header::COOKIE)?.to_str().ok()?;
     cookie_header.split(';').map(str::trim).find_map(|pair| {
         let (key, value) = pair.split_once('=')?;
-        (key == "session").then(|| value.to_string())
+        (key == SESSION_COOKIE).then(|| value.to_string())
     })
 }
 
