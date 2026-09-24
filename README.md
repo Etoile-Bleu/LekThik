@@ -1,17 +1,25 @@
 # LekThik
 
-Outil de gestion de tâches collaboratif inspiré de Trello (boards, listes, cartes), conçu pour être testé en déploiement multi-sites avec [ZamSync](https://github.com/Etoile-Bleu/ZamSync), un moteur de réplication offline-first.
+A collaborative task management tool inspired by Trello (boards, lists, cards), built to be tested in a multi-site deployment with [ZamSync](https://github.com/Etoile-Bleu/ZamSync), an offline-first replication engine.
 
-Projet réalisé dans le cadre du Simulated Professional Work.
+Built as part of the Simulated Professional Work program.
 
 ## Stack
 
-- **Frontend** : React
-- **Backend** : Rust
-- **Base de données** : PostgreSQL
-- **Synchronisation multi-sites** : ZamSync
-- **Exposition publique** : Cloudflare Tunnel
+- **Frontend**: React
+- **Backend**: Rust
+- **Database**: PostgreSQL
+- **Multi-site synchronization**: ZamSync
+- **Public exposure**: Cloudflare Tunnel
 
-## État du projet
+## Project status
 
-En cours de développement. Sprint 1 : 25/09/2026.
+In development. Sprint 1: 2026-09-25.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the git workflow, commit conventions, and code standards. This project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+MIT, see [LICENSE](LICENSE).
