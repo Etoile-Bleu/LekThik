@@ -35,7 +35,7 @@ runs Postgres, applies migrations, and starts the server with hot reload.
 
 ```
 domain/            Entities and repository traits, no framework dependencies
-application/        Use cases (register, confirm, login)
+application/        Use cases (register, login)
 adapters/db/        PostgreSQL implementation of the repository traits
 adapters/http/       Axum server: routes, DTOs, JWT, rate limiting
 migrations/         SQL migrations, applied in order by scripts/migrate.sh
