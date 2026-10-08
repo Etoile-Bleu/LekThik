@@ -5,12 +5,13 @@ use serde_json::Value;
 use tower::ServiceExt;
 
 use common::{
-    login_request, logout_request, me_request, register_request, session_cookie_from, spawn_app,
+    login_request, logout_request, mark_email_verified, me_request, register_request,
+    session_cookie_from, spawn_app,
 };
 
 #[tokio::test]
 async fn logs_in_and_reads_the_current_user() -> anyhow::Result<()> {
-    let (app, _pool, _container) = spawn_app().await?;
+    let (app, pool, _container) = spawn_app().await?;
     let register_response = app
         .clone()
         .oneshot(register_request(
@@ -20,6 +21,7 @@ async fn logs_in_and_reads_the_current_user() -> anyhow::Result<()> {
         )?)
         .await?;
     assert_eq!(register_response.status(), StatusCode::CREATED);
+    mark_email_verified(&pool, "session@example.com").await?;
 
     let login_response = app
         .clone()
@@ -53,7 +55,7 @@ async fn rejects_me_without_a_session_cookie() -> anyhow::Result<()> {
 
 #[tokio::test]
 async fn logout_clears_the_session_so_me_is_rejected_afterwards() -> anyhow::Result<()> {
-    let (app, _pool, _container) = spawn_app().await?;
+    let (app, pool, _container) = spawn_app().await?;
     let register_response = app
         .clone()
         .oneshot(register_request(
@@ -63,6 +65,7 @@ async fn logout_clears_the_session_so_me_is_rejected_afterwards() -> anyhow::Res
         )?)
         .await?;
     assert_eq!(register_response.status(), StatusCode::CREATED);
+    mark_email_verified(&pool, "logout@example.com").await?;
 
     let login_response = app
         .clone()

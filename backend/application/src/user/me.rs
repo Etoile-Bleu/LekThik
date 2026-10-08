@@ -49,6 +49,7 @@ mod tests {
                 id: user_id,
                 email: "person@example.com".to_string(),
                 username: "person".to_string(),
+                email_verified: true,
             }))
         });
 

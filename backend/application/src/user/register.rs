@@ -85,6 +85,7 @@ mod tests {
                 id: Uuid::new_v4(),
                 email: new_user.email,
                 username: new_user.username,
+                email_verified: false,
             })
         });
 
