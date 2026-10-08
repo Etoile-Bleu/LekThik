@@ -3,5 +3,7 @@ mod user;
 
 pub use common::ErrorResponseDto;
 pub use user::{
-    LoginUserRequestDto, RegisterUserRequestDto, RegisteredUserResponseDto, UserResponseDto,
+    ForgotPasswordRequestDto, LoginUserRequestDto, RegisterUserRequestDto,
+    RegisteredUserResponseDto, ResendVerificationRequestDto, ResetPasswordRequestDto,
+    UserResponseDto, VerifyEmailRequestDto,
 };
