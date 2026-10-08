@@ -1,6 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError, getCurrentUser, loginUser, logoutUser, registerUser } from './api';
+import {
+  ApiError,
+  getCurrentUser,
+  loginUser,
+  logoutUser,
+  registerUser,
+  requestPasswordReset,
+  resendVerification,
+  resetPassword,
+  verifyEmail,
+} from './api';
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -83,5 +93,65 @@ describe('api', () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).message).toContain('500');
+  });
+
+  it('posts the email and code to the verify email endpoint', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await verifyEmail('matheo@example.com', '123456');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/auth/verify-email'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'matheo@example.com', code: '123456' }),
+      })
+    );
+  });
+
+  it('posts the email to the resend verification endpoint', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await resendVerification('matheo@example.com');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/auth/resend-verification'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'matheo@example.com' }),
+      })
+    );
+  });
+
+  it('posts the email to the forgot password endpoint', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await requestPasswordReset('matheo@example.com');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/auth/forgot-password'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ email: 'matheo@example.com' }),
+      })
+    );
+  });
+
+  it('posts the email, code and new password to the reset password endpoint', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, { status: 204 }));
+
+    await resetPassword('matheo@example.com', '123456', 'a-new-strong-password');
+
+    expect(fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/api/auth/reset-password'),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({
+          email: 'matheo@example.com',
+          code: '123456',
+          password: 'a-new-strong-password',
+        }),
+      })
+    );
   });
 });
