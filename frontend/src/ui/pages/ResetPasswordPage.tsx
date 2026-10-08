@@ -1,22 +1,28 @@
 import { type FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { ApiError, registerUser } from '@lib/api';
+import { CodeField } from '@components/CodeField';
+import { ApiError, requestPasswordReset, resetPassword } from '@lib/api';
 
 import '@components/AuthForm.css';
 
-export function SignupPage() {
+export function ResetPasswordPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
+  const [searchParams] = useSearchParams();
+
+  const [email, setEmail] = useState(searchParams.get('email') ?? '');
+  const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setNotice(null);
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
@@ -26,8 +32,8 @@ export function SignupPage() {
     setIsSubmitting(true);
 
     try {
-      await registerUser(email, username, password);
-      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+      await resetPassword(email, code, password);
+      navigate('/login', { state: { notice: 'Password updated. You can sign in now.' } });
     } catch (submitError) {
       setError(
         submitError instanceof ApiError ? submitError.message : 'Something went wrong, try again.'
@@ -37,19 +43,38 @@ export function SignupPage() {
     }
   }
 
+  async function handleResend() {
+    setError(null);
+    setNotice(null);
+    setIsResending(true);
+
+    try {
+      await requestPasswordReset(email);
+      setNotice('If an account exists for this address, a new code is on its way.');
+    } catch (resendError) {
+      setError(
+        resendError instanceof ApiError ? resendError.message : 'Something went wrong, try again.'
+      );
+    } finally {
+      setIsResending(false);
+    }
+  }
+
   return (
     <div className="auth">
       <div className="auth__card">
         <div>
-          <h1 className="auth__title">Create your account</h1>
-          <p className="auth__subtitle">Boards, lists and cards, synced across your team.</p>
+          <h1 className="auth__title">Choose a new password</h1>
+          <p className="auth__subtitle">
+            Enter the code from your email, then pick a new password.
+          </p>
         </div>
 
         <form className="auth__form" onSubmit={handleSubmit}>
           <div className="auth__field">
-            <label htmlFor="signup-email">Email</label>
+            <label htmlFor="reset-email">Email</label>
             <input
-              id="signup-email"
+              id="reset-email"
               name="email"
               type="email"
               autoComplete="email"
@@ -59,26 +84,12 @@ export function SignupPage() {
             />
           </div>
 
-          <div className="auth__field">
-            <label htmlFor="signup-username">Username</label>
-            <input
-              id="signup-username"
-              name="username"
-              type="text"
-              autoComplete="username"
-              minLength={3}
-              maxLength={32}
-              required
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-            />
-            <span className="auth__hint">3 to 32 characters.</span>
-          </div>
+          <CodeField id="reset-code" value={code} onChange={setCode} />
 
           <div className="auth__field">
-            <label htmlFor="signup-password">Password</label>
+            <label htmlFor="reset-password">New password</label>
             <input
-              id="signup-password"
+              id="reset-password"
               name="password"
               type="password"
               autoComplete="new-password"
@@ -91,9 +102,9 @@ export function SignupPage() {
           </div>
 
           <div className="auth__field">
-            <label htmlFor="signup-confirm-password">Confirm password</label>
+            <label htmlFor="reset-confirm-password">Confirm new password</label>
             <input
-              id="signup-confirm-password"
+              id="reset-confirm-password"
               name="confirmPassword"
               type="password"
               autoComplete="new-password"
@@ -105,14 +116,24 @@ export function SignupPage() {
           </div>
 
           {error && <p className="auth__error">{error}</p>}
+          {notice && <p className="auth__success">{notice}</p>}
 
           <button className="auth__submit" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating account...' : 'Create account'}
+            {isSubmitting ? 'Updating...' : 'Update password'}
           </button>
         </form>
 
+        <button
+          className="auth__link-button"
+          type="button"
+          onClick={handleResend}
+          disabled={isResending || email === ''}
+        >
+          {isResending ? 'Sending...' : 'Send a new code'}
+        </button>
+
         <p className="auth__switch">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Back to <Link to="/login">Sign in</Link>
         </p>
       </div>
     </div>

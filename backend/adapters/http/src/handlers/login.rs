@@ -19,6 +19,7 @@ use crate::state::{AppState, SESSION_COOKIE};
         (status = 204, description = "Session cookie set"),
         (status = 400, body = ErrorResponseDto),
         (status = 401, body = ErrorResponseDto),
+        (status = 403, description = "Password is right but the email is not verified yet", body = ErrorResponseDto),
     )
 )]
 pub async fn login_user(
@@ -42,6 +43,15 @@ pub async fn login_user(
         Err(error @ LoginUserError::InvalidCredentials) => {
             return (
                 StatusCode::UNAUTHORIZED,
+                Json(ErrorResponseDto {
+                    message: error.to_string(),
+                }),
+            )
+                .into_response();
+        }
+        Err(error @ LoginUserError::EmailNotVerified) => {
+            return (
+                StatusCode::FORBIDDEN,
                 Json(ErrorResponseDto {
                     message: error.to_string(),
                 }),
