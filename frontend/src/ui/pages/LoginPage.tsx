@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { ApiError, loginUser } from '@lib/api';
 import { useAuthStore } from '@lib/authStore';
@@ -8,16 +8,20 @@ import '@components/AuthForm.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const notice = (location.state as { notice?: string } | null)?.notice;
   const checkSession = useAuthStore((state) => state.checkSession);
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setNeedsVerification(false);
     setIsSubmitting(true);
 
     try {
@@ -25,6 +29,7 @@ export function LoginPage() {
       await checkSession();
       navigate('/dashboard');
     } catch (submitError) {
+      setNeedsVerification(submitError instanceof ApiError && submitError.status === 403);
       setError(
         submitError instanceof ApiError ? submitError.message : 'Something went wrong, try again.'
       );
@@ -68,7 +73,19 @@ export function LoginPage() {
             />
           </div>
 
+          <p className="auth__aside">
+            <Link to="/forgot-password">Forgot your password?</Link>
+          </p>
+
+          {notice && !error && <p className="auth__success">{notice}</p>}
           {error && <p className="auth__error">{error}</p>}
+          {needsVerification && (
+            <p className="auth__aside">
+              <Link to={`/verify-email?email=${encodeURIComponent(email)}`}>
+                Enter your verification code
+              </Link>
+            </p>
+          )}
 
           <button className="auth__submit" type="submit" disabled={isSubmitting}>
             {isSubmitting ? 'Signing in...' : 'Sign in'}
