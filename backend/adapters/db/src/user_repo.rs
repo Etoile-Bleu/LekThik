@@ -19,7 +19,7 @@ impl UserRepo for PgUserRepo {
         let row = sqlx::query(
             "INSERT INTO users (email, username, password_hash) \
                 VALUES ($1, $2, $3) \
-                RETURNING id, email, username",
+                RETURNING id, email, username, (email_verified_at IS NOT NULL) AS email_verified",
         )
         .bind(&new_user.email)
         .bind(&new_user.username)
@@ -38,11 +38,14 @@ impl UserRepo for PgUserRepo {
     }
 
     async fn find_by_email(&self, email: &str) -> Result<Option<User>, UserRepoError> {
-        let row = sqlx::query("SELECT id, email, username FROM users WHERE email = $1")
-            .bind(email)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(|error| UserRepoError::Repository(error.to_string()))?;
+        let row = sqlx::query(
+            "SELECT id, email, username, (email_verified_at IS NOT NULL) AS email_verified \
+                FROM users WHERE email = $1",
+        )
+        .bind(email)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|error| UserRepoError::Repository(error.to_string()))?;
 
         row.as_ref()
             .map(row_to_user)
@@ -51,11 +54,14 @@ impl UserRepo for PgUserRepo {
     }
 
     async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, UserRepoError> {
-        let row = sqlx::query("SELECT id, email, username FROM users WHERE id = $1")
-            .bind(id)
-            .fetch_optional(&self.pool)
-            .await
-            .map_err(|error| UserRepoError::Repository(error.to_string()))?;
+        let row = sqlx::query(
+            "SELECT id, email, username, (email_verified_at IS NOT NULL) AS email_verified \
+                FROM users WHERE id = $1",
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|error| UserRepoError::Repository(error.to_string()))?;
 
         row.as_ref()
             .map(row_to_user)
@@ -63,16 +69,42 @@ impl UserRepo for PgUserRepo {
             .map_err(UserRepoError::Repository)
     }
 
+    async fn set_password_hash(&self, id: Uuid, password_hash: &str) -> Result<(), UserRepoError> {
+        sqlx::query("UPDATE users SET password_hash = $2 WHERE id = $1")
+            .bind(id)
+            .bind(password_hash)
+            .execute(&self.pool)
+            .await
+            .map_err(|error| UserRepoError::Repository(error.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn mark_email_verified(&self, id: Uuid) -> Result<(), UserRepoError> {
+        sqlx::query(
+            "UPDATE users SET email_verified_at = COALESCE(email_verified_at, now()) WHERE id = $1",
+        )
+        .bind(id)
+        .execute(&self.pool)
+        .await
+        .map_err(|error| UserRepoError::Repository(error.to_string()))?;
+
+        Ok(())
+    }
+
     async fn find_credentials_by_email(
         &self,
         email: &str,
     ) -> Result<Option<(User, String)>, UserRepoError> {
-        let row =
-            sqlx::query("SELECT id, email, username, password_hash FROM users WHERE email = $1")
-                .bind(email)
-                .fetch_optional(&self.pool)
-                .await
-                .map_err(|error| UserRepoError::Repository(error.to_string()))?;
+        let row = sqlx::query(
+            "SELECT id, email, username, password_hash, \
+                (email_verified_at IS NOT NULL) AS email_verified \
+                FROM users WHERE email = $1",
+        )
+        .bind(email)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|error| UserRepoError::Repository(error.to_string()))?;
 
         let Some(row) = row else {
             return Ok(None);
@@ -92,5 +124,8 @@ fn row_to_user(row: &sqlx::postgres::PgRow) -> Result<User, String> {
         id: row.try_get("id").map_err(|error| error.to_string())?,
         email: row.try_get("email").map_err(|error| error.to_string())?,
         username: row.try_get("username").map_err(|error| error.to_string())?,
+        email_verified: row
+            .try_get("email_verified")
+            .map_err(|error| error.to_string())?,
     })
 }
