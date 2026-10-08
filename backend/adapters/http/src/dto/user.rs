@@ -34,3 +34,33 @@ pub struct LoginUserRequestDto {
     #[validate(length(min = 1))]
     pub password: String,
 }
+
+#[derive(Deserialize, Validate, ToSchema)]
+pub struct VerifyEmailRequestDto {
+    #[validate(email)]
+    pub email: String,
+    #[validate(length(equal = 6))]
+    pub code: String,
+}
+
+#[derive(Deserialize, Validate, ToSchema)]
+pub struct ResendVerificationRequestDto {
+    #[validate(email)]
+    pub email: String,
+}
+
+#[derive(Deserialize, Validate, ToSchema)]
+pub struct ForgotPasswordRequestDto {
+    #[validate(email)]
+    pub email: String,
+}
+
+#[derive(Deserialize, Validate, ToSchema)]
+pub struct ResetPasswordRequestDto {
+    #[validate(email)]
+    pub email: String,
+    #[validate(length(equal = 6))]
+    pub code: String,
+    #[validate(length(min = 8))]
+    pub password: String,
+}
