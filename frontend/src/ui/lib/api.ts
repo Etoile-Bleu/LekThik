@@ -73,3 +73,31 @@ export async function getCurrentUser(): Promise<CurrentUser> {
   const response = await request('/api/users/me');
   return (await response.json()) as CurrentUser;
 }
+
+export async function verifyEmail(email: string, code: string): Promise<void> {
+  await request('/api/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
+  });
+}
+
+export async function resendVerification(email: string): Promise<void> {
+  await request('/api/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  await request('/api/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPassword(email: string, code: string, password: string): Promise<void> {
+  await request('/api/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ email, code, password }),
+  });
+}
