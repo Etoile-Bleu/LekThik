@@ -7,6 +7,8 @@ use domain::{User, UserRepo, UserRepoError};
 pub enum LoginUserError {
     #[error("invalid email or password")]
     InvalidCredentials,
+    #[error("email not verified")]
+    EmailNotVerified,
     #[error("repository error: {0}")]
     Repository(String),
 }
@@ -35,6 +37,10 @@ impl<R: UserRepo> LoginUser<R> {
 
         verify_password(password, &password_hash)
             .map_err(|_| LoginUserError::InvalidCredentials)?;
+
+        if !user.email_verified {
+            return Err(LoginUserError::EmailNotVerified);
+        }
 
         Ok(user)
     }
@@ -66,6 +72,7 @@ mod tests {
                         id: Uuid::new_v4(),
                         email: "person@example.com".to_string(),
                         username: "person".to_string(),
+                        email_verified: true,
                     },
                     password_hash.clone(),
                 )))
@@ -93,6 +100,7 @@ mod tests {
                         id: Uuid::new_v4(),
                         email: "person@example.com".to_string(),
                         username: "person".to_string(),
+                        email_verified: true,
                     },
                     password_hash.clone(),
                 )))
@@ -105,6 +113,34 @@ mod tests {
             .await;
 
         assert!(matches!(result, Err(LoginUserError::InvalidCredentials)));
+    }
+
+    #[tokio::test]
+    async fn rejects_login_when_the_email_is_not_verified() {
+        let password_hash = hash_password("a-strong-password").expect("hashing should succeed");
+        let mut mock_repo = MockUserRepo::new();
+        mock_repo
+            .expect_find_credentials_by_email()
+            .times(1)
+            .returning(move |_| {
+                Ok(Some((
+                    User {
+                        id: Uuid::new_v4(),
+                        email: "person@example.com".to_string(),
+                        username: "person".to_string(),
+                        email_verified: false,
+                    },
+                    password_hash.clone(),
+                )))
+            });
+
+        let use_case = LoginUser::new(mock_repo);
+
+        let result = use_case
+            .execute("person@example.com", "a-strong-password")
+            .await;
+
+        assert!(matches!(result, Err(LoginUserError::EmailNotVerified)));
     }
 
     #[tokio::test]
