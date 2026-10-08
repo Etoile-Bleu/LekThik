@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["domain", "application", "adapters/http", "adapters/db"]
+members = ["domain", "application", "adapters/http", "adapters/db", "adapters/mail"]
 
 [workspace.package]
 edition = "2024"
@@ -24,6 +24,9 @@ sqlx = { version = "0.9.0", features = ["runtime-tokio", "postgres", "uuid"] }
 async-trait = "0.1.92"
 uuid = { version = "1.26.1", features = ["v4", "serde"] }
 argon2 = "0.6.0"
+sha2 = "0.11.0"
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls"] }
+wiremock = "0.6.5"
 validator = { version = "0.21.0", features = ["derive"] }
 mockall = "0.15.0"
 testcontainers = "0.27"
