@@ -124,3 +124,44 @@
 .auth__switch a:hover {
   text-decoration: underline;
 }
+
+.auth__field input.auth__code {
+  height: 56px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  letter-spacing: 0.5rem;
+  padding-left: 1.4rem;
+}
+
+.auth__link-button {
+  align-self: center;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-accent-text);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.auth__link-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth__aside {
+  font-size: 0.88rem;
+  text-align: right;
+}
+
+.auth__aside a {
+  color: var(--color-accent-text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth__aside a:hover {
+  text-decoration: underline;
+}
