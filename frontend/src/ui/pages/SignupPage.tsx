@@ -1,18 +1,18 @@
 import { type FormEvent, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { ApiError, registerUser } from '@lib/api';
 
 import '@components/AuthForm.css';
 
 export function SignupPage() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,7 +27,7 @@ export function SignupPage() {
 
     try {
       await registerUser(email, username, password);
-      setRegisteredEmail(email);
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
     } catch (submitError) {
       setError(
         submitError instanceof ApiError ? submitError.message : 'Something went wrong, try again.'
@@ -35,26 +35,6 @@ export function SignupPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (registeredEmail) {
-    return (
-      <div className="auth">
-        <div className="auth__card">
-          <div>
-            <h1 className="auth__title">Account created</h1>
-            <p className="auth__subtitle">You&apos;re all set.</p>
-          </div>
-          <p className="auth__success">
-            Your account <strong>{registeredEmail}</strong> was created successfully. You can now
-            sign in.
-          </p>
-          <p className="auth__switch">
-            <Link to="/login">Sign in</Link>
-          </p>
-        </div>
-      </div>
-    );
   }
 
   return (
