@@ -41,6 +41,9 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-lekthik}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lekthik}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       JWT_SECRET: ${JWT_SECRET:?Missing JWT_SECRET, copy .env.example to .env first}
+      BREVO_API_KEY: ${BREVO_API_KEY:?Missing BREVO_API_KEY, copy .env.example to .env first}
+      MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:?Missing MAIL_FROM_EMAIL, copy .env.example to .env first}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-LekThik}
     volumes:
       - ./backend:/app
       - backend_target:/app/target
