@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@lib/api', async (importOriginal) => {
@@ -49,12 +49,15 @@ describe('SignupPage', () => {
     expect(registerUser).not.toHaveBeenCalled();
   });
 
-  it('registers the account with the email, username and password', async () => {
+  it('registers the account and sends the user to verify their email', async () => {
     vi.mocked(registerUser).mockResolvedValueOnce(undefined);
 
     render(
-      <MemoryRouter>
-        <SignupPage />
+      <MemoryRouter initialEntries={['/signup']}>
+        <Routes>
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/verify-email" element={<p>verify email page</p>} />
+        </Routes>
       </MemoryRouter>
     );
 
@@ -62,6 +65,6 @@ describe('SignupPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     expect(registerUser).toHaveBeenCalledWith('matheo@example.com', 'matheo', 'a-strong-password');
-    expect(await screen.findByText('Account created')).toBeInTheDocument();
+    expect(await screen.findByText('verify email page')).toBeInTheDocument();
   });
 });
