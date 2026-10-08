@@ -19,7 +19,7 @@ use crate::state::AppState;
     info(title = "LekThik API", description = "Boards, lists, cards and account management"),
     tags(
         (name = "users", description = "Email/password registration and profile"),
-        (name = "auth", description = "Login, logout and session management"),
+        (name = "auth", description = "Login, logout, email verification and password reset"),
     )
 )]
 struct ApiDoc;
@@ -37,6 +37,10 @@ pub fn build(state: AppState) -> Router {
         .routes(routes!(register_user))
         .routes(routes!(login_user))
         .routes(routes!(logout))
+        .routes(routes!(verify_email))
+        .routes(routes!(resend_verification))
+        .routes(routes!(forgot_password))
+        .routes(routes!(reset_password))
         .routes(routes!(get_current_user))
         .layer(middleware::from_fn_with_state(rate_limiter, rate_limit));
 
