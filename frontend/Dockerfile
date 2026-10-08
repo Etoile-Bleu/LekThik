@@ -10,6 +10,8 @@ RUN pnpm run build
 
 FROM node:22-slim AS production
 WORKDIR /app
+ENV PNPM_HOME=/pnpm
+ENV PATH="$PNPM_HOME/bin:$PATH"
 RUN corepack enable && corepack prepare pnpm@11 --activate
 COPY --from=build-env /app/dist ./dist
 RUN pnpm add -g serve
