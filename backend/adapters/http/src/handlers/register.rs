@@ -1,8 +1,9 @@
-use application::{RegisterUser, RegisterUserError};
+use application::{IssueVerificationCode, RegisterUser, RegisterUserError};
 use axum::Json;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use domain::VerificationPurpose;
 use validator::Validate;
 
 use crate::dto::{ErrorResponseDto, RegisterUserRequestDto, RegisteredUserResponseDto};
@@ -13,7 +14,7 @@ use crate::state::AppState;
     path = "/users/register",
     tag = "users",
     summary = "Register a new user",
-    description = "Creates a user with an argon2-hashed password, ready to sign in immediately. Rejects an email or username already in use.",
+    description = "Creates a user with an argon2-hashed password and emails a six digit code to verify the address. The account can sign in once the email is verified. Rejects an email or username already in use.",
     request_body = RegisterUserRequestDto,
     responses(
         (status = 201, body = RegisteredUserResponseDto),
@@ -43,6 +44,22 @@ pub async fn register_user(
     {
         Ok(registered) => {
             println!("registered {}", registered.email);
+
+            let issue_code = IssueVerificationCode::new(
+                state.verification_code_repo.clone(),
+                state.mailer.clone(),
+            );
+            if let Err(error) = issue_code
+                .execute(
+                    registered.id,
+                    &registered.email,
+                    &registered.username,
+                    VerificationPurpose::EmailVerification,
+                )
+                .await
+            {
+                eprintln!("sending the verification email failed: {error}");
+            }
 
             (
                 StatusCode::CREATED,
