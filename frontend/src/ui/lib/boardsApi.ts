@@ -48,6 +48,9 @@ export interface CardSummary {
   title: string;
   has_description: boolean;
   label_ids: string[];
+  assignee_ids: string[];
+  /** Calendar day, `YYYY-MM-DD`. */
+  due_date: string | null;
 }
 
 export interface BoardList {
@@ -56,9 +59,15 @@ export interface BoardList {
   cards: CardSummary[];
 }
 
+export interface BoardMember {
+  user_id: string;
+  username: string;
+}
+
 export interface BoardView {
   board: BoardSummary;
   role: Role;
+  members: BoardMember[];
   lists: BoardList[];
   labels: Label[];
 }
@@ -69,6 +78,8 @@ export interface CardDetail {
   title: string;
   description: string;
   label_ids: string[];
+  assignee_ids: string[];
+  due_date: string | null;
 }
 
 export interface TemplateLabel {
@@ -201,7 +212,7 @@ export function fetchCard(id: string): Promise<CardDetail> {
 
 export function updateCard(
   id: string,
-  changes: { title?: string; description?: string }
+  changes: { title?: string; description?: string; due_date?: string | null }
 ): Promise<CardDetail> {
   return send<CardDetail>(`/api/cards/${id}`, 'PATCH', changes);
 }
@@ -217,6 +228,15 @@ export function deleteCard(id: string): Promise<void> {
 export function setCardLabels(id: string, labelIds: string[]): Promise<{ label_ids: string[] }> {
   return send<{ label_ids: string[] }>(`/api/cards/${id}/labels`, 'PUT', {
     label_ids: labelIds,
+  });
+}
+
+export function setCardAssignees(
+  id: string,
+  userIds: string[]
+): Promise<{ assignee_ids: string[] }> {
+  return send<{ assignee_ids: string[] }>(`/api/cards/${id}/assignees`, 'PUT', {
+    user_ids: userIds,
   });
 }
 
