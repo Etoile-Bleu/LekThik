@@ -44,12 +44,12 @@ fn plan_for(method: &Method, path: &str) -> Option<Plan> {
             touches_workspace: true,
             touches_board: true,
         }),
-        ("boards", 3, Some("lists" | "labels" | "look")) => Some(Plan {
+        ("boards", 3, Some("lists" | "labels" | "look" | "blocks")) => Some(Plan {
             target: Target::Board(id),
             touches_workspace: false,
             touches_board: true,
         }),
-        ("lists", _, _) => Some(Plan {
+        ("lists" | "blocks", _, _) => Some(Plan {
             target: Target::List(id),
             touches_workspace: false,
             touches_board: true,
@@ -148,6 +148,8 @@ mod tests {
             format!("lists/{id}"),
             format!("lists/{id}/move"),
             format!("lists/{id}/wip-limit"),
+            format!("boards/{id}/blocks"),
+            format!("blocks/{id}/config"),
             format!("cards/{id}"),
             format!("cards/{id}/labels"),
             format!("cards/{id}/assignees"),
