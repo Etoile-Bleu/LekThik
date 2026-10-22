@@ -25,6 +25,9 @@ runs Postgres, applies migrations, and starts the server with hot reload.
 | `DATABASE_URL` | Postgres connection string |
 | `JWT_SECRET` | Secret used to sign session tokens |
 | `CORS_ALLOWED_ORIGINS` | Comma-separated list of allowed origins |
+| `SMTP_RELAY` | SMTP host used for emails, defaults to `smtp-relay.brevo.com` |
+| `SMTP_USERNAME`, `SMTP_PASSWORD` | SMTP credentials |
+| `MAIL_FROM_EMAIL`, `MAIL_FROM_NAME` | Sender address (must be accepted by the SMTP provider) and display name |
 
 ## Scripts
 
@@ -44,7 +47,7 @@ application/        Use cases: accounts (register, login, email codes) and board
                     (workspaces, boards, lists, cards, labels)
 adapters/db/        PostgreSQL implementation of the repository traits
 adapters/http/       Axum server: routes, DTOs, JWT, rate limiting, security headers
-adapters/mail/       Brevo mail sender
+adapters/mail/       SMTP mail sender (STARTTLS)
 migrations/         SQL migrations, applied in order by scripts/migrate.sh
 ```
 

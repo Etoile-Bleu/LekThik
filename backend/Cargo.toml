@@ -25,8 +25,7 @@ async-trait = "0.1.92"
 uuid = { version = "1.26.1", features = ["v4", "serde"] }
 argon2 = "0.6.0"
 sha2 = "0.11.0"
-reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls"] }
-wiremock = "0.6.5"
+lettre = { version = "0.11", default-features = false, features = ["tokio1-rustls-tls", "smtp-transport", "builder", "pool"] }
 validator = { version = "0.21.0", features = ["derive"] }
 mockall = "0.15.0"
 testcontainers = "0.27"

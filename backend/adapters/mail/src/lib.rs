@@ -1,3 +1,3 @@
-mod brevo;
+mod smtp;
 
-pub use brevo::{BrevoMailer, MailSender};
+pub use smtp::{MailSender, SmtpMailer};
