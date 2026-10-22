@@ -28,7 +28,9 @@ import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boards
 import type { ColumnWidth } from '@lib/prefs';
 
 import { Composer } from '../ui/Composer';
+import { PlusIcon } from '../ui/Icons';
 import { CardFace } from './BoardCard';
+import { BoardBlock } from './BoardBlock';
 import { BoardList, ListFace } from './BoardList';
 import './BoardCanvas.css';
 
@@ -41,6 +43,9 @@ interface BoardCanvasProps {
   collapsedIds: string[];
   onToggleCollapsed: (listId: string) => void;
   onEditLimit: (listId: string) => void;
+  onBlockSettings: (blockId: string) => void;
+  onSaveNote: (blockId: string, text: string) => void;
+  onAddBlock: () => void;
   onRenameList: (listId: string, name: string) => void;
   onMoveList: (listId: string, index: number) => void;
   onDeleteList: (listId: string) => void;
@@ -65,6 +70,9 @@ export function BoardCanvas({
   collapsedIds,
   onToggleCollapsed,
   onEditLimit,
+  onBlockSettings,
+  onSaveNote,
+  onAddBlock,
   onRenameList,
   onMoveList,
   onDeleteList,
@@ -98,6 +106,13 @@ export function BoardCanvas({
       });
     }
 
+    // A card can only be dropped on a list, never on a block.
+    args = {
+      ...args,
+      droppableContainers: args.droppableContainers.filter(
+        (container) => !container.data.current?.block
+      ),
+    };
     const pointerCollisions = pointerWithin(args);
     const collisions = pointerCollisions.length > 0 ? pointerCollisions : rectIntersection(args);
     let overId = getFirstCollision(collisions, 'id');
@@ -280,26 +295,46 @@ export function BoardCanvas({
           items={lists.map((list) => list.id)}
           strategy={horizontalListSortingStrategy}
         >
-          {lists.map((list, index) => (
-            <BoardList
-              key={list.id}
-              list={list}
-              index={index}
-              total={lists.length}
-              labelsById={labelsById}
-              matches={matches}
-              freshIds={freshIds}
-              collapsed={collapsedIds.includes(list.id)}
-              onToggleCollapsed={onToggleCollapsed}
-              onEditLimit={onEditLimit}
-              onRename={onRenameList}
-              onMove={onMoveList}
-              onDelete={onDeleteList}
-              onAddCard={onAddCard}
-              onOpenCard={onOpenCard}
-              readOnly={readOnly}
-            />
-          ))}
+          {lists.map((list, index) =>
+            list.kind !== 'list' ? (
+              <BoardBlock
+                key={list.id}
+                block={list}
+                panels={lists}
+                index={index}
+                total={lists.length}
+                freshIds={freshIds}
+                collapsed={collapsedIds.includes(list.id)}
+                onToggleCollapsed={onToggleCollapsed}
+                onRename={onRenameList}
+                onMove={onMoveList}
+                onDelete={onDeleteList}
+                onSettings={onBlockSettings}
+                onSaveNote={onSaveNote}
+                onOpenCard={onOpenCard}
+                readOnly={readOnly}
+              />
+            ) : (
+              <BoardList
+                key={list.id}
+                list={list}
+                index={index}
+                total={lists.length}
+                labelsById={labelsById}
+                matches={matches}
+                freshIds={freshIds}
+                collapsed={collapsedIds.includes(list.id)}
+                onToggleCollapsed={onToggleCollapsed}
+                onEditLimit={onEditLimit}
+                onRename={onRenameList}
+                onMove={onMoveList}
+                onDelete={onDeleteList}
+                onAddCard={onAddCard}
+                onOpenCard={onOpenCard}
+                readOnly={readOnly}
+              />
+            )
+          )}
         </SortableContext>
         {readOnly ? (
           lists.length === 0 && <p className="board-canvas__empty">This board has no lists yet.</p>
@@ -313,6 +348,11 @@ export function BoardCanvas({
               submitLabel="Add list"
               onSubmit={onAddList}
             />
+            <button type="button" className="board-canvas__block" onClick={onAddBlock}>
+              <PlusIcon size={16} />
+              Add a block
+              <span className="board-canvas__block-hint">Calendar, agenda, note, counter</span>
+            </button>
           </div>
         )}
       </div>
