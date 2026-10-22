@@ -6,6 +6,8 @@ import type { CardSummary, Label } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
 
 import { GripIcon, TextLinesIcon } from '../ui/Icons';
+import { useBoardMeta } from '@hooks/useBoardMeta';
+
 import { AssigneeStack } from './AssigneeStack';
 import { DueBadge } from './DueBadge';
 import { LabelChip } from './LabelChip';
@@ -21,12 +23,20 @@ interface BoardCardProps {
 }
 
 export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] }) {
+  const { display } = useBoardMeta();
+  const shownLabels = display.labels ? labels : [];
+  const showMarker = display.description_marker && card.has_description;
+  const preview = display.description_preview ? card.description_preview.trim() : '';
+  const showDue = display.due_date && card.due_date !== null;
+  const showPeople = display.assignees && card.assignee_ids.length > 0;
+
   return (
     <>
       <span className="board-card__title">{card.title}</span>
-      {(labels.length > 0 || card.has_description) && (
+      {preview && <span className="board-card__preview">{preview}</span>}
+      {(shownLabels.length > 0 || showMarker) && (
         <span className="board-card__meta">
-          {labels.map((label) => (
+          {shownLabels.map((label) => (
             <LabelChip
               key={label.id}
               name={label.name}
@@ -34,7 +44,7 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
               priority={label.priority}
             />
           ))}
-          {card.has_description && (
+          {showMarker && (
             <span className="board-card__description-flag">
               <TextLinesIcon size={16} />
               <span className="sr-only">Has a description</span>
@@ -42,10 +52,10 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
           )}
         </span>
       )}
-      {(card.due_date || card.assignee_ids.length > 0) && (
+      {(showDue || showPeople) && (
         <span className="board-card__foot">
-          {card.due_date && <DueBadge day={card.due_date} />}
-          <AssigneeStack ids={card.assignee_ids} />
+          {showDue && card.due_date && <DueBadge day={card.due_date} />}
+          {showPeople && <AssigneeStack ids={card.assignee_ids} />}
         </span>
       )}
     </>
