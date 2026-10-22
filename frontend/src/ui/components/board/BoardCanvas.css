@@ -50,3 +50,51 @@
   border-radius: var(--radius-lg);
   color: var(--color-text-muted);
 }
+
+.board-canvas__add {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.board-canvas__block {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 0.5rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--color-text-soft-on-light);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.board-canvas__block:hover {
+  border-color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  color: var(--color-ink);
+}
+
+.board-canvas__block:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.board-canvas__block-hint {
+  flex-basis: 100%;
+  padding-left: 1.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
