@@ -101,4 +101,59 @@ describe('prefsStore', () => {
     expect(usePrefsStore.getState().prefs).toEqual(DEFAULT_PREFERENCES);
     expect(usePrefsStore.getState().loaded).toBe(true);
   });
+
+  describe('board layout', () => {
+    it('remembers the view of one board without touching the others', () => {
+      usePrefsStore.getState().updateBoard('b1', { view: 'calendar' });
+
+      const { prefs } = usePrefsStore.getState();
+      expect(prefs.boards.b1.view).toBe('calendar');
+      expect(prefs.boards.b2).toBeUndefined();
+    });
+
+    it('keeps the card display of a board when its view changes', () => {
+      const display = { ...DEFAULT_CARD_DISPLAY, labels: false };
+      usePrefsStore.getState().setBoardCardDisplay('b1', display);
+      usePrefsStore.getState().updateBoard('b1', { view: 'list' });
+
+      const { prefs } = usePrefsStore.getState();
+      expect(prefs.boards.b1.card_display).toEqual(display);
+      expect(prefs.boards.b1.view).toBe('list');
+    });
+
+    it('drops a board once it holds nothing but defaults', () => {
+      usePrefsStore.getState().updateBoard('b1', { view: 'list' });
+      usePrefsStore.getState().updateBoard('b1', { view: 'board' });
+
+      expect(usePrefsStore.getState().prefs.boards).toEqual({});
+    });
+
+    it('folds and opens lists one by one', () => {
+      const { toggleListCollapsed } = usePrefsStore.getState();
+
+      toggleListCollapsed('b1', 'l1');
+      toggleListCollapsed('b1', 'l2');
+      expect(usePrefsStore.getState().prefs.boards.b1.collapsed_lists).toEqual(['l1', 'l2']);
+
+      toggleListCollapsed('b1', 'l1');
+      expect(usePrefsStore.getState().prefs.boards.b1.collapsed_lists).toEqual(['l2']);
+
+      toggleListCollapsed('b1', 'l2');
+      expect(usePrefsStore.getState().prefs.boards).toEqual({});
+    });
+
+    it('saves the layout with everything else', async () => {
+      usePrefsStore.getState().updateBoard('b1', { column_width: 'narrow' });
+      usePrefsStore
+        .getState()
+        .setCardDialog({ order: ['list', 'labels', 'due_date', 'assignees'], hidden: ['labels'] });
+
+      await vi.advanceTimersByTimeAsync(700);
+
+      expect(vi.mocked(savePreferences).mock.calls[0][0]).toMatchObject({
+        boards: { b1: { column_width: 'narrow' } },
+        card_dialog: { order: ['list', 'labels', 'due_date', 'assignees'], hidden: ['labels'] },
+      });
+    });
+  });
 });
