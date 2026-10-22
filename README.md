@@ -34,6 +34,10 @@ This starts Postgres, runs migrations, and brings up the Rust API on
 [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md) for
 service-specific commands.
 
+## Privacy
+
+What LekThik stores, why, for how long and who can see it is in [docs/privacy.md](docs/privacy.md): no tracking, pictures kept in the database and stripped of their metadata, and outside videos and calendars that load only when a reader asks.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the git workflow, commit conventions, and code standards. This project follows a [Code of Conduct](CODE_OF_CONDUCT.md).
