@@ -27,6 +27,8 @@ function listWith(count: number, limit: number | null): BoardListData {
     id: 'doing',
     name: 'Doing',
     wip_limit: limit,
+    kind: 'list',
+    config: {},
     cards: Array.from({ length: count }, (_, index) => card(String(index))),
   };
 }
