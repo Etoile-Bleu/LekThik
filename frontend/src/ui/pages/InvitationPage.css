@@ -1,0 +1,28 @@
+.invitation-page {
+  display: grid;
+  place-items: start center;
+  padding: clamp(1.5rem, 6vw, 4rem) 1.25rem;
+}
+
+.invitation-page__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+  max-width: 34rem;
+}
+
+.invitation-page__panel .invitation-card {
+  width: 100%;
+}
+
+.invitation-page__title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  letter-spacing: -0.01em;
+}
+
+.invitation-page__note {
+  color: var(--color-text-soft-on-light);
+  overflow-wrap: anywhere;
+}
