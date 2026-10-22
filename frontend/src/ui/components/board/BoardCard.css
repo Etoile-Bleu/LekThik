@@ -131,3 +131,15 @@
     transform: translateY(6px) scale(0.985);
   }
 }
+
+.board-card__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 24px;
+}
+
+.board-card__foot > .assignees {
+  margin-left: auto;
+}
