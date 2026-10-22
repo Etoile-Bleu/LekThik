@@ -11,6 +11,8 @@ pub struct CardSummary {
     pub list_id: Uuid,
     pub title: String,
     pub has_description: bool,
+    /// The start of the description, for cards that show a preview.
+    pub description_preview: String,
     pub label_ids: Vec<Uuid>,
     pub assignee_ids: Vec<Uuid>,
     pub due_date: Option<String>,
