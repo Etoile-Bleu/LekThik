@@ -41,6 +41,7 @@ interface BoardState {
     name: string,
     config: PanelConfig
   ) => Promise<BoardList | null>;
+  setImageVersion: (blockId: string, version: number) => void;
   setBlockConfig: (
     blockId: string,
     kind: Exclude<PanelKind, 'list'>,
@@ -194,6 +195,15 @@ export const useBoardStore = create<BoardState>((set, get) => {
         notifyError(error);
         return null;
       }
+    },
+
+    setImageVersion: (blockId, version) => {
+      update((current) => ({
+        ...current,
+        lists: current.lists.map((list) =>
+          list.id === blockId ? { ...list, image_version: version } : list
+        ),
+      }));
     },
 
     setBlockConfig: async (blockId, kind, config) => {
