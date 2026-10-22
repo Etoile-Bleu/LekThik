@@ -1,0 +1,221 @@
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: var(--z-toast);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--color-ink);
+  color: var(--color-text-on-dark);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 40px;
+  padding: 0 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn--primary {
+  background: var(--color-ink);
+  color: var(--color-text-on-dark);
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: #23273a;
+}
+
+.btn--accent {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+
+.btn--accent:hover:not(:disabled) {
+  background: #33d6b0;
+}
+
+.btn--outline {
+  background: var(--color-paper-card);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
+}
+
+.btn--outline:hover:not(:disabled) {
+  border-color: var(--color-ink);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-ink);
+}
+
+.btn--ghost:hover:not(:disabled) {
+  background: rgba(18, 20, 28, 0.07);
+}
+
+.btn--danger {
+  background: var(--color-danger);
+  color: #ffffff;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background: #9c3a31;
+}
+
+.btn--sm {
+  min-height: 34px;
+  padding: 0 0.75rem;
+  font-size: 0.85rem;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.icon-button:hover {
+  background: rgba(18, 20, 28, 0.08);
+  color: var(--color-ink);
+}
+
+@media (pointer: coarse) {
+  .btn,
+  .btn--sm {
+    min-height: 44px;
+  }
+
+  .icon-button {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.field > label,
+.field-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.field input[type='text'],
+.field input[type='search'],
+.field textarea,
+.field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.field textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.field input:focus-visible,
+.field textarea:focus-visible,
+.field select:focus-visible {
+  border-color: var(--color-accent);
+  outline-offset: 0;
+}
+
+.field-hint {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.field-error {
+  font-size: 0.85rem;
+  color: var(--color-danger-ink);
+}
+
+.protected-unreachable {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.75rem;
+  max-width: 480px;
+  margin: 18vh auto 0;
+  padding: 0 1.25rem;
+}
+
+.protected-unreachable h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.protected-unreachable p {
+  color: var(--color-text-soft-on-light);
+}
