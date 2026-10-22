@@ -9,7 +9,7 @@ mod template;
 mod user;
 mod workspace;
 
-pub use board::{BoardMemberDto, BoardResponseDto, BoardSummaryDto, BoardViewDto};
+pub use board::{BoardLookDto, BoardMemberDto, BoardResponseDto, BoardSummaryDto, BoardViewDto};
 pub use card::{
     CardAssigneesResponseDto, CardLabelsResponseDto, CardResponseDto, CardSummaryDto,
     CreateCardRequestDto, MoveCardRequestDto, SetCardAssigneesRequestDto, SetCardLabelsRequestDto,
