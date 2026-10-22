@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 pub const MAX_BOARD_PREFERENCES: usize = 200;
+pub const MAX_COLLAPSED_LISTS: usize = 50;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -100,11 +101,66 @@ impl Default for CardDisplay {
     }
 }
 
-/// Settings that only make sense for one board, for one person.
+/// How a board is shown: columns, a sortable table or a calendar of due dates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum BoardView {
+    #[default]
+    Board,
+    List,
+    Calendar,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ColumnWidth {
+    Narrow,
+    #[default]
+    Default,
+    Wide,
+}
+
+/// A property of the card dialog that can be moved or hidden.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CardProperty {
+    Assignees,
+    DueDate,
+    Labels,
+    List,
+}
+
+/// Which properties the card dialog shows and in what order.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct CardDialogLayout {
+    pub order: Vec<CardProperty>,
+    pub hidden: Vec<CardProperty>,
+}
+
+impl Default for CardDialogLayout {
+    fn default() -> Self {
+        Self {
+            order: vec![
+                CardProperty::Assignees,
+                CardProperty::DueDate,
+                CardProperty::Labels,
+                CardProperty::List,
+            ],
+            hidden: Vec::new(),
+        }
+    }
+}
+
+/// Settings that only make sense for one board, for one person.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct BoardPreferences {
     pub card_display: Option<CardDisplay>,
+    pub view: BoardView,
+    pub column_width: ColumnWidth,
+    /// Lists folded into a slim rail on this board.
+    pub collapsed_lists: Vec<Uuid>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -128,6 +184,7 @@ pub struct Preferences {
     /// Tell screen readers when teammates change the board you are looking at.
     pub announce_changes: bool,
     pub card_display: CardDisplay,
+    pub card_dialog: CardDialogLayout,
     pub boards: BTreeMap<Uuid, BoardPreferences>,
 }
 
@@ -147,8 +204,29 @@ impl Preferences {
             )));
         }
 
+        if has_duplicates(&self.card_dialog.order) || has_duplicates(&self.card_dialog.hidden) {
+            return Err(PreferencesError::Invalid(
+                "a card property can only be listed once".to_string(),
+            ));
+        }
+
+        for board in self.boards.values() {
+            if board.collapsed_lists.len() > MAX_COLLAPSED_LISTS {
+                return Err(PreferencesError::Invalid(format!(
+                    "at most {MAX_COLLAPSED_LISTS} lists can be collapsed on a board"
+                )));
+            }
+        }
+
         Ok(())
     }
+}
+
+fn has_duplicates(properties: &[CardProperty]) -> bool {
+    properties
+        .iter()
+        .enumerate()
+        .any(|(index, property)| properties[..index].contains(property))
 }
 
 #[cfg_attr(feature = "test-utils", mockall::automock)]
@@ -201,6 +279,87 @@ mod tests {
         assert!(serde_json::from_str::<Preferences>(r#"{"text_size":"huge"}"#).is_err());
         assert!(serde_json::from_str::<Preferences>(r#"{"color_vision":"rainbow"}"#).is_err());
         assert!(serde_json::from_str::<Preferences>(r#"{"reading_font":"comic"}"#).is_err());
+    }
+
+    #[test]
+    fn board_layout_settings_round_trip() {
+        let list = Uuid::new_v4();
+        let board = Uuid::new_v4();
+        let json = format!(
+            r#"{{"boards":{{"{board}":{{"view":"calendar","column_width":"wide","collapsed_lists":["{list}"]}}}},
+                "card_dialog":{{"order":["labels","due_date"],"hidden":["list"]}}}}"#
+        );
+        let parsed: Preferences = serde_json::from_str(&json).expect("parse");
+
+        let own = &parsed.boards[&board];
+        assert_eq!(own.view, BoardView::Calendar);
+        assert_eq!(own.column_width, ColumnWidth::Wide);
+        assert_eq!(own.collapsed_lists, vec![list]);
+        assert_eq!(
+            parsed.card_dialog.order,
+            vec![CardProperty::Labels, CardProperty::DueDate]
+        );
+        assert_eq!(parsed.card_dialog.hidden, vec![CardProperty::List]);
+        assert!(parsed.validate().is_ok());
+    }
+
+    #[test]
+    fn a_board_starts_as_columns_with_every_property_shown() {
+        let preferences = Preferences::default();
+
+        assert_eq!(BoardPreferences::default().view, BoardView::Board);
+        assert_eq!(
+            BoardPreferences::default().column_width,
+            ColumnWidth::Default
+        );
+        assert_eq!(preferences.card_dialog.order.len(), 4);
+        assert!(preferences.card_dialog.hidden.is_empty());
+    }
+
+    #[test]
+    fn unknown_views_widths_and_properties_are_refused() {
+        let board = Uuid::new_v4();
+        assert!(
+            serde_json::from_str::<Preferences>(&format!(
+                r#"{{"boards":{{"{board}":{{"view":"gantt"}}}}}}"#
+            ))
+            .is_err()
+        );
+        assert!(
+            serde_json::from_str::<Preferences>(&format!(
+                r#"{{"boards":{{"{board}":{{"column_width":"huge"}}}}}}"#
+            ))
+            .is_err()
+        );
+        assert!(
+            serde_json::from_str::<Preferences>(r#"{"card_dialog":{"order":["comments"]}}"#)
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn a_card_property_cannot_be_listed_twice() {
+        let mut preferences = Preferences::default();
+        preferences.card_dialog.order = vec![CardProperty::Labels, CardProperty::Labels];
+        assert!(preferences.validate().is_err());
+
+        let mut preferences = Preferences::default();
+        preferences.card_dialog.hidden = vec![CardProperty::List, CardProperty::List];
+        assert!(preferences.validate().is_err());
+    }
+
+    #[test]
+    fn collapsed_lists_are_capped_per_board() {
+        let mut preferences = Preferences::default();
+        preferences.boards.insert(
+            Uuid::new_v4(),
+            BoardPreferences {
+                collapsed_lists: (0..=MAX_COLLAPSED_LISTS).map(|_| Uuid::new_v4()).collect(),
+                ..BoardPreferences::default()
+            },
+        );
+
+        assert!(preferences.validate().is_err());
     }
 
     #[test]
