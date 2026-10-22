@@ -18,7 +18,7 @@
   padding: 0.6rem 1rem;
   border-radius: var(--radius-md);
   background: var(--color-ink);
-  color: var(--color-text-on-dark);
+  color: var(--color-on-ink);
   font-weight: 600;
   text-decoration: none;
   transform: translateY(-200%);
@@ -64,7 +64,7 @@
 
 .btn--primary {
   background: var(--color-ink);
-  color: var(--color-text-on-dark);
+  color: var(--color-on-ink);
 }
 
 .btn--primary:hover:not(:disabled) {
@@ -189,7 +189,7 @@
 .field input:focus-visible,
 .field textarea:focus-visible,
 .field select:focus-visible {
-  border-color: var(--color-accent);
+  border-color: var(--color-focus);
   outline-offset: 0;
 }
 
