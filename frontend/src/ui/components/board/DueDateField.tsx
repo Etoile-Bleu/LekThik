@@ -1,5 +1,3 @@
-import { useId } from 'react';
-
 import { useBoardMeta } from '@hooks/useBoardMeta';
 import { addDays, describeDue } from '@lib/dueDate';
 
@@ -12,9 +10,20 @@ interface DueDateFieldProps {
   onChange: (day: string | null) => void;
 }
 
+/** The value part of the "Due date" row. */
 export function DueDateField({ value, editable, onChange }: DueDateFieldProps) {
   const { today } = useBoardMeta();
-  const inputId = useId();
+
+  if (!editable) {
+    return value ? (
+      <span className="due-field__readonly">
+        <DueBadge day={value} />
+        <span>{describeDue(value, today)}</span>
+      </span>
+    ) : (
+      <span className="due-field__none">No due date</span>
+    );
+  }
 
   const quickPicks = [
     { label: 'Today', day: today },
@@ -22,36 +31,23 @@ export function DueDateField({ value, editable, onChange }: DueDateFieldProps) {
     { label: 'Next week', day: addDays(today, 7) },
   ];
 
-  if (!editable) {
-    return (
-      <div className="due-field">
-        <span className="field-label">Due date</span>
-        {value ? (
-          <p className="due-field__readonly">
-            <DueBadge day={value} />
-            <span>{describeDue(value, today)}</span>
-          </p>
-        ) : (
-          <p className="field-hint">No due date.</p>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="due-field">
-      <div className="field">
-        <label htmlFor={inputId}>Due date</label>
-        <input
-          id={inputId}
-          type="date"
-          value={value ?? ''}
-          min="2000-01-01"
-          max="2100-12-31"
-          onChange={(event) => onChange(event.target.value || null)}
-        />
-      </div>
-      <div className="due-field__quick" role="group" aria-label="Quick due dates">
+    <>
+      <input
+        className="due-field__input"
+        type="date"
+        aria-label="Due date"
+        value={value ?? ''}
+        min="2000-01-01"
+        max="2100-12-31"
+        onChange={(event) => onChange(event.target.value || null)}
+      />
+      {value && (
+        <span className="sr-only" role="status">
+          {describeDue(value, today)}
+        </span>
+      )}
+      <span className="due-field__quick" role="group" aria-label="Quick due dates">
         {quickPicks.map((pick) => (
           <button
             key={pick.label}
@@ -72,12 +68,7 @@ export function DueDateField({ value, editable, onChange }: DueDateFieldProps) {
             Clear
           </button>
         )}
-      </div>
-      {value && (
-        <p className="due-field__summary" role="status" aria-live="polite">
-          {describeDue(value, today)}
-        </p>
-      )}
-    </div>
+      </span>
+    </>
   );
 }
