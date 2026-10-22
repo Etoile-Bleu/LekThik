@@ -7,6 +7,7 @@ import { DEFAULT_PREFERENCES } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 
 import { CardDialogSection } from '../components/settings/CardDialogSection';
+import { PrivacySection } from '../components/settings/PrivacySection';
 import {
   AppearanceSection,
   ColourSection,
@@ -20,6 +21,7 @@ import {
   ColumnsIcon,
   EyeIcon,
   KeyboardIcon,
+  ShieldIcon,
   PaletteIcon,
   SlidersIcon,
   TextLinesIcon,
@@ -61,6 +63,13 @@ const SECTIONS = [
     blurb: 'Bigger targets, focus, motion and announcements.',
     icon: <SlidersIcon size={18} />,
     content: <ControlsSection />,
+  },
+  {
+    id: 'privacy',
+    label: 'Privacy',
+    blurb: 'What is kept, and outside content.',
+    icon: <ShieldIcon size={18} />,
+    content: <PrivacySection />,
   },
   {
     id: 'help',
@@ -108,7 +117,7 @@ export function SettingsPage() {
     update(defaults);
   }
 
-  const showsPreview = section.id !== 'help' && section.id !== 'card';
+  const showsPreview = !['help', 'card', 'privacy'].includes(section.id);
 
   return (
     <div className="settings">
