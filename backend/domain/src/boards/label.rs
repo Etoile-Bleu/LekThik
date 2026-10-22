@@ -26,7 +26,7 @@ pub struct LabelUpdate {
 pub trait LabelRepo: Send + Sync {
     async fn create(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         board_id: Uuid,
         name: Title,
         color: LabelColor,
@@ -34,9 +34,9 @@ pub trait LabelRepo: Send + Sync {
     ) -> Result<Label, BoardsError>;
     async fn update(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         update: LabelUpdate,
     ) -> Result<Label, BoardsError>;
-    async fn delete(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
+    async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
 }
