@@ -127,6 +127,19 @@
   animation: board-shimmer 1.4s linear infinite;
 }
 
+/* On a phone the actions drop under the title, which otherwise gets squeezed to a letter wide. */
+@media (max-width: 719px) {
+  .board-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .board-header__actions {
+    flex-wrap: wrap;
+  }
+}
+
 @media (min-width: 900px) {
   .board-header {
     padding-inline: 1.75rem;
