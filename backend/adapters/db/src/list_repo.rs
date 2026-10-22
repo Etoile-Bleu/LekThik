@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use domain::boards::{BoardsError, List, ListRepo, MAX_LISTS_PER_BOARD, Title};
+use domain::boards::{BoardsError, List, ListRepo, MAX_LISTS_PER_BOARD, Title, WipLimit};
 use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
@@ -22,6 +22,10 @@ fn row_to_list(row: &PgRow) -> Result<List, BoardsError> {
         id: row.try_get("id").map_err(repository_error)?,
         board_id: row.try_get("board_id").map_err(repository_error)?,
         name: row.try_get("name").map_err(repository_error)?,
+        wip_limit: row
+            .try_get::<Option<i16>, _>("wip_limit")
+            .map_err(repository_error)?
+            .and_then(|limit| u8::try_from(limit).ok()),
     })
 }
 
@@ -63,7 +67,7 @@ impl ListRepo for PgListRepo {
         let row = sqlx::query(
             "INSERT INTO lists (board_id, name, position) \
                 VALUES ($1, $2, (SELECT COALESCE(MAX(position), -1) + 1 FROM lists WHERE board_id = $1)) \
-                RETURNING id, board_id, name",
+                RETURNING id, board_id, name, wip_limit",
         )
         .bind(board_id)
         .bind(name.as_str())
@@ -81,11 +85,36 @@ impl ListRepo for PgListRepo {
             "UPDATE lists l SET name = $3 FROM boards b, workspaces w \
                 WHERE l.id = $2 AND b.id = l.board_id AND w.id = b.workspace_id AND ",
             writer_of!("$1"),
-            " RETURNING l.id, l.board_id, l.name"
+            " RETURNING l.id, l.board_id, l.name, l.wip_limit"
         ))
         .bind(user_id)
         .bind(id)
         .bind(name.as_str())
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(repository_error)?
+        else {
+            return Err(denial(&self.pool, Kind::List, user_id, id).await);
+        };
+
+        row_to_list(&row)
+    }
+
+    async fn set_wip_limit(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        limit: Option<WipLimit>,
+    ) -> Result<List, BoardsError> {
+        let Some(row) = sqlx::query(concat!(
+            "UPDATE lists l SET wip_limit = $3 FROM boards b, workspaces w \
+                WHERE l.id = $2 AND b.id = l.board_id AND w.id = b.workspace_id AND ",
+            writer_of!("$1"),
+            " RETURNING l.id, l.board_id, l.name, l.wip_limit"
+        ))
+        .bind(user_id)
+        .bind(id)
+        .bind(limit.map(|limit| i16::from(limit.get())))
         .fetch_optional(&self.pool)
         .await
         .map_err(repository_error)?

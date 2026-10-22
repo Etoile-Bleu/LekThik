@@ -88,6 +88,27 @@ remaining accessibility rules are in `styles/access.css`.
 - Controls: larger targets, a thick two tone focus ring, plain board backgrounds, reduce motion, and
   spoken announcements when teammates change the board. Notifications wait while you read them.
 
+Views and layout. A board is shown as columns, a sortable table or a calendar, chosen with a switcher
+beside the filters and remembered per board and per person. The three share the filters and stay in
+sync with the live stream.
+
+- Table (`BoardTable`): a real `<table>`, a button inside each sortable heading, `aria-sort` on the
+  sorted column only, a glyph that changes shape (not just colour), the sort announced, and rows that
+  glide to their place with the View Transitions API where it exists. Cards without a date or an
+  assignee always sort last. The list cell is a select, which moves a card without dragging.
+- Calendar (`BoardCalendar`): a month grid that is one tab stop, with arrows, Home and End, Page Up and
+  Page Down (`lib/calendar.ts`), the first day of the week taken from the locale. Picking a day lists
+  its cards beside the grid, and cards without a date wait in a tray where a button gives them the
+  chosen day, so planning never needs a drag. Dates are strings, never parsed as `Date`.
+- Columns: a list folds into a slim rail that keeps its name and count, three widths, and an optional
+  work in progress limit that warns with an icon and words when exceeded and never blocks
+  (`lib/wipLimit.ts`). Folding and width are personal; the limit is shared.
+- My cards (`/my-cards`): everything assigned to you across workspaces, grouped overdue, today, next
+  seven days, later, no date (`lib/myCards.ts`). Each row is a link that opens the card on its board.
+- Card dialog layout: Settings, Card dialog. Properties are reordered with move buttons and hidden
+  with switches, a preview follows, and each change is announced. Hidden properties stay one click
+  away in the dialog.
+
 Path aliases (`@`, `@components`, `@pages`, `@lib`, `@hooks`, `@types`) are configured in
 `vite.config.ts` and `tsconfig.json`.
 

@@ -3,9 +3,12 @@ import { create } from 'zustand';
 import { applyAppearance, cacheAppearance, pickAppearance } from './appearance';
 import {
   type BoardPreferences,
+  type CardDialogLayout,
   type CardDisplay,
   DEFAULT_PREFERENCES,
   type Preferences,
+  boardPrefsFor,
+  isDefaultBoardPrefs,
 } from './prefs';
 import { fetchPreferences, savePreferences } from './prefsApi';
 
@@ -24,6 +27,11 @@ interface PrefsState {
   setCardDisplay: (display: CardDisplay) => void;
   /** `null` drops a board's own setting so it follows the general one again. */
   setBoardCardDisplay: (boardId: string, display: CardDisplay | null) => void;
+  /** Changes what this person chose for one board: its view, column width or folded lists. */
+  updateBoard: (boardId: string, changes: Partial<BoardPreferences>) => void;
+  /** Folds a list into a rail, or opens it again. */
+  toggleListCollapsed: (boardId: string, listId: string) => void;
+  setCardDialog: (layout: CardDialogLayout) => void;
   reset: () => void;
 }
 
@@ -66,15 +74,30 @@ export const usePrefsStore = create<PrefsState>((set, get) => {
 
     setCardDisplay: (display) => commit({ ...get().prefs, card_display: display }),
 
-    setBoardCardDisplay: (boardId, display) => {
+    setBoardCardDisplay: (boardId, display) =>
+      get().updateBoard(boardId, { card_display: display }),
+
+    updateBoard: (boardId, changes) => {
       const boards: Record<string, BoardPreferences> = { ...get().prefs.boards };
-      if (display === null) {
+      const next = { ...boardPrefsFor(get().prefs, boardId), ...changes };
+      if (isDefaultBoardPrefs(next)) {
         delete boards[boardId];
       } else {
-        boards[boardId] = { ...boards[boardId], card_display: display };
+        boards[boardId] = next;
       }
       commit({ ...get().prefs, boards });
     },
+
+    toggleListCollapsed: (boardId, listId) => {
+      const current = boardPrefsFor(get().prefs, boardId).collapsed_lists;
+      get().updateBoard(boardId, {
+        collapsed_lists: current.includes(listId)
+          ? current.filter((id) => id !== listId)
+          : [...current, listId],
+      });
+    },
+
+    setCardDialog: (layout) => commit({ ...get().prefs, card_dialog: layout }),
 
     reset: () => {
       window.clearTimeout(saveTimer);

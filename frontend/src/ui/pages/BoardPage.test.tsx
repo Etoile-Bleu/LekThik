@@ -15,6 +15,7 @@ vi.mock('@lib/boardsApi', async (importOriginal) => {
     renameList: vi.fn(),
     moveList: vi.fn(),
     deleteList: vi.fn(),
+    setListWipLimit: vi.fn(),
     createCard: vi.fn(),
     fetchCard: vi.fn(),
     updateCard: vi.fn(),
@@ -29,14 +30,16 @@ import { ApiError } from '@lib/api';
 import { useAuthStore } from '@lib/authStore';
 import * as api from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
+import { DEFAULT_PREFERENCES } from '@lib/prefs';
+import { usePrefsStore } from '@lib/prefsStore';
 import { useToastStore } from '@lib/toastStore';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
 import { BoardPage } from './BoardPage';
 
-function renderBoard() {
+function renderBoard(path = '/b/b1') {
   return render(
-    <MemoryRouter initialEntries={['/b/b1']}>
+    <MemoryRouter initialEntries={[path]}>
       <Routes>
         <Route path="/b/:boardId" element={<BoardPage />} />
         <Route path="/dashboard" element={<p>workspaces overview</p>} />
@@ -50,6 +53,7 @@ describe('BoardPage', () => {
     vi.clearAllMocks();
     useBoardStore.getState().reset();
     useToastStore.setState({ toasts: [] });
+    usePrefsStore.setState({ prefs: DEFAULT_PREFERENCES, loaded: true, saveState: 'idle' });
     useWorkspaceStore.setState({ workspaces: sampleWorkspaces(), status: 'ready' });
     vi.mocked(api.fetchBoard).mockResolvedValue(sampleBoardView());
   });
@@ -241,5 +245,100 @@ describe('BoardPage', () => {
     await waitFor(() =>
       expect(within(dialog).getByLabelText('Description')).toHaveValue('Cover the happy path')
     );
+  });
+
+  describe('views and layout', () => {
+    it('opens as columns, with the switcher beside the filters', async () => {
+      renderBoard();
+
+      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+      expect(screen.getByRole('radio', { name: 'Board' })).toBeChecked();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    });
+
+    it('shows the same cards as a table and remembers the choice for this board', async () => {
+      renderBoard();
+      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+
+      fireEvent.click(screen.getByRole('radio', { name: 'List' }));
+
+      expect(await screen.findByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Write the spec' })).toBeInTheDocument();
+      expect(usePrefsStore.getState().prefs.boards.b1.view).toBe('list');
+    });
+
+    it('shows the cards on a calendar', async () => {
+      renderBoard();
+      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+
+      fireEvent.click(screen.getByRole('radio', { name: 'Calendar' }));
+
+      expect(await screen.findByRole('grid')).toBeInTheDocument();
+      expect(screen.getByRole('region', { name: /No due date/ })).toHaveTextContent(
+        'Write the spec'
+      );
+    });
+
+    it('opens in the view that was saved for the board', async () => {
+      usePrefsStore.setState({
+        prefs: {
+          ...DEFAULT_PREFERENCES,
+          boards: {
+            b1: { card_display: null, view: 'list', column_width: 'default', collapsed_lists: [] },
+          },
+        },
+      });
+
+      renderBoard();
+
+      expect(await screen.findByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: 'List' })).toBeChecked();
+    });
+
+    it('folds a list into a rail and keeps it folded', async () => {
+      renderBoard();
+      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Collapse list To do' }));
+
+      expect(screen.getByRole('button', { name: /Expand list To do/ })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Write the spec/ })).not.toBeInTheDocument();
+      expect(usePrefsStore.getState().prefs.boards.b1.collapsed_lists).toEqual(['todo']);
+    });
+
+    it('sets a card limit from the list menu', async () => {
+      vi.mocked(api.setListWipLimit).mockResolvedValue({ id: 'todo', name: 'To do' });
+      renderBoard();
+      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Actions for list To do' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /Set a card limit/ }));
+      const dialog = await screen.findByRole('dialog', { name: 'Card limit for To do' });
+      fireEvent.change(within(dialog).getByLabelText('Most cards at once'), {
+        target: { value: '1' },
+      });
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+
+      await waitFor(() => expect(api.setListWipLimit).toHaveBeenCalledWith('todo', 1));
+      expect(screen.getByText('1 over the limit of 1')).toBeInTheDocument();
+    });
+
+    it('opens the card a link points to', async () => {
+      vi.mocked(api.fetchCard).mockResolvedValue({
+        id: 'c1',
+        list_id: 'todo',
+        title: 'Write the spec',
+        description: '',
+        label_ids: [],
+        assignee_ids: [],
+        due_date: null,
+      });
+
+      renderBoard('/b/b1?card=c1');
+
+      expect(
+        await screen.findByRole('dialog', { name: 'Card Write the spec' })
+      ).toBeInTheDocument();
+    });
   });
 });

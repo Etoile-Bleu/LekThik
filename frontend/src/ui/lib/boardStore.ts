@@ -29,6 +29,7 @@ interface BoardState {
   createList: (name: string) => Promise<void>;
   renameList: (listId: string, name: string) => Promise<void>;
   moveList: (listId: string, index: number) => Promise<void>;
+  setListWipLimit: (listId: string, limit: number | null) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
   createCard: (listId: string, title: string) => Promise<CardSummary | null>;
   renameCard: (cardId: string, title: string) => Promise<void>;
@@ -149,7 +150,7 @@ export const useBoardStore = create<BoardState>((set, get) => {
         markFresh(list.id);
         update((current) => ({
           ...current,
-          lists: [...current.lists, { id: list.id, name: list.name, cards: [] }],
+          lists: [...current.lists, { id: list.id, name: list.name, wip_limit: null, cards: [] }],
         }));
       } catch (error) {
         notifyError(error);
@@ -163,6 +164,20 @@ export const useBoardStore = create<BoardState>((set, get) => {
       }));
       try {
         await api.renameList(listId, name);
+      } catch (error) {
+        await recoverFrom(error);
+      }
+    },
+
+    setListWipLimit: async (listId, limit) => {
+      update((current) => ({
+        ...current,
+        lists: current.lists.map((list) =>
+          list.id === listId ? { ...list, wip_limit: limit } : list
+        ),
+      }));
+      try {
+        await api.setListWipLimit(listId, limit);
       } catch (error) {
         await recoverFrom(error);
       }

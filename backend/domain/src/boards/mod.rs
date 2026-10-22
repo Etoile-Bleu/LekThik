@@ -16,7 +16,7 @@ mod text;
 mod workspace;
 
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
-pub use card::{Card, CardRepo, CardSummary, CardUpdate};
+pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};
 pub use due_date::DueDate;
 pub use error::BoardsError;
 pub use invitation::{Invitation, InvitationRepo, InvitationStatus, NewInvitation};
@@ -25,9 +25,9 @@ pub use label_style::{LabelColor, Priority};
 pub use limits::{
     INVITATION_TTL_SECONDS, MAX_ASSIGNEES_PER_CARD, MAX_BOARDS_PER_WORKSPACE, MAX_CARDS_PER_LIST,
     MAX_LABELS_PER_BOARD, MAX_LISTS_PER_BOARD, MAX_MEMBERS_PER_WORKSPACE,
-    MAX_PENDING_INVITATIONS_PER_WORKSPACE, MAX_WORKSPACES_PER_USER,
+    MAX_PENDING_INVITATIONS_PER_WORKSPACE, MAX_WIP_LIMIT, MAX_WORKSPACES_PER_USER,
 };
-pub use list::{List, ListRepo, ListWithCards};
+pub use list::{List, ListRepo, ListWithCards, WipLimit};
 pub use locator::{Located, Locator, Target};
 pub use look::{BoardAccent, BoardBackground, BoardLook};
 pub use members::{Member, MemberRepo};

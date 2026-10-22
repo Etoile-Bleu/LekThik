@@ -8,7 +8,14 @@ import { useWorkspaceStore } from '@lib/workspaceStore';
 import { MembersDialog } from '../collab/MembersDialog';
 import { TemplatePicker } from '../templates/TemplatePicker';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { ChevronDownIcon, PencilIcon, PlusIcon, TrashIcon, UsersIcon } from '../ui/Icons';
+import {
+  CheckCircleIcon,
+  ChevronDownIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+  UsersIcon,
+} from '../ui/Icons';
 import { Menu } from '../ui/Menu';
 import { NameDialog } from '../ui/NameDialog';
 import './Sidebar.css';
@@ -47,6 +54,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       <div className="sidebar__header">
         <NavLink to="/dashboard" end className="sidebar__overview" onClick={onNavigate}>
           All workspaces
+        </NavLink>
+        <NavLink to="/my-cards" className="sidebar__overview" onClick={onNavigate}>
+          <CheckCircleIcon size={16} />
+          My cards
         </NavLink>
       </div>
 

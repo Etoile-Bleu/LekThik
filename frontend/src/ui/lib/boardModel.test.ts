@@ -28,8 +28,13 @@ function card(id: string, listId: string, labelIds: string[] = []): CardSummary 
 
 function board(): BoardList[] {
   return [
-    { id: 'todo', name: 'To do', cards: [card('a', 'todo'), card('b', 'todo'), card('c', 'todo')] },
-    { id: 'done', name: 'Done', cards: [card('d', 'done')] },
+    {
+      id: 'todo',
+      name: 'To do',
+      wip_limit: null,
+      cards: [card('a', 'todo'), card('b', 'todo'), card('c', 'todo')],
+    },
+    { id: 'done', name: 'Done', wip_limit: null, cards: [card('d', 'done')] },
   ];
 }
 

@@ -160,8 +160,47 @@
 
 .card-dialog__footer {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--color-border);
+}
+
+.card-dialog__customize {
+  margin-right: -0.5rem;
+  color: var(--color-text-soft-on-light);
+}
+
+.card-dialog__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  min-height: 36px;
+  margin-top: 0.35rem;
+  padding: 0 0.5rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-soft-on-light);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.card-dialog__more:hover {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+.card-dialog__more svg {
+  transition: transform var(--duration-base) var(--ease-out);
+}
+
+.card-dialog__more[aria-expanded='true'] svg {
+  transform: rotate(180deg);
 }
 
 .card-dialog__delete {

@@ -18,6 +18,20 @@ pub struct CardSummary {
     pub due_date: Option<String>,
 }
 
+/// A card assigned to someone, with where it lives, for the "my cards" page.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct AssignedCard {
+    pub id: Uuid,
+    pub title: String,
+    pub due_date: Option<String>,
+    pub list_id: Uuid,
+    pub list_name: String,
+    pub board_id: Uuid,
+    pub board_name: String,
+    pub workspace_id: Uuid,
+    pub workspace_name: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Card {
     pub id: Uuid,
@@ -47,6 +61,8 @@ pub trait CardRepo: Send + Sync {
         title: Title,
     ) -> Result<CardSummary, BoardsError>;
     async fn get(&self, user_id: Uuid, id: Uuid) -> Result<Card, BoardsError>;
+    /// Every card assigned to the user in a workspace they still belong to, soonest due first.
+    async fn assigned_to(&self, user_id: Uuid) -> Result<Vec<AssignedCard>, BoardsError>;
     async fn update(
         &self,
         user_id: Uuid,
