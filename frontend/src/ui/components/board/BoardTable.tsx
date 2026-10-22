@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { useBoardMeta } from '@hooks/useBoardMeta';
 import { announce } from '@lib/announcer';
+import { isCardList } from '@lib/blocks';
 import {
   type Sort,
   type SortKey,
@@ -178,7 +179,7 @@ export function BoardTable({
                       value={row.listId}
                       onChange={(event) => moveTo(row.card.id, row.card.title, event.target.value)}
                     >
-                      {lists.map((list) => (
+                      {lists.filter(isCardList).map((list) => (
                         <option key={list.id} value={list.id}>
                           {list.name}
                         </option>
