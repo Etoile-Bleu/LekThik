@@ -120,6 +120,27 @@ days left, total) with an icon and words besides colour, and counts up unless mo
 are regions named by their title, unique by default ("Note", "Note 2"), and a card can be dropped on a
 list but never on a block.
 
+Writing. Notes, and card descriptions, are Markdown (CommonMark and GitHub tables, checklists and
+strikethrough, single line breaks kept) through `react-markdown` without raw HTML, so text is never read
+as markup. Links keep only web and mail addresses, pictures from other sites are never loaded (they show
+as a link, since loading them would hand the reader's address to a stranger), tables and code scroll in
+regions a keyboard can reach, and the boxes of a checklist can be ticked from the note or the card, which
+saves it. LaTeX formulas (`$x^2$`, or a block between `$$`) are drawn by KaTeX as HTML for the eye and
+MathML for screen readers, with `trust` off and size limits. Code is highlighted with a palette checked
+for contrast in every theme and has a copy button. Mermaid diagrams are drawn in strict mode, with the
+result cleaned by DOMPurify, the diagram source kept as text underneath as its alternative, and the
+`accTitle` and `accDescr` of the source read out. The Markdown, KaTeX, highlighting and Mermaid code each
+load only when a text needs them (`components/richtext/`), so the board stays light. The editor has a
+formatting toolbar that is one tab stop, a preview tab, shortcuts and a help list.
+
+Pictures, videos and links. An image block shows a picture fetched with the session and kept as a local
+address, with the description required when it is added as its alternative text. An embed block shows a
+placeholder and requests nothing from the provider until someone presses its button, and says who would
+receive what; a choice to remember it is kept in this browser only (`lib/embedConsent.ts`) and withdrawn in
+Settings, Privacy. The frame address is built from a checked provider and identifier
+(`lib/embeds.ts`), never from a typed address, and the frame is sandboxed and titled. A link block shows
+the real site and fetches nothing. `docs/privacy.md` has the full account.
+
 Path aliases (`@`, `@components`, `@pages`, `@lib`, `@hooks`, `@types`) are configured in
 `vite.config.ts` and `tsconfig.json`.
 
