@@ -1,0 +1,40 @@
+.assignees {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding-left: 6px;
+}
+
+.assignees__item {
+  position: relative;
+  display: inline-flex;
+  margin-left: -6px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--assignee-ring, var(--color-paper-card));
+}
+
+.assignees__item[data-new] {
+  animation: assignee-pop 360ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.assignees__more {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  margin-left: -6px;
+  padding: 0 0.3rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  box-shadow: 0 0 0 2px var(--assignee-ring, var(--color-paper-card));
+  color: var(--color-text-soft-on-light);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+@keyframes assignee-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+}
