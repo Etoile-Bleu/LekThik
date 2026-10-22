@@ -11,6 +11,8 @@ import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Dialog } from '../ui/Dialog';
 import { TagIcon, TrashIcon } from '../ui/Icons';
 import { InlineEdit } from '../ui/InlineEdit';
+import { AssigneePicker } from './AssigneePicker';
+import { DueDateField } from './DueDateField';
 import { LabelChip } from './LabelChip';
 import './CardDialog.css';
 
@@ -28,6 +30,8 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
   const moveCard = useBoardStore((state) => state.moveCard);
   const deleteCard = useBoardStore((state) => state.deleteCard);
   const setCardLabels = useBoardStore((state) => state.setCardLabels);
+  const setCardAssignees = useBoardStore((state) => state.setCardAssignees);
+  const setCardDueDate = useBoardStore((state) => state.setCardDueDate);
   const markHasDescription = useBoardStore((state) => state.markHasDescription);
 
   const [detail, setDetail] = useState<CardDetail | null>(null);
@@ -179,6 +183,19 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
             </div>
 
             <aside className="card-dialog__side" aria-label="Card settings">
+              <DueDateField
+                value={summary.due_date}
+                editable={editable}
+                onChange={(day) => void setCardDueDate(summary.id, day)}
+              />
+
+              <AssigneePicker
+                members={view.members}
+                assigneeIds={summary.assignee_ids}
+                editable={editable}
+                onChange={(userIds) => void setCardAssignees(summary.id, userIds)}
+              />
+
               <fieldset className="card-dialog__labels">
                 <legend className="field-label">Labels</legend>
                 {view.labels.length === 0 && (
