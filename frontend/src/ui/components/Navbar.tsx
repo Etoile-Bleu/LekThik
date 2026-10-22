@@ -37,7 +37,7 @@ export function Navbar() {
     <header className="navbar">
       <div className="navbar__bar container">
         <a href="#top" className="navbar__brand" onClick={() => setIsMenuOpen(false)}>
-          <span className="navbar__mark" aria-hidden="true" />
+          <img className="navbar__mark" src="/logo-icon.svg" alt="" width="28" height="28" />
           LekThik
         </a>
 
