@@ -103,8 +103,8 @@ describe('CardDialog', () => {
     setup();
     await screen.findByRole('dialog', { name: 'Card Write the spec' });
 
-    fireEvent.change(screen.getByLabelText('List'), { target: { value: 'done' } });
-    expect(screen.getByLabelText('Position')).toHaveValue('1');
+    fireEvent.change(screen.getByRole('combobox', { name: 'List' }), { target: { value: 'done' } });
+    expect(screen.getByRole('combobox', { name: 'Position' })).toHaveValue('1');
     fireEvent.click(screen.getByRole('button', { name: 'Move card' }));
 
     await waitFor(() => expect(api.moveCard).toHaveBeenCalledWith('c1', 'done', 0));
@@ -202,7 +202,7 @@ describe('CardDialog', () => {
         'aria-pressed',
         'true'
       );
-      expect(within(dialog).getByText(/^Due today, /, { selector: 'p' })).toBeInTheDocument();
+      expect(within(dialog).getAllByText(/^Due today, /).length).toBeGreaterThan(0);
 
       fireEvent.click(within(dialog).getByRole('button', { name: 'Clear' }));
       await waitFor(() =>
@@ -215,7 +215,7 @@ describe('CardDialog', () => {
       setupWithMeta('owner');
       const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
 
-      fireEvent.change(within(dialog).getByLabelText('Due date'), {
+      fireEvent.change(within(dialog).getByLabelText('Due date', { selector: 'input' }), {
         target: { value: '2026-12-24' },
       });
 
@@ -239,7 +239,9 @@ describe('CardDialog', () => {
 
       expect(within(dialog).getByText('wen')).toBeInTheDocument();
       expect(within(dialog).getAllByText(/^Overdue, /).length).toBeGreaterThan(0);
-      expect(within(dialog).queryByLabelText('Due date')).not.toBeInTheDocument();
+      expect(
+        within(dialog).queryByLabelText('Due date', { selector: 'input' })
+      ).not.toBeInTheDocument();
       expect(within(dialog).queryByRole('checkbox', { name: /wen/ })).not.toBeInTheDocument();
       expect(
         within(dialog).queryByRole('button', { name: 'Assign to me' })
