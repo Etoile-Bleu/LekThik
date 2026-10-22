@@ -57,7 +57,12 @@
 .workspaces__skeleton div {
   height: 92px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(90deg, #e3e5dc 25%, #eef0e8 50%, #e3e5dc 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-border) 50%,
+    var(--color-surface) 75%
+  );
   background-size: 200% 100%;
   animation: workspace-shimmer 1.4s linear infinite;
 }
