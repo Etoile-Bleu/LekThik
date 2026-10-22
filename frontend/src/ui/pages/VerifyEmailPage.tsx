@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { CodeField } from '@components/CodeField';
 import { ApiError, resendVerification, verifyEmail } from '@lib/api';
+import { safeNext, withNext } from '@lib/nextPath';
 
 import '@components/AuthForm.css';
 
@@ -25,7 +26,9 @@ export function VerifyEmailPage() {
 
     try {
       await verifyEmail(email, code);
-      navigate('/login', { state: { notice: 'Email verified. You can sign in now.' } });
+      navigate(withNext('/login', safeNext(searchParams.get('next'))), {
+        state: { notice: 'Email verified. You can sign in now.' },
+      });
     } catch (submitError) {
       setError(
         submitError instanceof ApiError ? submitError.message : 'Something went wrong, try again.'
