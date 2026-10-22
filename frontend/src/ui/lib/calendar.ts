@@ -110,11 +110,14 @@ export function firstDayOfWeek(locale?: string): number {
   return 1;
 }
 
-export function weekdayNames(firstDay: number): Array<{ short: string; long: string }> {
+export function weekdayNames(
+  firstDay: number
+): Array<{ narrow: string; short: string; long: string }> {
   // 2023-01-01 was a Sunday.
   return Array.from({ length: 7 }, (_, index) => {
     const date = new Date(2023, 0, 1 + ((firstDay + index) % 7));
     return {
+      narrow: date.toLocaleDateString(undefined, { weekday: 'narrow' }),
       short: date.toLocaleDateString(undefined, { weekday: 'short' }),
       long: date.toLocaleDateString(undefined, { weekday: 'long' }),
     };
