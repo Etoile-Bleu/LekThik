@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 
 use adapters_db::{
     PgBoardRepo, PgCardRepo, PgInvitationRepo, PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo,
-    PgUserRepo, PgVerificationCodeRepo, PgWorkspaceRepo,
+    PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo, PgWorkspaceRepo,
 };
 use async_trait::async_trait;
 use axum::body::Body;
@@ -125,6 +125,12 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
     .execute(&pool)
     .await?;
 
+    sqlx::raw_sql(include_str!(
+        "../../../../migrations/008_add_preferences_and_board_look.sql"
+    ))
+    .execute(&pool)
+    .await?;
+
     let mailer = Arc::new(RecordingMailer::default());
 
     let state = AppState {
@@ -140,6 +146,7 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
         member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
+        preferences_repo: Arc::new(PgPreferencesRepo::new(pool.clone())),
         invitation_repo: Arc::new(PgInvitationRepo::new(pool.clone())),
         locator: Arc::new(PgLocator::new(pool.clone())),
         events: EventHub::new(),
