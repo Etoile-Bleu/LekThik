@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use adapters_db::{
     PgBoardRepo, PgCardRepo, PgInvitationRepo, PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo,
-    PgUserRepo, PgVerificationCodeRepo, PgWorkspaceRepo,
+    PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo, PgWorkspaceRepo,
 };
 use adapters_mail::{MailSender, SmtpMailer};
 use secrecy::SecretString;
@@ -49,6 +49,7 @@ async fn main() -> anyhow::Result<()> {
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
         member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
+        preferences_repo: Arc::new(PgPreferencesRepo::new(pool.clone())),
         invitation_repo: Arc::new(PgInvitationRepo::new(pool.clone())),
         locator: Arc::new(PgLocator::new(pool)),
         events: EventHub::new(),
