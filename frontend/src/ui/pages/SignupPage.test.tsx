@@ -16,7 +16,7 @@ function fillForm(
 ) {
   const values = {
     email: 'matheo@example.com',
-    username: '',
+    username: 'weier',
     password: 'a-strong-password',
     confirm: 'a-strong-password',
     ...overrides,
@@ -49,7 +49,31 @@ describe('SignupPage', () => {
     expect(registerUser).not.toHaveBeenCalled();
   });
 
-  it('sends the chosen username when one is typed', async () => {
+  it('rejects a username that is too short, without calling the API', () => {
+    render(
+      <MemoryRouter>
+        <SignupPage />
+      </MemoryRouter>
+    );
+
+    fillForm({ username: 'ab' });
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+
+    expect(screen.getByText('Username must be 3 to 32 characters.')).toBeInTheDocument();
+    expect(registerUser).not.toHaveBeenCalled();
+  });
+
+  it('requires a username on the form', () => {
+    render(
+      <MemoryRouter>
+        <SignupPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByLabelText(/^Username/)).toBeRequired();
+  });
+
+  it('sends the chosen username without surrounding spaces', async () => {
     vi.mocked(registerUser).mockResolvedValueOnce(undefined);
 
     render(
@@ -58,7 +82,7 @@ describe('SignupPage', () => {
       </MemoryRouter>
     );
 
-    fillForm({ username: 'Weier' });
+    fillForm({ username: '  Weier  ' });
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
     await waitFor(() =>
@@ -81,7 +105,7 @@ describe('SignupPage', () => {
     fillForm();
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
-    expect(registerUser).toHaveBeenCalledWith('matheo@example.com', 'a-strong-password', '');
+    expect(registerUser).toHaveBeenCalledWith('matheo@example.com', expect.any(String), 'weier');
     expect(await screen.findByText('verify email page')).toBeInTheDocument();
   });
 });
