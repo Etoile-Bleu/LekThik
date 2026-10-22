@@ -15,7 +15,7 @@ use crate::state::AppState;
     path = "/cards/{id}",
     tag = "cards",
     summary = "Update a card",
-    description = "Changes the title and or the description. Fields left out are kept as they are.",
+    description = "Changes the title, the description and or the due date. Fields left out are kept as they are, a null due date clears it.",
     params(("id" = Uuid, Path, description = "Card id")),
     request_body = UpdateCardRequestDto,
     responses(
@@ -39,6 +39,7 @@ pub async fn update_card(
             id,
             payload.title.as_deref(),
             payload.description.as_deref(),
+            payload.due_date.as_ref().map(Option::as_deref),
         )
         .await
     {
