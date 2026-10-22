@@ -30,6 +30,8 @@ const lists: BoardList[] = [
     id: 'l1',
     name: 'To do',
     wip_limit: null,
+    kind: 'list',
+    config: {},
     cards: [
       card('a', 'Banana', { due_date: '2026-11-02', label_ids: ['low'], assignee_ids: ['u1'] }),
       card('b', 'apple', { due_date: null, label_ids: ['urgent'] }),
@@ -40,6 +42,8 @@ const lists: BoardList[] = [
     id: 'l2',
     name: 'Done',
     wip_limit: null,
+    kind: 'list',
+    config: {},
     cards: [card('d', 'Cherry 2', { due_date: '2026-10-30' })],
   },
 ];
@@ -63,6 +67,8 @@ describe('board rows', () => {
           id: 'l',
           name: 'L',
           wip_limit: null,
+          kind: 'list',
+          config: {},
           cards: [card('x', 'X', { assignee_ids: ['gone'] })],
         },
       ],
