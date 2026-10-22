@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
+import type { Workspace } from '@lib/boardsApi';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
-import { ChevronDownIcon, PlusIcon } from '../ui/Icons';
 import { TemplatePicker } from '../templates/TemplatePicker';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { ChevronDownIcon, PencilIcon, PlusIcon, TrashIcon } from '../ui/Icons';
+import { Menu } from '../ui/Menu';
+import { NameDialog } from '../ui/NameDialog';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -16,11 +20,16 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const status = useWorkspaceStore((state) => state.status);
   const createWorkspace = useWorkspaceStore((state) => state.createWorkspace);
   const createBoard = useWorkspaceStore((state) => state.createBoard);
+  const renameWorkspace = useWorkspaceStore((state) => state.renameWorkspace);
+  const deleteWorkspace = useWorkspaceStore((state) => state.deleteWorkspace);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [collapsed, setCollapsed] = useState<string[]>([]);
   const [creatingWorkspace, setCreatingWorkspace] = useState(false);
   const [boardTarget, setBoardTarget] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState<Workspace | null>(null);
+  const [deleting, setDeleting] = useState<Workspace | null>(null);
 
   function toggle(workspaceId: string) {
     setCollapsed((current) =>
@@ -52,16 +61,40 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           const panelId = `sidebar-${workspace.id}`;
           return (
             <li key={workspace.id} className="sidebar__group" data-open={isOpen}>
-              <button
-                type="button"
-                className="sidebar__toggle"
-                aria-expanded={isOpen}
-                aria-controls={panelId}
-                onClick={() => toggle(workspace.id)}
-              >
-                <span className="sidebar__workspace-name">{workspace.name}</span>
-                <ChevronDownIcon className="sidebar__chevron" />
-              </button>
+              <div className="sidebar__row">
+                <button
+                  type="button"
+                  className="sidebar__toggle"
+                  aria-expanded={isOpen}
+                  aria-controls={panelId}
+                  onClick={() => toggle(workspace.id)}
+                >
+                  <span className="sidebar__workspace-name">{workspace.name}</span>
+                  <ChevronDownIcon className="sidebar__chevron" />
+                </button>
+                <Menu
+                  label={`Actions for workspace ${workspace.name}`}
+                  triggerClassName="sidebar__more"
+                  items={[
+                    {
+                      label: 'New board',
+                      icon: <PlusIcon />,
+                      onSelect: () => setBoardTarget(workspace.id),
+                    },
+                    {
+                      label: 'Rename workspace',
+                      icon: <PencilIcon />,
+                      onSelect: () => setRenaming(workspace),
+                    },
+                    {
+                      label: 'Delete workspace',
+                      icon: <TrashIcon />,
+                      tone: 'danger',
+                      onSelect: () => setDeleting(workspace),
+                    },
+                  ]}
+                />
+              </div>
               <div
                 id={panelId}
                 className="sidebar__panel"
@@ -133,6 +166,42 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             navigate(`/b/${board.id}`);
           }
           return board !== null;
+        }}
+      />
+      <NameDialog
+        open={renaming !== null}
+        title="Rename workspace"
+        fieldLabel="Workspace name"
+        submitLabel="Save name"
+        initialValue={renaming?.name ?? ''}
+        onClose={() => setRenaming(null)}
+        onSubmit={async (name) => {
+          if (renaming) {
+            await renameWorkspace(renaming.id, name);
+          }
+          return true;
+        }}
+      />
+      <ConfirmDialog
+        open={deleting !== null}
+        title="Delete this workspace?"
+        message={
+          deleting
+            ? `“${deleting.name}” and every board, list and card inside it will be removed for good.`
+            : ''
+        }
+        confirmLabel="Delete workspace"
+        onCancel={() => setDeleting(null)}
+        onConfirm={async () => {
+          const target = deleting;
+          setDeleting(null);
+          if (!target) return;
+          const boardIds = target.boards.map((board) => board.id);
+          const deleted = await deleteWorkspace(target.id);
+          if (deleted && boardIds.some((id) => location.pathname === `/b/${id}`)) {
+            onNavigate?.();
+            navigate('/dashboard');
+          }
         }}
       />
     </nav>
