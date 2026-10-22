@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { sampleBoardView } from '../../../test/fixtures';
+import { BoardMetaProvider } from '@hooks/useBoardMeta';
 
 vi.mock('@lib/boardsApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@lib/boardsApi')>();
@@ -12,6 +13,7 @@ vi.mock('@lib/boardsApi', async (importOriginal) => {
     moveCard: vi.fn(),
     deleteCard: vi.fn(),
     setCardLabels: vi.fn(),
+    setCardAssignees: vi.fn(),
   };
 });
 
@@ -27,6 +29,8 @@ const detail = {
   title: 'Write the spec',
   description: 'Cover the happy path',
   label_ids: ['urgent'],
+  assignee_ids: [],
+  due_date: null,
 };
 
 function setup(onClose = vi.fn(), onManageLabels = vi.fn()) {
@@ -144,5 +148,102 @@ describe('CardDialog', () => {
 
     await waitFor(() => expect(onClose).toHaveBeenCalled());
     expect(useToastStore.getState().toasts[0]?.message).toBe('not found');
+  });
+
+  describe('assignees and due date', () => {
+    function setupWithMeta(role: 'owner' | 'reader') {
+      const view = { ...sampleBoardView(), role };
+      useBoardStore.setState({ view, status: 'ready', freshIds: [] });
+      vi.mocked(api.fetchCard).mockResolvedValue(detail);
+      render(
+        <BoardMetaProvider members={view.members} meId="u-me" today="2026-10-22">
+          <CardDialog cardId="c1" onClose={vi.fn()} onManageLabels={vi.fn()} />
+        </BoardMetaProvider>
+      );
+    }
+
+    it('assigns and unassigns people optimistically', async () => {
+      vi.mocked(api.setCardAssignees).mockResolvedValue({ assignee_ids: ['u-wen'] });
+      setupWithMeta('owner');
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      fireEvent.click(within(dialog).getByRole('checkbox', { name: /wen/ }));
+
+      await waitFor(() => expect(api.setCardAssignees).toHaveBeenCalledWith('c1', ['u-wen']));
+      expect(within(dialog).getByRole('checkbox', { name: /wen/ })).toBeChecked();
+
+      fireEvent.click(within(dialog).getByRole('checkbox', { name: /wen/ }));
+      await waitFor(() => expect(api.setCardAssignees).toHaveBeenLastCalledWith('c1', []));
+    });
+
+    it('offers to assign the card to me in one click', async () => {
+      vi.mocked(api.setCardAssignees).mockResolvedValue({ assignee_ids: ['u-me'] });
+      setupWithMeta('owner');
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Assign to me' }));
+
+      await waitFor(() => expect(api.setCardAssignees).toHaveBeenCalledWith('c1', ['u-me']));
+      expect(
+        within(dialog).queryByRole('button', { name: 'Assign to me' })
+      ).not.toBeInTheDocument();
+    });
+
+    it('sets the due date from a quick pick and clears it', async () => {
+      vi.mocked(api.updateCard).mockResolvedValue({ ...detail, due_date: '2026-10-22' });
+      setupWithMeta('owner');
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Today' }));
+      await waitFor(() =>
+        expect(api.updateCard).toHaveBeenCalledWith('c1', { due_date: '2026-10-22' })
+      );
+      expect(within(dialog).getByRole('button', { name: 'Today' })).toHaveAttribute(
+        'aria-pressed',
+        'true'
+      );
+      expect(within(dialog).getByText(/^Due today, /, { selector: 'p' })).toBeInTheDocument();
+
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Clear' }));
+      await waitFor(() =>
+        expect(api.updateCard).toHaveBeenLastCalledWith('c1', { due_date: null })
+      );
+    });
+
+    it('takes a typed date from the native date field', async () => {
+      vi.mocked(api.updateCard).mockResolvedValue({ ...detail, due_date: '2026-12-24' });
+      setupWithMeta('owner');
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      fireEvent.change(within(dialog).getByLabelText('Due date'), {
+        target: { value: '2026-12-24' },
+      });
+
+      await waitFor(() =>
+        expect(api.updateCard).toHaveBeenCalledWith('c1', { due_date: '2026-12-24' })
+      );
+    });
+
+    it('lets readers look but not change anything', async () => {
+      const view = sampleBoardView();
+      view.lists[0].cards[0].assignee_ids = ['u-wen'];
+      view.lists[0].cards[0].due_date = '2026-10-20';
+      useBoardStore.setState({ view: { ...view, role: 'reader' }, status: 'ready', freshIds: [] });
+      vi.mocked(api.fetchCard).mockResolvedValue(detail);
+      render(
+        <BoardMetaProvider members={view.members} meId="u-me" today="2026-10-22">
+          <CardDialog cardId="c1" onClose={vi.fn()} onManageLabels={vi.fn()} />
+        </BoardMetaProvider>
+      );
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      expect(within(dialog).getByText('wen')).toBeInTheDocument();
+      expect(within(dialog).getAllByText(/^Overdue, /).length).toBeGreaterThan(0);
+      expect(within(dialog).queryByLabelText('Due date')).not.toBeInTheDocument();
+      expect(within(dialog).queryByRole('checkbox', { name: /wen/ })).not.toBeInTheDocument();
+      expect(
+        within(dialog).queryByRole('button', { name: 'Assign to me' })
+      ).not.toBeInTheDocument();
+    });
   });
 });
