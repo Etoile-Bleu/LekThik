@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use super::card::CardSummary;
 use super::error::BoardsError;
+use super::limits::MAX_WIP_LIMIT;
 use super::text::Title;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -10,12 +11,33 @@ pub struct List {
     pub id: Uuid,
     pub board_id: Uuid,
     pub name: String,
+    pub wip_limit: Option<u8>,
+}
+
+/// How many cards a list should hold at once, between 1 and 99.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct WipLimit(u8);
+
+impl WipLimit {
+    pub fn parse(value: u32) -> Result<Self, BoardsError> {
+        match u8::try_from(value) {
+            Ok(limit) if (1..=MAX_WIP_LIMIT).contains(&limit) => Ok(Self(limit)),
+            _ => Err(BoardsError::Invalid(format!(
+                "a work in progress limit is between 1 and {MAX_WIP_LIMIT}"
+            ))),
+        }
+    }
+
+    pub fn get(self) -> u8 {
+        self.0
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ListWithCards {
     pub id: Uuid,
     pub name: String,
+    pub wip_limit: Option<u8>,
     pub cards: Vec<CardSummary>,
 }
 
@@ -25,6 +47,34 @@ pub trait ListRepo: Send + Sync {
     async fn create(&self, user_id: Uuid, board_id: Uuid, name: Title)
     -> Result<List, BoardsError>;
     async fn rename(&self, user_id: Uuid, id: Uuid, name: Title) -> Result<List, BoardsError>;
+    async fn set_wip_limit(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        limit: Option<WipLimit>,
+    ) -> Result<List, BoardsError>;
     async fn move_to(&self, user_id: Uuid, id: Uuid, index: usize) -> Result<(), BoardsError>;
     async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn accepts_limits_from_one_to_ninety_nine() {
+        for value in [1, 5, 99] {
+            assert_eq!(WipLimit::parse(value).map(WipLimit::get), Ok(value as u8));
+        }
+    }
+
+    #[test]
+    fn refuses_zero_and_anything_past_the_cap() {
+        for value in [0, 100, 256, 1000, u32::MAX] {
+            assert!(matches!(
+                WipLimit::parse(value),
+                Err(BoardsError::Invalid(_))
+            ));
+        }
+    }
 }
