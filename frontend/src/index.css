@@ -19,6 +19,61 @@
 
   --max-width: 1200px;
   --space-section: clamp(4rem, 8vw, 7rem);
+
+  --color-canvas: #eceee7;
+  --color-surface: #f4f5ef;
+  --color-border-strong: #cfd2c7;
+  --color-text-muted: #5b6475;
+  --color-danger: #b3453b;
+  --color-danger-tint: #fbeae8;
+  --color-danger-ink: #7a2e27;
+  --color-scrim: rgba(18, 20, 28, 0.55);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-card: 0 1px 0 rgba(18, 20, 28, 0.04), 0 1px 3px rgba(18, 20, 28, 0.1);
+  --shadow-lifted: 0 14px 30px -10px rgba(18, 20, 28, 0.35), 0 3px 8px rgba(18, 20, 28, 0.14);
+  --shadow-popover: 0 12px 32px -8px rgba(18, 20, 28, 0.3), 0 2px 6px rgba(18, 20, 28, 0.1);
+
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+
+  --z-sticky: 20;
+  --z-drawer: 40;
+  --z-popover: 70;
+  --z-toast: 80;
+
+  --label-slate-bg: #e8eaee;
+  --label-slate-fg: #363c4a;
+  --label-slate-dot: #7a8294;
+  --label-red-bg: #fbe4e1;
+  --label-red-fg: #8a2a22;
+  --label-red-dot: #d9534a;
+  --label-orange-bg: #fdebd9;
+  --label-orange-fg: #8a4410;
+  --label-orange-dot: #e8802a;
+  --label-amber-bg: #fbf0c8;
+  --label-amber-fg: #6e5200;
+  --label-amber-dot: #d9a514;
+  --label-green-bg: #dcf3e3;
+  --label-green-fg: #1d6b3b;
+  --label-green-dot: #2fa35c;
+  --label-teal-bg: #d7f3ee;
+  --label-teal-fg: #0f6a5b;
+  --label-teal-dot: #14c9a0;
+  --label-blue-bg: #dde9fb;
+  --label-blue-fg: #1f4f9a;
+  --label-blue-dot: #3b78d8;
+  --label-violet-bg: #e8e2fa;
+  --label-violet-fg: #4b3399;
+  --label-violet-dot: #7a5ce0;
+  --label-pink-bg: #fbe0ec;
+  --label-pink-fg: #912a5c;
+  --label-pink-dot: #d94d8f;
 }
 
 *,
