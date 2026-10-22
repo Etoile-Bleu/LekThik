@@ -8,6 +8,7 @@ mod label_style;
 mod limits;
 mod list;
 mod locator;
+mod look;
 mod members;
 mod role;
 mod templates;
@@ -28,6 +29,7 @@ pub use limits::{
 };
 pub use list::{List, ListRepo, ListWithCards};
 pub use locator::{Located, Locator, Target};
+pub use look::{BoardAccent, BoardBackground, BoardLook};
 pub use members::{Member, MemberRepo};
 pub use role::Role;
 pub use templates::{
