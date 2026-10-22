@@ -362,3 +362,46 @@ export function GaugeIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function ClockIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10" cy="10" r="7.25" />
+      <path d="M10 5.8V10l2.8 1.8" />
+    </Base>
+  );
+}
+
+export function NoteIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4.5 3.5h11v8l-4 5h-7v-13Z" />
+      <path d="M11.5 16.5v-5h4M7 7.5h6M7 10.5h3" />
+    </Base>
+  );
+}
+
+export function HashIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M7.5 3.5 6.5 16.5M13.5 3.5l-1 13M3.5 7.5h13M3.5 12.5h13" />
+    </Base>
+  );
+}
+
+export function ExternalLinkIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M8.5 4.5h-4v11h11v-4M11.5 4.5h4v4M15.5 4.5 9 11" />
+    </Base>
+  );
+}
+
+export function SettingsIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10" cy="10" r="2.5" />
+      <path d="M10 3v2M10 15v2M3 10h2M15 10h2M5.05 5.05l1.4 1.4M13.55 13.55l1.4 1.4M14.95 5.05l-1.4 1.4M6.45 13.55l-1.4 1.4" />
+    </Base>
+  );
+}

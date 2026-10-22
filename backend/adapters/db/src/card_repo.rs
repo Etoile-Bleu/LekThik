@@ -63,7 +63,7 @@ impl CardRepo for PgCardRepo {
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
 
         let locked = sqlx::query(concat!(
-            "SELECT l.id FROM ",
+            "SELECT l.id, l.kind FROM ",
             owned_list!(),
             " WHERE l.id = $1 AND ",
             writer_of!("$2"),
@@ -74,8 +74,14 @@ impl CardRepo for PgCardRepo {
         .fetch_optional(&mut *transaction)
         .await
         .map_err(repository_error)?;
-        if locked.is_none() {
+        let Some(locked) = locked else {
             return Err(denial(&self.pool, Kind::List, user_id, list_id).await);
+        };
+        let kind: String = locked.try_get("kind").map_err(repository_error)?;
+        if kind != "list" {
+            return Err(BoardsError::Invalid(
+                "cards can only be added to lists".to_string(),
+            ));
         }
 
         let existing: i64 = sqlx::query_scalar("SELECT count(*) FROM cards WHERE list_id = $1")
@@ -230,14 +236,20 @@ impl CardRepo for PgCardRepo {
         let source_list_id: Uuid = source.try_get("list_id").map_err(repository_error)?;
         let board_id: Uuid = source.try_get("board_id").map_err(repository_error)?;
 
-        let target = sqlx::query("SELECT id FROM lists WHERE id = $1 AND board_id = $2")
+        let target = sqlx::query("SELECT kind FROM lists WHERE id = $1 AND board_id = $2")
             .bind(list_id)
             .bind(board_id)
             .fetch_optional(&mut *transaction)
             .await
             .map_err(repository_error)?;
-        if target.is_none() {
+        let Some(target) = target else {
             return Err(BoardsError::NotFound);
+        };
+        let target_kind: String = target.try_get("kind").map_err(repository_error)?;
+        if target_kind != "list" {
+            return Err(BoardsError::Invalid(
+                "cards can only be moved into lists".to_string(),
+            ));
         }
 
         let siblings: Vec<Uuid> = sqlx::query_scalar(

@@ -32,9 +32,18 @@ function board(): BoardList[] {
       id: 'todo',
       name: 'To do',
       wip_limit: null,
+      kind: 'list',
+      config: {},
       cards: [card('a', 'todo'), card('b', 'todo'), card('c', 'todo')],
     },
-    { id: 'done', name: 'Done', wip_limit: null, cards: [card('d', 'done')] },
+    {
+      id: 'done',
+      name: 'Done',
+      wip_limit: null,
+      kind: 'list',
+      config: {},
+      cards: [card('d', 'done')],
+    },
   ];
 }
 

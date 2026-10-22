@@ -20,7 +20,7 @@ impl RenameList {
 
 #[cfg(test)]
 mod tests {
-    use domain::boards::MockListRepo;
+    use domain::boards::{BlockConfig, MockListRepo};
 
     use super::*;
 
@@ -36,6 +36,7 @@ mod tests {
                     board_id: Uuid::new_v4(),
                     name: name.into_string(),
                     wip_limit: None,
+                    config: BlockConfig::List,
                 })
             });
 

@@ -1,7 +1,8 @@
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
+import { useOpening } from '@hooks/useOpening';
 import { announce } from '@lib/announcer';
 import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
@@ -124,18 +125,7 @@ export function BoardList({
   }, [state, description, list.name]);
 
   // A list that has just opened grows from the rail, with its contents clipped meanwhile.
-  const wasCollapsed = useRef(collapsed);
-  const [opening, setOpening] = useState(false);
-  useEffect(() => {
-    if (wasCollapsed.current && !collapsed) {
-      setOpening(true);
-      const timer = window.setTimeout(() => setOpening(false), 260);
-      wasCollapsed.current = collapsed;
-      return () => window.clearTimeout(timer);
-    }
-    wasCollapsed.current = collapsed;
-    return undefined;
-  }, [collapsed]);
+  const opening = useOpening(collapsed);
 
   const style = { transform: CSS.Translate.toString(transform), transition };
 

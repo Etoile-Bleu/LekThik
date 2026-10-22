@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 
+use super::block::BlockConfig;
 use super::card::CardSummary;
 use super::error::BoardsError;
 use super::limits::MAX_WIP_LIMIT;
@@ -12,6 +13,8 @@ pub struct List {
     pub board_id: Uuid,
     pub name: String,
     pub wip_limit: Option<u8>,
+    /// What the panel is, with its settings. A list of cards for most.
+    pub config: BlockConfig,
 }
 
 /// How many cards a list should hold at once, between 1 and 99.
@@ -38,6 +41,7 @@ pub struct ListWithCards {
     pub id: Uuid,
     pub name: String,
     pub wip_limit: Option<u8>,
+    pub config: BlockConfig,
     pub cards: Vec<CardSummary>,
 }
 
@@ -47,6 +51,21 @@ pub trait ListRepo: Send + Sync {
     async fn create(&self, user_id: Uuid, board_id: Uuid, name: Title)
     -> Result<List, BoardsError>;
     async fn rename(&self, user_id: Uuid, id: Uuid, name: Title) -> Result<List, BoardsError>;
+    /// Adds a block (a panel that is not a list of cards) at the end of the board.
+    async fn create_block(
+        &self,
+        user_id: Uuid,
+        board_id: Uuid,
+        name: Title,
+        config: BlockConfig,
+    ) -> Result<List, BoardsError>;
+    /// Replaces the settings of a block. The kind of a block never changes.
+    async fn set_config(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        config: BlockConfig,
+    ) -> Result<List, BoardsError>;
     async fn set_wip_limit(
         &self,
         user_id: Uuid,

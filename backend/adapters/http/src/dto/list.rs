@@ -12,6 +12,11 @@ pub struct ListResponseDto {
     pub name: String,
     /// Work in progress limit, `null` when the list has none.
     pub wip_limit: Option<u8>,
+    /// `list`, or the kind of block: `calendar`, `agenda`, `note` or `counter`.
+    pub kind: String,
+    /// The settings of a block, empty for a list.
+    #[schema(value_type = Object)]
+    pub config: serde_json::Value,
 }
 
 impl From<List> for ListResponseDto {
@@ -21,6 +26,8 @@ impl From<List> for ListResponseDto {
             board_id: list.board_id,
             name: list.name,
             wip_limit: list.wip_limit,
+            kind: list.config.kind().as_str().to_string(),
+            config: list.config.to_value(),
         }
     }
 }
@@ -30,6 +37,9 @@ pub struct ListWithCardsDto {
     pub id: Uuid,
     pub name: String,
     pub wip_limit: Option<u8>,
+    pub kind: String,
+    #[schema(value_type = Object)]
+    pub config: serde_json::Value,
     pub cards: Vec<CardSummaryDto>,
 }
 
@@ -39,6 +49,8 @@ impl From<ListWithCards> for ListWithCardsDto {
             id: list.id,
             name: list.name,
             wip_limit: list.wip_limit,
+            kind: list.config.kind().as_str().to_string(),
+            config: list.config.to_value(),
             cards: list.cards.into_iter().map(Into::into).collect(),
         }
     }
@@ -65,4 +77,26 @@ where
     D: serde::Deserializer<'de>,
 {
     Option::<u32>::deserialize(deserializer)
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct CreateBlockRequestDto {
+    /// `calendar`, `agenda`, `note` or `counter`.
+    pub kind: String,
+    pub name: String,
+    /// Settings for the kind. Leave out for the defaults. Unknown settings are refused.
+    #[serde(default)]
+    #[schema(value_type = Object)]
+    pub config: serde_json::Value,
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SetBlockConfigRequestDto {
+    /// Must match the kind the block was made with.
+    pub kind: String,
+    #[serde(default)]
+    #[schema(value_type = Object)]
+    pub config: serde_json::Value,
 }

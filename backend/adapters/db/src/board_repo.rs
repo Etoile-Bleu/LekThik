@@ -121,7 +121,8 @@ impl BoardRepo for PgBoardRepo {
         })?;
 
         let list_rows = sqlx::query(
-            "SELECT id, name, wip_limit FROM lists WHERE board_id = $1 ORDER BY position, created_at, id",
+            "SELECT id, name, wip_limit, kind, config::text AS config FROM lists \
+                WHERE board_id = $1 ORDER BY position, created_at, id",
         )
         .bind(board.id)
         .fetch_all(&mut *transaction)
@@ -216,6 +217,7 @@ impl BoardRepo for PgBoardRepo {
                     .try_get::<Option<i16>, _>("wip_limit")
                     .map_err(repository_error)?
                     .and_then(|limit| u8::try_from(limit).ok()),
+                config: crate::list_repo::row_to_config(row)?,
                 cards: Vec::new(),
             });
         }
