@@ -2,6 +2,10 @@
 pub enum BoardsError {
     #[error("not found")]
     NotFound,
+    #[error("forbidden")]
+    Forbidden,
+    #[error("conflict: {0}")]
+    Conflict(String),
     #[error("limit reached: {0}")]
     LimitReached(&'static str),
     #[error("invalid input: {0}")]
