@@ -41,6 +41,7 @@ mod tests {
                     id: Uuid::new_v4(),
                     board_id,
                     name: name.into_string(),
+                    wip_limit: None,
                 })
             });
 
