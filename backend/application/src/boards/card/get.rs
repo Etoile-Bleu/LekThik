@@ -33,6 +33,8 @@ mod tests {
             title: "Write tests".to_string(),
             description: "Cover the move path".to_string(),
             label_ids: Vec::new(),
+            assignee_ids: Vec::new(),
+            due_date: None,
         };
 
         let mut repo = MockCardRepo::new();
