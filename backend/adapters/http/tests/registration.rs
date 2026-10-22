@@ -4,7 +4,7 @@ use axum::http::StatusCode;
 use serde_json::Value;
 use tower::ServiceExt;
 
-use common::{register_request, spawn_app};
+use common::{register_request, register_request_without_username, spawn_app};
 
 #[tokio::test]
 async fn registers_a_user_and_returns_its_email() -> anyhow::Result<()> {
@@ -98,27 +98,38 @@ async fn rejects_duplicate_username() -> anyhow::Result<()> {
 }
 
 #[tokio::test]
-async fn registers_without_a_username_and_derives_a_unique_one() -> anyhow::Result<()> {
+async fn rejects_a_registration_without_a_username() -> anyhow::Result<()> {
     let (app, _pool, _container) = spawn_app().await?;
 
-    let mut usernames = Vec::new();
-    for email in ["marie@example.com", "marie@example.org"] {
-        let response = app
-            .clone()
-            .oneshot(common::json_post(
-                "/api/users/register",
-                serde_json::json!({ "email": email, "password": "a-strong-password" }),
-            )?)
-            .await?;
-        assert_eq!(response.status(), StatusCode::CREATED);
+    let response = app
+        .oneshot(register_request_without_username(
+            "marie@example.com",
+            "a-strong-password",
+        )?)
+        .await?;
 
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await?;
-        let body: Value = serde_json::from_slice(&body)?;
-        usernames.push(body["username"].as_str().unwrap_or_default().to_string());
-    }
+    assert!(
+        response.status().is_client_error(),
+        "unexpected status {}",
+        response.status()
+    );
 
-    assert_eq!(usernames[0], "marie");
-    assert!(usernames[1].starts_with("marie-"), "{usernames:?}");
+    Ok(())
+}
+
+#[tokio::test]
+async fn rejects_a_username_that_is_too_short() -> anyhow::Result<()> {
+    let (app, _pool, _container) = spawn_app().await?;
+
+    let response = app
+        .oneshot(register_request(
+            "marie@example.com",
+            "ab",
+            "a-strong-password",
+        )?)
+        .await?;
+
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
 
     Ok(())
 }
