@@ -15,6 +15,8 @@ interface SegmentedProps<T extends string> {
   value: T;
   options: SegmentedOption<T>[];
   onChange: (value: T) => void;
+  /** Lets a parent restyle the control, for instance to show only icons on a phone. */
+  className?: string;
 }
 
 /**
@@ -27,6 +29,7 @@ export function Segmented<T extends string>({
   value,
   options,
   onChange,
+  className,
 }: SegmentedProps<T>) {
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const index = Math.max(
@@ -67,7 +70,7 @@ export function Segmented<T extends string>({
 
   return (
     <div
-      className="segmented"
+      className={className ? `segmented ${className}` : 'segmented'}
       role="radiogroup"
       aria-label={label}
       style={
@@ -91,7 +94,7 @@ export function Segmented<T extends string>({
           style={option.fontFamily ? { fontFamily: option.fontFamily } : undefined}
         >
           {option.icon}
-          {option.label}
+          <span className="segmented__label">{option.label}</span>
         </button>
       ))}
     </div>
