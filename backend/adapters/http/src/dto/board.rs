@@ -43,6 +43,8 @@ impl From<BoardSummary> for BoardSummaryDto {
 #[derive(Serialize, ToSchema)]
 pub struct BoardViewDto {
     pub board: BoardResponseDto,
+    /// Role of the signed in user in the workspace of this board.
+    pub role: String,
     pub lists: Vec<ListWithCardsDto>,
     pub labels: Vec<LabelDto>,
 }
@@ -51,6 +53,7 @@ impl From<BoardView> for BoardViewDto {
     fn from(view: BoardView) -> Self {
         Self {
             board: view.board.into(),
+            role: view.role.as_str().to_string(),
             lists: view.lists.into_iter().map(Into::into).collect(),
             labels: view.labels.into_iter().map(Into::into).collect(),
         }
