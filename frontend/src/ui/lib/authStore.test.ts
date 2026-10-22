@@ -2,11 +2,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CurrentUser } from './api';
 
-vi.mock('./api', () => ({
-  getCurrentUser: vi.fn(),
-}));
+vi.mock('./api', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./api')>();
+  return { ...actual, getCurrentUser: vi.fn() };
+});
 
-import { getCurrentUser } from './api';
+import { ApiError, getCurrentUser } from './api';
 import { useAuthStore } from './authStore';
 
 const user: CurrentUser = {
@@ -48,11 +49,30 @@ describe('useAuthStore', () => {
     expect(useAuthStore.getState()).toMatchObject({ user, status: 'authenticated' });
   });
 
-  it('marks unauthenticated when checkSession rejects', async () => {
-    vi.mocked(getCurrentUser).mockRejectedValueOnce(new Error('no session'));
+  it('marks unauthenticated when the server says the session is not valid', async () => {
+    vi.mocked(getCurrentUser).mockRejectedValueOnce(
+      new ApiError(401, 'missing or invalid session')
+    );
 
     await useAuthStore.getState().checkSession();
 
     expect(useAuthStore.getState()).toMatchObject({ user: null, status: 'unauthenticated' });
+  });
+
+  it('does not sign anybody out when the server cannot be reached', async () => {
+    vi.mocked(getCurrentUser).mockRejectedValueOnce(new TypeError('Failed to fetch'));
+
+    await useAuthStore.getState().checkSession();
+
+    expect(useAuthStore.getState()).toMatchObject({ user: null, status: 'unreachable' });
+  });
+
+  it('keeps a known user signed in when a later check is throttled', async () => {
+    useAuthStore.getState().setUser(user);
+    vi.mocked(getCurrentUser).mockRejectedValueOnce(new ApiError(429, 'too many requests'));
+
+    await useAuthStore.getState().checkSession();
+
+    expect(useAuthStore.getState()).toMatchObject({ user, status: 'authenticated' });
   });
 });
