@@ -5,6 +5,8 @@ import { type CardDetail, fetchCard, updateCard } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { notifyError } from '@lib/toastStore';
 
+import { canEdit } from '@lib/roles';
+
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Dialog } from '../ui/Dialog';
 import { TagIcon, TrashIcon } from '../ui/Icons';
@@ -37,6 +39,7 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
   const descriptionRef = useRef('');
   const detailRef = useRef<CardDetail | null>(null);
 
+  const editable = canEdit(view?.role);
   const location = view && cardId ? findCard(view.lists, cardId) : null;
   const summary =
     view && location ? view.lists[location.listIndex].cards[location.cardIndex] : null;
@@ -136,6 +139,7 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
               className="card-dialog__title"
               value={summary.title}
               label="card title"
+              readOnly={!editable}
               onCommit={(title) => void renameCard(summary.id, title)}
             />
             <p className="card-dialog__location">
@@ -151,7 +155,14 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
                   id="card-description"
                   value={description}
                   disabled={!detail}
-                  placeholder={detail ? 'Add more detail about this card…' : 'Loading…'}
+                  readOnly={!editable}
+                  placeholder={
+                    !detail
+                      ? 'Loading…'
+                      : editable
+                        ? 'Add more detail about this card…'
+                        : 'No description.'
+                  }
                   maxLength={10000}
                   onChange={(event) => {
                     setDescription(event.target.value);
@@ -180,6 +191,7 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
                         <input
                           type="checkbox"
                           checked={summary.label_ids.includes(label.id)}
+                          disabled={!editable}
                           onChange={(event) => toggleLabel(label.id, event.target.checked)}
                         />
                         <span className="label-toggle__box" aria-hidden="true" />
@@ -192,65 +204,71 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
                     </li>
                   ))}
                 </ul>
-                <button type="button" className="btn btn--ghost btn--sm" onClick={onManageLabels}>
-                  <TagIcon /> Manage labels
-                </button>
+                {editable && (
+                  <button type="button" className="btn btn--ghost btn--sm" onClick={onManageLabels}>
+                    <TagIcon /> Manage labels
+                  </button>
+                )}
               </fieldset>
 
-              <fieldset className="card-dialog__move">
-                <legend className="field-label">Move card</legend>
-                <div className="field">
-                  <label htmlFor="move-list">List</label>
-                  <select
-                    id="move-list"
-                    value={targetListId}
-                    onChange={(event) => {
-                      setTargetListId(event.target.value);
-                      const target = view.lists.find((list) => list.id === event.target.value);
-                      setTargetPosition(
-                        (target?.cards.length ?? 0) +
-                          (event.target.value === currentList.id ? 0 : 1)
-                      );
-                    }}
+              {editable && (
+                <fieldset className="card-dialog__move">
+                  <legend className="field-label">Move card</legend>
+                  <div className="field">
+                    <label htmlFor="move-list">List</label>
+                    <select
+                      id="move-list"
+                      value={targetListId}
+                      onChange={(event) => {
+                        setTargetListId(event.target.value);
+                        const target = view.lists.find((list) => list.id === event.target.value);
+                        setTargetPosition(
+                          (target?.cards.length ?? 0) +
+                            (event.target.value === currentList.id ? 0 : 1)
+                        );
+                      }}
+                    >
+                      {view.lists.map((list) => (
+                        <option key={list.id} value={list.id}>
+                          {list.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="move-position">Position</label>
+                    <select
+                      id="move-position"
+                      value={targetPosition}
+                      onChange={(event) => setTargetPosition(Number(event.target.value))}
+                    >
+                      {Array.from({ length: Math.max(positionCount, 1) }, (_, index) => (
+                        <option key={index} value={index + 1}>
+                          {index + 1}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn--outline btn--sm"
+                    disabled={!hasMoved}
+                    onClick={() => void moveCard(summary.id, targetListId, targetPosition - 1)}
                   >
-                    {view.lists.map((list) => (
-                      <option key={list.id} value={list.id}>
-                        {list.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label htmlFor="move-position">Position</label>
-                  <select
-                    id="move-position"
-                    value={targetPosition}
-                    onChange={(event) => setTargetPosition(Number(event.target.value))}
-                  >
-                    {Array.from({ length: Math.max(positionCount, 1) }, (_, index) => (
-                      <option key={index} value={index + 1}>
-                        {index + 1}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    Move card
+                  </button>
+                </fieldset>
+              )}
+
+              {editable && (
                 <button
                   type="button"
-                  className="btn btn--outline btn--sm"
-                  disabled={!hasMoved}
-                  onClick={() => void moveCard(summary.id, targetListId, targetPosition - 1)}
+                  className="btn btn--outline btn--sm card-dialog__delete"
+                  onClick={() => setConfirmingDelete(true)}
                 >
-                  Move card
+                  <TrashIcon /> Delete card
                 </button>
-              </fieldset>
-
-              <button
-                type="button"
-                className="btn btn--outline btn--sm card-dialog__delete"
-                onClick={() => setConfirmingDelete(true)}
-              >
-                <TrashIcon /> Delete card
-              </button>
+              )}
             </aside>
           </div>
         </div>
