@@ -1,12 +1,13 @@
 use application::CreateWorkspace;
 use axum::Json;
 use axum::extract::State;
-use axum::http::StatusCode;
+use axum::http::{HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 
 use crate::auth::AuthUser;
 use crate::boards_error::boards_error_response;
 use crate::dto::{CreateNamedRequestDto, ErrorResponseDto, WorkspaceWithBoardsDto};
+use crate::events::{Change, client_origin};
 use crate::state::AppState;
 
 #[utoipa::path(
@@ -26,6 +27,7 @@ use crate::state::AppState;
 pub async fn create_workspace(
     State(state): State<AppState>,
     AuthUser(user_id): AuthUser,
+    headers: HeaderMap,
     Json(payload): Json<CreateNamedRequestDto>,
 ) -> Response {
     let use_case = CreateWorkspace::new(state.workspace_repo.clone());
@@ -34,11 +36,16 @@ pub async fn create_workspace(
         .execute(user_id, &payload.name, payload.template_id.as_deref())
         .await
     {
-        Ok(workspace) => (
-            StatusCode::CREATED,
-            Json(WorkspaceWithBoardsDto::from(workspace)),
-        )
-            .into_response(),
+        Ok(workspace) => {
+            state
+                .events
+                .publish(Change::User { user_id }, client_origin(&headers));
+            (
+                StatusCode::CREATED,
+                Json(WorkspaceWithBoardsDto::from(workspace)),
+            )
+                .into_response()
+        }
         Err(error) => boards_error_response(error),
     }
 }
