@@ -7,6 +7,7 @@ import { AppShell } from '@components/app/AppShell';
 import { BoardPage } from '@pages/BoardPage';
 import { ForgotPasswordPage } from '@pages/ForgotPasswordPage';
 import { HomePage } from '@pages/HomePage';
+import { InvitationPage } from '@pages/InvitationPage';
 import { LoginPage } from '@pages/LoginPage';
 import { ResetPasswordPage } from '@pages/ResetPasswordPage';
 import { SignupPage } from '@pages/SignupPage';
@@ -38,6 +39,7 @@ export function App() {
         >
           <Route path="/dashboard" element={<WorkspacesPage />} />
           <Route path="/b/:boardId" element={<BoardPage />} />
+          <Route path="/invitations/:invitationId" element={<InvitationPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
