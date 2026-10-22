@@ -15,6 +15,7 @@ interface BoardCardProps {
   fresh: boolean;
   dimmed: boolean;
   onOpen: (cardId: string) => void;
+  readOnly?: boolean;
 }
 
 export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] }) {
@@ -43,7 +44,14 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
   );
 }
 
-function BoardCardComponent({ card, labels, fresh, dimmed, onOpen }: BoardCardProps) {
+function BoardCardComponent({
+  card,
+  labels,
+  fresh,
+  dimmed,
+  onOpen,
+  readOnly = false,
+}: BoardCardProps) {
   const {
     attributes,
     listeners,
@@ -52,7 +60,11 @@ function BoardCardComponent({ card, labels, fresh, dimmed, onOpen }: BoardCardPr
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: card.id, data: { type: 'card', listId: card.list_id } });
+  } = useSortable({
+    id: card.id,
+    data: { type: 'card', listId: card.list_id },
+    disabled: readOnly,
+  });
 
   const { onKeyDown, pointer: pointerListeners } = splitDragListeners(listeners);
 
@@ -69,20 +81,22 @@ function BoardCardComponent({ card, labels, fresh, dimmed, onOpen }: BoardCardPr
         type="button"
         className="board-card__open"
         onClick={() => onOpen(card.id)}
-        {...pointerListeners}
+        {...(readOnly ? {} : pointerListeners)}
       >
         <CardFace card={card} labels={labels} />
       </button>
-      <button
-        type="button"
-        ref={setActivatorNodeRef}
-        className="board-card__grip"
-        aria-label={`Reorder card ${card.title}`}
-        onKeyDown={onKeyDown}
-        {...attributes}
-      >
-        <GripIcon size={16} />
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          ref={setActivatorNodeRef}
+          className="board-card__grip"
+          aria-label={`Reorder card ${card.title}`}
+          onKeyDown={onKeyDown}
+          {...attributes}
+        >
+          <GripIcon size={16} />
+        </button>
+      )}
     </li>
   );
 }
