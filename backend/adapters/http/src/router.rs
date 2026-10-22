@@ -65,6 +65,7 @@ fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(get_card, update_card, delete_card))
         .routes(routes!(move_card))
         .routes(routes!(set_card_labels))
+        .routes(routes!(set_card_assignees))
         .routes(routes!(update_label, delete_label))
         .routes(routes!(list_members))
         .routes(routes!(change_member_role, remove_member))

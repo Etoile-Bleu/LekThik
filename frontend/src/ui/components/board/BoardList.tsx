@@ -2,8 +2,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { useId } from 'react';
 
-import { matchesFilter } from '@lib/boardModel';
-import type { BoardList as BoardListData, Label } from '@lib/boardsApi';
+import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
 
 import { Composer } from '../ui/Composer';
@@ -18,7 +17,7 @@ interface BoardListProps {
   index: number;
   total: number;
   labelsById: Map<string, Label>;
-  filter: string[];
+  matches: (card: CardSummary) => boolean;
   freshIds: string[];
   onRename: (listId: string, name: string) => void;
   onMove: (listId: string, index: number) => void;
@@ -44,7 +43,7 @@ export function BoardList({
   index,
   total,
   labelsById,
-  filter,
+  matches,
   freshIds,
   onRename,
   onMove,
@@ -143,7 +142,7 @@ export function BoardList({
                 .map((id) => labelsById.get(id))
                 .filter((label): label is Label => label !== undefined)}
               fresh={freshIds.includes(card.id)}
-              dimmed={!matchesFilter(card, filter)}
+              dimmed={!matches(card)}
               onOpen={onOpenCard}
               readOnly={readOnly}
             />

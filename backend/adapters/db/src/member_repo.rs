@@ -102,19 +102,34 @@ impl MemberRepo for PgMemberRepo {
     }
 
     async fn remove(&self, workspace_id: Uuid, user_id: Uuid) -> Result<(), BoardsError> {
+        let mut transaction = self.pool.begin().await.map_err(repository_error)?;
+
         let result = sqlx::query(
             "DELETE FROM workspace_members \
              WHERE workspace_id = $1 AND user_id = $2 AND role <> 'owner'",
         )
         .bind(workspace_id)
         .bind(user_id)
-        .execute(&self.pool)
+        .execute(&mut *transaction)
         .await
         .map_err(repository_error)?;
 
         if result.rows_affected() == 0 {
             return Err(BoardsError::NotFound);
         }
+
+        sqlx::query(
+            "DELETE FROM card_assignees ca USING cards c, lists l, boards b \
+             WHERE ca.user_id = $2 AND c.id = ca.card_id AND l.id = c.list_id \
+                AND b.id = l.board_id AND b.workspace_id = $1",
+        )
+        .bind(workspace_id)
+        .bind(user_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        transaction.commit().await.map_err(repository_error)?;
 
         Ok(())
     }

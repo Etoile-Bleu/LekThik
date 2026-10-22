@@ -9,8 +9,12 @@ import { canEdit } from '@lib/roles';
 
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Dialog } from '../ui/Dialog';
-import { TagIcon, TrashIcon } from '../ui/Icons';
+import { CalendarIcon, TagIcon, TextLinesIcon, TrashIcon, UsersIcon } from '../ui/Icons';
 import { InlineEdit } from '../ui/InlineEdit';
+import { AssigneePicker } from './AssigneePicker';
+import { DueDateField } from './DueDateField';
+import { Pick } from '../ui/Pick';
+import { PropertyRow } from '../ui/PropertyRow';
 import { LabelChip } from './LabelChip';
 import './CardDialog.css';
 
@@ -28,6 +32,8 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
   const moveCard = useBoardStore((state) => state.moveCard);
   const deleteCard = useBoardStore((state) => state.deleteCard);
   const setCardLabels = useBoardStore((state) => state.setCardLabels);
+  const setCardAssignees = useBoardStore((state) => state.setCardAssignees);
+  const setCardDueDate = useBoardStore((state) => state.setCardDueDate);
   const markHasDescription = useBoardStore((state) => state.markHasDescription);
 
   const [detail, setDetail] = useState<CardDetail | null>(null);
@@ -147,98 +153,74 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
             </p>
           </header>
 
-          <div className="card-dialog__body">
-            <div className="card-dialog__main">
-              <div className="field">
-                <label htmlFor="card-description">Description</label>
-                <textarea
-                  id="card-description"
-                  value={description}
-                  disabled={!detail}
-                  readOnly={!editable}
-                  placeholder={
-                    !detail
-                      ? 'Loading…'
-                      : editable
-                        ? 'Add more detail about this card…'
-                        : 'No description.'
-                  }
-                  maxLength={10000}
-                  onChange={(event) => {
-                    setDescription(event.target.value);
-                    descriptionRef.current = event.target.value;
-                    setSaveStatus('idle');
-                  }}
-                  onBlur={() => void saveDescription()}
-                />
-                <p className="field-hint card-dialog__status" role="status" aria-live="polite">
-                  {saveStatus === 'saving' && 'Saving…'}
-                  {saveStatus === 'saved' && 'Saved'}
-                </p>
-              </div>
-            </div>
+          <div className="card-dialog__props">
+            <PropertyRow index={0} icon={<UsersIcon size={16} />} label="Assignees">
+              <AssigneePicker
+                members={view.members}
+                assigneeIds={summary.assignee_ids}
+                editable={editable}
+                onChange={(userIds) => void setCardAssignees(summary.id, userIds)}
+              />
+            </PropertyRow>
 
-            <aside className="card-dialog__side" aria-label="Card settings">
-              <fieldset className="card-dialog__labels">
-                <legend className="field-label">Labels</legend>
-                {view.labels.length === 0 && (
-                  <p className="field-hint">No labels on this board yet.</p>
-                )}
-                <ul className="card-dialog__label-list">
-                  {view.labels.map((label) => (
-                    <li key={label.id}>
-                      <label className="label-toggle">
-                        <input
-                          type="checkbox"
-                          checked={summary.label_ids.includes(label.id)}
-                          disabled={!editable}
-                          onChange={(event) => toggleLabel(label.id, event.target.checked)}
-                        />
-                        <span className="label-toggle__box" aria-hidden="true" />
-                        <LabelChip
-                          name={label.name}
-                          color={label.color}
-                          priority={label.priority}
-                        />
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-                {editable && (
-                  <button type="button" className="btn btn--ghost btn--sm" onClick={onManageLabels}>
-                    <TagIcon /> Manage labels
-                  </button>
-                )}
-              </fieldset>
+            <PropertyRow index={1} icon={<CalendarIcon size={16} />} label="Due date">
+              <DueDateField
+                value={summary.due_date}
+                editable={editable}
+                onChange={(day) => void setCardDueDate(summary.id, day)}
+              />
+            </PropertyRow>
 
-              {editable && (
-                <fieldset className="card-dialog__move">
-                  <legend className="field-label">Move card</legend>
-                  <div className="field">
-                    <label htmlFor="move-list">List</label>
-                    <select
-                      id="move-list"
-                      value={targetListId}
-                      onChange={(event) => {
-                        setTargetListId(event.target.value);
-                        const target = view.lists.find((list) => list.id === event.target.value);
-                        setTargetPosition(
-                          (target?.cards.length ?? 0) +
-                            (event.target.value === currentList.id ? 0 : 1)
-                        );
-                      }}
+            <PropertyRow index={2} icon={<TagIcon size={16} />} label="Labels">
+              {view.labels.length === 0 && <span className="card-dialog__none">No labels yet</span>}
+              <ul className="card-dialog__label-list">
+                {view.labels.map((label) => (
+                  <li key={label.id}>
+                    <Pick
+                      bare
+                      checked={summary.label_ids.includes(label.id)}
+                      disabled={!editable}
+                      onChange={(checked) => toggleLabel(label.id, checked)}
                     >
-                      {view.lists.map((list) => (
-                        <option key={list.id} value={list.id}>
-                          {list.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label htmlFor="move-position">Position</label>
+                      <LabelChip name={label.name} color={label.color} priority={label.priority} />
+                    </Pick>
+                  </li>
+                ))}
+              </ul>
+              {editable && (
+                <button type="button" className="card-dialog__link" onClick={onManageLabels}>
+                  Manage labels
+                </button>
+              )}
+            </PropertyRow>
+
+            <PropertyRow index={3} icon={<TextLinesIcon size={16} />} label="List">
+              {editable ? (
+                <>
+                  <select
+                    className="card-dialog__select"
+                    aria-label="List"
+                    value={targetListId}
+                    onChange={(event) => {
+                      setTargetListId(event.target.value);
+                      const target = view.lists.find((list) => list.id === event.target.value);
+                      setTargetPosition(
+                        (target?.cards.length ?? 0) +
+                          (event.target.value === currentList.id ? 0 : 1)
+                      );
+                    }}
+                  >
+                    {view.lists.map((list) => (
+                      <option key={list.id} value={list.id}>
+                        {list.name}
+                      </option>
+                    ))}
+                  </select>
+                  <label className="card-dialog__position">
+                    <span>Position</span>
                     <select
-                      id="move-position"
+                      className="card-dialog__select card-dialog__select--short"
+                      aria-label="Position"
                       value={targetPosition}
                       onChange={(event) => setTargetPosition(Number(event.target.value))}
                     >
@@ -248,7 +230,7 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </label>
                   <button
                     type="button"
                     className="btn btn--outline btn--sm"
@@ -257,20 +239,54 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
                   >
                     Move card
                   </button>
-                </fieldset>
+                </>
+              ) : (
+                <span>{currentList.name}</span>
               )}
-
-              {editable && (
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm card-dialog__delete"
-                  onClick={() => setConfirmingDelete(true)}
-                >
-                  <TrashIcon /> Delete card
-                </button>
-              )}
-            </aside>
+            </PropertyRow>
           </div>
+
+          <section className="card-dialog__description">
+            <div className="card-dialog__description-head">
+              <label htmlFor="card-description">Description</label>
+              <p className="card-dialog__status" role="status" aria-live="polite">
+                {saveStatus === 'saving' && 'Saving…'}
+                {saveStatus === 'saved' && 'Saved'}
+              </p>
+            </div>
+            <textarea
+              id="card-description"
+              value={description}
+              disabled={!detail}
+              readOnly={!editable}
+              placeholder={
+                !detail
+                  ? 'Loading…'
+                  : editable
+                    ? 'Add more detail about this card…'
+                    : 'No description.'
+              }
+              maxLength={10000}
+              onChange={(event) => {
+                setDescription(event.target.value);
+                descriptionRef.current = event.target.value;
+                setSaveStatus('idle');
+              }}
+              onBlur={() => void saveDescription()}
+            />
+          </section>
+
+          {editable && (
+            <footer className="card-dialog__footer">
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm card-dialog__delete"
+                onClick={() => setConfirmingDelete(true)}
+              >
+                <TrashIcon /> Delete card
+              </button>
+            </footer>
+          )}
         </div>
       </Dialog>
 

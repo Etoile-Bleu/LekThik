@@ -24,7 +24,7 @@ import {
 import { useMemo, useRef, useState } from 'react';
 
 import { findCard, moveCard } from '@lib/boardModel';
-import type { BoardList as BoardListData, Label } from '@lib/boardsApi';
+import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boardsApi';
 
 import { Composer } from '../ui/Composer';
 import { CardFace } from './BoardCard';
@@ -34,7 +34,7 @@ import './BoardCanvas.css';
 interface BoardCanvasProps {
   lists: BoardListData[];
   labels: Label[];
-  filter: string[];
+  matches: (card: CardSummary) => boolean;
   freshIds: string[];
   onRenameList: (listId: string, name: string) => void;
   onMoveList: (listId: string, index: number) => void;
@@ -54,7 +54,7 @@ const INSTRUCTIONS =
 export function BoardCanvas({
   lists: storedLists,
   labels,
-  filter,
+  matches,
   freshIds,
   onRenameList,
   onMoveList,
@@ -278,7 +278,7 @@ export function BoardCanvas({
               index={index}
               total={lists.length}
               labelsById={labelsById}
-              filter={filter}
+              matches={matches}
               freshIds={freshIds}
               onRename={onRenameList}
               onMove={onMoveList}

@@ -6,7 +6,8 @@ pub use boards::{
     DeleteBoard, DeleteCard, DeleteLabel, DeleteList, DeleteWorkspace, GetBoard, GetCard,
     GetMyInvitation, InviteMember, ListMembers, ListMyInvitations, ListWorkspaces, MembersOverview,
     MoveCard, MoveList, RemoveMember, RenameBoard, RenameList, RenameWorkspace,
-    RespondToInvitation, RevokeInvitation, SetCardLabels, UpdateCard, UpdateLabel,
+    RespondToInvitation, RevokeInvitation, SetCardAssignees, SetCardLabels, UpdateCard,
+    UpdateLabel,
 };
 pub use user::{
     GetCurrentUser, GetCurrentUserError, IssueVerificationCode, IssueVerificationCodeError,

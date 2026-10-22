@@ -1,6 +1,7 @@
 use async_trait::async_trait;
 use domain::boards::{
-    BoardsError, Card, CardRepo, CardSummary, CardUpdate, Description, MAX_CARDS_PER_LIST, Title,
+    BoardsError, Card, CardRepo, CardSummary, CardUpdate, Description, MAX_ASSIGNEES_PER_CARD,
+    MAX_CARDS_PER_LIST, Title,
 };
 use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
@@ -26,6 +27,16 @@ impl PgCardRepo {
             .map_err(repository_error)
     }
 
+    async fn assignee_ids_of(&self, card_id: Uuid) -> Result<Vec<Uuid>, BoardsError> {
+        sqlx::query_scalar(
+            "SELECT user_id FROM card_assignees WHERE card_id = $1 ORDER BY assigned_at, user_id",
+        )
+        .bind(card_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(repository_error)
+    }
+
     async fn card_from_row(&self, row: &PgRow) -> Result<Card, BoardsError> {
         let id: Uuid = row.try_get("id").map_err(repository_error)?;
 
@@ -35,6 +46,8 @@ impl PgCardRepo {
             title: row.try_get("title").map_err(repository_error)?,
             description: row.try_get("description").map_err(repository_error)?,
             label_ids: self.label_ids_of(id).await?,
+            assignee_ids: self.assignee_ids_of(id).await?,
+            due_date: row.try_get("due_date").map_err(repository_error)?,
         })
     }
 }
@@ -93,12 +106,14 @@ impl CardRepo for PgCardRepo {
             title: row.try_get("title").map_err(repository_error)?,
             has_description: false,
             label_ids: Vec::new(),
+            assignee_ids: Vec::new(),
+            due_date: None,
         })
     }
 
     async fn get(&self, user_id: Uuid, id: Uuid) -> Result<Card, BoardsError> {
         let row = sqlx::query(concat!(
-            "SELECT c.id, c.list_id, c.title, c.description FROM ",
+            "SELECT c.id, c.list_id, c.title, c.description, c.due_date::text AS due_date FROM ",
             owned_card!(),
             " WHERE c.id = $1 AND ",
             member_of!("$2")
@@ -123,17 +138,26 @@ impl CardRepo for PgCardRepo {
             "UPDATE cards c SET \
                 title = COALESCE($3, c.title), \
                 description = COALESCE($4, c.description), \
+                due_date = CASE WHEN $5 THEN $6::date ELSE c.due_date END, \
                 updated_at = now() \
                 FROM lists l, boards b, workspaces w \
                 WHERE c.id = $2 AND l.id = c.list_id AND b.id = l.board_id \
                     AND w.id = b.workspace_id AND ",
             writer_of!("$1"),
-            " RETURNING c.id, c.list_id, c.title, c.description"
+            " RETURNING c.id, c.list_id, c.title, c.description, c.due_date::text AS due_date"
         ))
         .bind(user_id)
         .bind(id)
         .bind(update.title.as_ref().map(Title::as_str))
         .bind(update.description.as_ref().map(Description::as_str))
+        .bind(update.due_date.is_some())
+        .bind(
+            update
+                .due_date
+                .as_ref()
+                .and_then(|day| day.as_ref())
+                .map(|day| day.as_str()),
+        )
         .fetch_optional(&self.pool)
         .await
         .map_err(repository_error)?
@@ -286,5 +310,72 @@ impl CardRepo for PgCardRepo {
         transaction.commit().await.map_err(repository_error)?;
 
         Ok(label_ids)
+    }
+
+    async fn set_assignees(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        assignee_ids: Vec<Uuid>,
+    ) -> Result<Vec<Uuid>, BoardsError> {
+        if assignee_ids.len() as i64 > MAX_ASSIGNEES_PER_CARD {
+            return Err(BoardsError::LimitReached("assignees"));
+        }
+
+        let mut transaction = self.pool.begin().await.map_err(repository_error)?;
+
+        let Some(workspace_id) = sqlx::query_scalar::<_, Uuid>(concat!(
+            "SELECT w.id FROM ",
+            owned_card!(),
+            " WHERE c.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
+        ))
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?
+        else {
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
+        };
+
+        if !assignee_ids.is_empty() {
+            let members: i64 = sqlx::query_scalar(
+                "SELECT count(*) FROM workspace_members WHERE workspace_id = $1 AND user_id = ANY($2)",
+            )
+            .bind(workspace_id)
+            .bind(&assignee_ids)
+            .fetch_one(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+
+            if members != assignee_ids.len() as i64 {
+                return Err(BoardsError::Invalid(
+                    "only members of the workspace can be assigned".to_string(),
+                ));
+            }
+        }
+
+        sqlx::query("DELETE FROM card_assignees WHERE card_id = $1 AND NOT (user_id = ANY($2))")
+            .bind(id)
+            .bind(&assignee_ids)
+            .execute(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+
+        sqlx::query(
+            "INSERT INTO card_assignees (card_id, user_id) SELECT $1, UNNEST($2::uuid[]) \
+                ON CONFLICT (card_id, user_id) DO NOTHING",
+        )
+        .bind(id)
+        .bind(&assignee_ids)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        transaction.commit().await.map_err(repository_error)?;
+
+        Ok(assignee_ids)
     }
 }

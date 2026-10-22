@@ -13,7 +13,7 @@ function hueFor(seed: string): (typeof HUES)[number] {
 interface AvatarProps {
   name: string;
   seed?: string;
-  size?: 'sm' | 'md';
+  size?: 'xs' | 'sm' | 'md';
 }
 
 /** Decorative: the name always sits next to it in text. */

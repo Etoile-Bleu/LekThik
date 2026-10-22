@@ -57,6 +57,14 @@ user's role (`lib/roles.ts`): readers get a view only board with no composers, d
 menus. Links from invitation emails keep their destination through login and signup with a
 validated `next` parameter (`lib/nextPath.ts`).
 
+Assignees and due dates: cards show an avatar stack and a due badge. The badge states its meaning
+with wording (Today, Yesterday, a date), an icon (a warning triangle once overdue) and a sentence for
+screen readers, never colour alone. Due dates are plain calendar days compared with the viewer's
+local day (`lib/dueDate.ts`), and badges turn overdue at midnight on their own. The card dialog uses
+a native date input, so keyboard, screen readers and mobile pickers work, with quick picks for today,
+tomorrow and next week. The filter bar adds "My cards" and "Overdue", combined with the label
+filters.
+
 Path aliases (`@`, `@components`, `@pages`, `@lib`, `@hooks`, `@types`) are configured in
 `vite.config.ts` and `tsconfig.json`.
 
