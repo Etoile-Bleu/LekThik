@@ -196,3 +196,49 @@ export function AlertIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function SlidersIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M3 6h7M14 6h3M3 14h3M10 14h7" />
+      <circle cx="12" cy="6" r="2" />
+      <circle cx="8" cy="14" r="2" />
+    </Base>
+  );
+}
+
+export function PaletteIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 3a7 7 0 1 0 0 14c1.1 0 1.6-.8 1.3-1.7-.3-.9.2-1.8 1.2-1.8H14a3 3 0 0 0 3-3C17 6.4 13.9 3 10 3Z" />
+      <path d="M6.6 9.5v.01M9 6.8v.01M12.4 7.4v.01" />
+    </Base>
+  );
+}
+
+export function HelpIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10" cy="10" r="7.25" />
+      <path d="M7.9 7.9a2.2 2.2 0 1 1 3.2 2c-.8.4-1.1.9-1.1 1.6M10 13.9v.01" />
+    </Base>
+  );
+}
+
+export function EyeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M2.5 10s2.6-5 7.5-5 7.5 5 7.5 5-2.6 5-7.5 5-7.5-5-7.5-5Z" />
+      <circle cx="10" cy="10" r="2.3" />
+    </Base>
+  );
+}
+
+export function KeyboardIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="2.5" y="5.5" width="15" height="9" rx="2" />
+      <path d="M5.5 8.5h.01M8.5 8.5h.01M11.5 8.5h.01M14.5 8.5h.01M6.5 11.5h7" />
+    </Base>
+  );
+}
