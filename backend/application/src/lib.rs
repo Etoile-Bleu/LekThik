@@ -2,9 +2,11 @@ mod boards;
 mod user;
 
 pub use boards::{
-    CreateBoard, CreateCard, CreateLabel, CreateList, CreateWorkspace, DeleteBoard, DeleteCard,
-    DeleteLabel, DeleteList, DeleteWorkspace, GetBoard, GetCard, ListWorkspaces, MoveCard,
-    MoveList, RenameBoard, RenameList, RenameWorkspace, SetCardLabels, UpdateCard, UpdateLabel,
+    ChangeMemberRole, CreateBoard, CreateCard, CreateLabel, CreateList, CreateWorkspace,
+    DeleteBoard, DeleteCard, DeleteLabel, DeleteList, DeleteWorkspace, GetBoard, GetCard,
+    GetMyInvitation, InviteMember, ListMembers, ListMyInvitations, ListWorkspaces, MembersOverview,
+    MoveCard, MoveList, RemoveMember, RenameBoard, RenameList, RenameWorkspace,
+    RespondToInvitation, RevokeInvitation, SetCardLabels, UpdateCard, UpdateLabel,
 };
 pub use user::{
     GetCurrentUser, GetCurrentUserError, IssueVerificationCode, IssueVerificationCodeError,
