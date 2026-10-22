@@ -3,6 +3,15 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  /* The board's own tint: a soft wash from the top left over the theme's canvas. */
+  background:
+    radial-gradient(
+      70rem 32rem at 8% -6%,
+      color-mix(in oklab, var(--board-hue, var(--color-canvas)) 24%, transparent),
+      transparent 70%
+    ),
+    color-mix(in oklab, var(--color-canvas), var(--board-hue, var(--color-canvas)) 9%);
+  transition: background-color var(--duration-slow) ease;
 }
 
 .board-header {
@@ -95,7 +104,7 @@
   width: 220px;
   height: 32px;
   border-radius: var(--radius-sm);
-  background: #dfe2d8;
+  background: var(--color-border);
 }
 
 .board-page__skeleton-lists {
@@ -105,10 +114,15 @@
 }
 
 .board-page__skeleton-lists div {
-  flex: 0 0 296px;
+  flex: 0 0 var(--list-width);
   height: 280px;
   border-radius: var(--radius-lg);
-  background: linear-gradient(90deg, #e3e5dc 25%, #eef0e8 50%, #e3e5dc 75%);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-border) 50%,
+    var(--color-surface) 75%
+  );
   background-size: 200% 100%;
   animation: board-shimmer 1.4s linear infinite;
 }

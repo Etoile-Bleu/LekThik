@@ -4,6 +4,8 @@
   height: 100dvh;
   overflow: hidden;
   background: var(--color-canvas);
+  /* Text inherits from here, so it follows the theme and not the page's light default. */
+  color: var(--color-text-on-light);
 }
 
 .shell__topbar {
@@ -13,7 +15,7 @@
   gap: 0.5rem;
   height: 56px;
   padding: 0 0.75rem;
-  background: var(--color-ink);
+  background: var(--chrome-bg);
   color: var(--color-text-on-dark);
 }
 
@@ -57,8 +59,8 @@
 .shell__sidebar {
   flex-shrink: 0;
   width: 264px;
-  border-top: 1px solid #262a3a;
-  background: var(--color-ink);
+  border-top: 1px solid var(--chrome-border);
+  background: var(--chrome-bg);
 }
 
 .shell__main {

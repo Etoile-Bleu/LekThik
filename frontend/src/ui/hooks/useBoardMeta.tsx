@@ -1,36 +1,48 @@
 import { type ReactNode, createContext, useContext, useMemo } from 'react';
 
 import type { BoardMember } from '@lib/boardsApi';
+import { type CardDisplay, DEFAULT_CARD_DISPLAY } from '@lib/prefs';
 
 interface BoardMeta {
   membersById: Map<string, BoardMember>;
   meId: string | undefined;
   today: string;
+  /** What the signed in person wants cards on this board to show. */
+  display: CardDisplay;
 }
 
 const BoardMetaContext = createContext<BoardMeta>({
   membersById: new Map(),
   meId: undefined,
   today: '1970-01-01',
+  display: DEFAULT_CARD_DISPLAY,
 });
 
 interface BoardMetaProviderProps {
   members: BoardMember[];
   meId: string | undefined;
   today: string;
+  display?: CardDisplay;
   children: ReactNode;
 }
 
 /** What every card on the board needs to draw people and dates, without prop drilling. */
 // eslint-disable-next-line react-refresh/only-export-components
-export function BoardMetaProvider({ members, meId, today, children }: BoardMetaProviderProps) {
+export function BoardMetaProvider({
+  members,
+  meId,
+  today,
+  display = DEFAULT_CARD_DISPLAY,
+  children,
+}: BoardMetaProviderProps) {
   const value = useMemo<BoardMeta>(
     () => ({
       membersById: new Map(members.map((member) => [member.user_id, member])),
       meId,
       today,
+      display,
     }),
-    [members, meId, today]
+    [members, meId, today, display]
   );
 
   return <BoardMetaContext.Provider value={value}>{children}</BoardMetaContext.Provider>;

@@ -14,16 +14,21 @@ interface ToastState {
   dismiss: (id: number) => void;
 }
 
-const TOAST_LIFETIME_MS = 5000;
+/** How long each kind stays. Errors get more time because people act on them. */
+export const TOAST_LIFETIME_MS: Record<ToastTone, number> = {
+  error: 12000,
+  success: 6000,
+  info: 8000,
+};
+
 let nextId = 1;
 
-export const useToastStore = create<ToastState>((set, get) => ({
+export const useToastStore = create<ToastState>((set) => ({
   toasts: [],
   push: (tone, message) => {
     const id = nextId;
     nextId += 1;
     set((state) => ({ toasts: [...state.toasts.slice(-3), { id, tone, message }] }));
-    window.setTimeout(() => get().dismiss(id), TOAST_LIFETIME_MS);
   },
   dismiss: (id) => set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) })),
 }));

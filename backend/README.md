@@ -113,6 +113,20 @@ emails) so a client can draw avatars without another request.
 | `PATCH /api/cards/{id}` with `due_date` | Set a day, send `null` to clear it, leave it out to keep it |
 | `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
 
+### Preferences and board look
+
+Each person has one preferences object (`GET` and `PUT /api/users/me/preferences`, stored as JSON in
+`user_preferences`): theme, density, text size, reading font, letter spacing, colour vision, label
+shapes, strong focus, large targets, plain backgrounds, reduce motion, announcing teammates, what a
+card shows, and per board choices for at most 200 boards. A save replaces the whole object, unknown
+fields and values are refused, and someone who never saved gets the defaults. The types live in
+`domain/src/preferences.rs`, so adding a setting is a field with a default and nothing breaks for
+people who saved before.
+
+A board also has a shared look, a background tint and an accent colour picked from fixed presets
+(`PUT /api/boards/{id}/look`, writers and above). Presets, not free colours, so contrast stays
+guaranteed in every theme. The board view returns the look and a short description preview per card.
+
 ### Real time
 
 `GET /api/events` keeps one server-sent events stream per signed in user. Events carry identifiers

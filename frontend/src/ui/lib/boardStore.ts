@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 import { ApiError } from './api';
 import * as api from './boardsApi';
+import type { BoardLook } from './boardLooks';
 import type { BoardView, CardSummary, Label, LabelColor, Priority } from './boardsApi';
 import { moveCard, moveList, patchCard, removeCard } from './boardModel';
 import { notifyError } from './toastStore';
@@ -23,6 +24,7 @@ interface BoardState {
   refresh: () => Promise<void>;
   reset: () => void;
   renameBoard: (name: string) => Promise<void>;
+  setLook: (look: BoardLook) => Promise<void>;
   deleteBoard: () => Promise<boolean>;
   createList: (name: string) => Promise<void>;
   renameList: (listId: string, name: string) => Promise<void>;
@@ -111,6 +113,17 @@ export const useBoardStore = create<BoardState>((set, get) => {
         await api.renameBoard(view.board.id, name);
       } catch (error) {
         useWorkspaceStore.getState().syncBoardName(view.board.id, view.board.name);
+        await recoverFrom(error);
+      }
+    },
+
+    setLook: async (look) => {
+      const view = get().view;
+      if (!view) return;
+      update((current) => ({ ...current, look }));
+      try {
+        await api.setBoardLook(view.board.id, look);
+      } catch (error) {
         await recoverFrom(error);
       }
     },

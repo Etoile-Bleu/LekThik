@@ -1,0 +1,72 @@
+.popover-scrim {
+  display: none;
+}
+
+.popover {
+  position: fixed;
+  z-index: var(--z-popover);
+  top: var(--pop-top);
+  left: var(--pop-left);
+  width: min(360px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-popover);
+  transform-origin: top right;
+  animation: popover-in 180ms var(--ease-out);
+}
+
+.popover:focus {
+  outline: none;
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.97);
+  }
+}
+
+/* On a phone the panel is a bottom sheet: thumb reach, full width, a scrim behind. */
+@media (max-width: 599px) {
+  .popover-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-popover);
+    display: block;
+    background: var(--color-scrim);
+    animation: popover-fade 180ms ease;
+  }
+
+  .popover {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-height: 82dvh;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    transform-origin: bottom center;
+    animation: popover-sheet 260ms var(--ease-out);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@keyframes popover-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes popover-sheet {
+  from {
+    transform: translateY(100%);
+  }
+}

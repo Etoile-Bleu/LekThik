@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use domain::boards::{
-    Board, BoardMember, BoardRepo, BoardTemplate, BoardView, BoardsError, CardSummary,
-    ListWithCards, MAX_BOARDS_PER_WORKSPACE, Role, Title,
+    Board, BoardAccent, BoardBackground, BoardLook, BoardMember, BoardRepo, BoardTemplate,
+    BoardView, BoardsError, CardSummary, ListWithCards, MAX_BOARDS_PER_WORKSPACE, Role, Title,
 };
 use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
@@ -28,6 +28,19 @@ fn row_to_board(row: &PgRow) -> Result<Board, BoardsError> {
         id: row.try_get("id").map_err(repository_error)?,
         workspace_id: row.try_get("workspace_id").map_err(repository_error)?,
         name: row.try_get("name").map_err(repository_error)?,
+    })
+}
+
+fn row_to_look(row: &PgRow) -> Result<BoardLook, BoardsError> {
+    let background: String = row.try_get("background").map_err(repository_error)?;
+    let accent: String = row.try_get("accent").map_err(repository_error)?;
+
+    Ok(BoardLook {
+        background: BoardBackground::parse(&background).ok_or_else(|| {
+            BoardsError::Repository(format!("unknown board background {background}"))
+        })?,
+        accent: BoardAccent::parse(&accent)
+            .ok_or_else(|| BoardsError::Repository(format!("unknown board accent {accent}")))?,
     })
 }
 
@@ -81,7 +94,7 @@ impl BoardRepo for PgBoardRepo {
             .map_err(repository_error)?;
 
         let board_row = sqlx::query(concat!(
-            "SELECT b.id, b.workspace_id, b.name FROM ",
+            "SELECT b.id, b.workspace_id, b.name, b.background, b.accent FROM ",
             owned_board!(),
             " WHERE b.id = $1 AND ",
             member_of!("$2")
@@ -93,6 +106,7 @@ impl BoardRepo for PgBoardRepo {
         .map_err(repository_error)?
         .ok_or(BoardsError::NotFound)?;
         let board = row_to_board(&board_row)?;
+        let look = row_to_look(&board_row)?;
 
         let role_name: String = sqlx::query_scalar(
             "SELECT role FROM workspace_members WHERE workspace_id = $1 AND user_id = $2",
@@ -116,7 +130,7 @@ impl BoardRepo for PgBoardRepo {
 
         let card_rows = sqlx::query(
             "SELECT c.id, c.list_id, c.title, c.description <> '' AS has_description, \
-                c.due_date::text AS due_date \
+                c.due_date::text AS due_date, left(c.description, 140) AS preview \
                 FROM cards c JOIN lists l ON l.id = c.list_id \
                 WHERE l.board_id = $1 ORDER BY c.position, c.created_at, c.id",
         )
@@ -210,6 +224,7 @@ impl BoardRepo for PgBoardRepo {
                 list_id,
                 title: row.try_get("title").map_err(repository_error)?,
                 has_description: row.try_get("has_description").map_err(repository_error)?,
+                description_preview: row.try_get("preview").map_err(repository_error)?,
                 label_ids: labels_by_card.remove(&card_id).unwrap_or_default(),
                 assignee_ids: assignees_by_card.remove(&card_id).unwrap_or_default(),
                 due_date: row.try_get("due_date").map_err(repository_error)?,
@@ -227,6 +242,7 @@ impl BoardRepo for PgBoardRepo {
         Ok(BoardView {
             board,
             role,
+            look,
             members,
             lists,
             labels,
@@ -270,5 +286,31 @@ impl BoardRepo for PgBoardRepo {
         }
 
         Ok(())
+    }
+
+    async fn set_look(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        look: BoardLook,
+    ) -> Result<BoardLook, BoardsError> {
+        let Some(row) = sqlx::query(concat!(
+            "UPDATE boards b SET background = $3, accent = $4 FROM workspaces w \
+                WHERE b.id = $2 AND w.id = b.workspace_id AND ",
+            writer_of!("$1"),
+            " RETURNING b.background, b.accent"
+        ))
+        .bind(user_id)
+        .bind(id)
+        .bind(look.background.as_str())
+        .bind(look.accent.as_str())
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(repository_error)?
+        else {
+            return Err(denial(&self.pool, Kind::Board, user_id, id).await);
+        };
+
+        row_to_look(&row)
     }
 }

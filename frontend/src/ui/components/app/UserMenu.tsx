@@ -1,12 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 
 import { logoutUser } from '@lib/api';
+import { usePrefsStore } from '@lib/prefsStore';
 import { useAuthStore } from '@lib/authStore';
 import { useBoardStore } from '@lib/boardStore';
 import { notifyError } from '@lib/toastStore';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
-import { ChevronDownIcon, SignOutIcon } from '../ui/Icons';
+import { ChevronDownIcon, HelpIcon, SignOutIcon, SlidersIcon } from '../ui/Icons';
 import { Menu } from '../ui/Menu';
 import './UserMenu.css';
 
@@ -24,6 +25,7 @@ export function UserMenu() {
     }
     useWorkspaceStore.getState().reset();
     useBoardStore.getState().reset();
+    usePrefsStore.getState().reset();
     clearUser();
     navigate('/');
   }
@@ -43,7 +45,15 @@ export function UserMenu() {
           <ChevronDownIcon size={16} />
         </>
       }
-      items={[{ label: 'Sign out', icon: <SignOutIcon />, onSelect: () => void signOut() }]}
+      items={[
+        { label: 'Settings', icon: <SlidersIcon />, onSelect: () => navigate('/settings') },
+        {
+          label: 'Keyboard and help',
+          icon: <HelpIcon />,
+          onSelect: () => navigate('/settings/help'),
+        },
+        { label: 'Sign out', icon: <SignOutIcon />, onSelect: () => void signOut() },
+      ]}
     />
   );
 }

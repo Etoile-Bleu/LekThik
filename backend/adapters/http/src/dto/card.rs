@@ -9,6 +9,8 @@ pub struct CardSummaryDto {
     pub list_id: Uuid,
     pub title: String,
     pub has_description: bool,
+    /// The first characters of the description, empty when there is none.
+    pub description_preview: String,
     pub label_ids: Vec<Uuid>,
     pub assignee_ids: Vec<Uuid>,
     /// Calendar day, `YYYY-MM-DD`.
@@ -22,6 +24,7 @@ impl From<CardSummary> for CardSummaryDto {
             list_id: card.list_id,
             title: card.title,
             has_description: card.has_description,
+            description_preview: card.description_preview,
             label_ids: card.label_ids,
             assignee_ids: card.assignee_ids,
             due_date: card.due_date,
