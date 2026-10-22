@@ -64,6 +64,8 @@ fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(create_label))
         .routes(routes!(rename_list, delete_list))
         .routes(routes!(set_list_wip_limit))
+        .routes(routes!(create_block))
+        .routes(routes!(set_block_config))
         .routes(routes!(move_list))
         .routes(routes!(create_card))
         .routes(routes!(get_card, update_card, delete_card))
