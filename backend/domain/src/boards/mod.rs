@@ -1,3 +1,4 @@
+mod block;
 mod board;
 mod card;
 mod due_date;
@@ -15,6 +16,10 @@ mod templates;
 mod text;
 mod workspace;
 
+pub use block::{
+    AgendaConfig, AgendaRange, BlockConfig, BlockSize, COUNTER_LABEL_MAX_CHARS, CalendarConfig,
+    CounterConfig, CounterMetric, ListKind, NOTE_MAX_CHARS, NoteConfig,
+};
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};
 pub use due_date::DueDate;
