@@ -31,7 +31,7 @@ describe('api', () => {
   it('sends credentials and a JSON content type on every request', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(200, {}));
 
-    await registerUser('mathéo@example.com', 'matheo', 'test-fixture-password');
+    await registerUser('mathéo@example.com', 'test-fixture-password');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/users/register'),
@@ -41,7 +41,6 @@ describe('api', () => {
         headers: expect.objectContaining({ 'Content-Type': 'application/json' }) as unknown,
         body: JSON.stringify({
           email: 'mathéo@example.com',
-          username: 'matheo',
           password: 'test-fixture-password',
         }),
       })
