@@ -9,6 +9,7 @@ interface InlineEditProps {
   as?: 'h1' | 'h2' | 'h3';
   className?: string;
   maxLength?: number;
+  readOnly?: boolean;
 }
 
 export function InlineEdit({
@@ -18,6 +19,7 @@ export function InlineEdit({
   as: Heading = 'h2',
   className = '',
   maxLength = 120,
+  readOnly = false,
 }: InlineEditProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -31,6 +33,10 @@ export function InlineEdit({
       inputRef.current?.select();
     }
   }, [editing]);
+
+  if (readOnly) {
+    return <Heading className={className}>{value}</Heading>;
+  }
 
   function startEditing() {
     cancelled.current = false;
