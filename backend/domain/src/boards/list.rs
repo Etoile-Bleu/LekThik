@@ -42,6 +42,8 @@ pub struct ListWithCards {
     pub name: String,
     pub wip_limit: Option<u8>,
     pub config: BlockConfig,
+    /// Changes with every new picture of an image block, `None` while it has none.
+    pub image_version: Option<i64>,
     pub cards: Vec<CardSummary>,
 }
 
