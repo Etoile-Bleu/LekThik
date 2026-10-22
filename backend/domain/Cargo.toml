@@ -13,5 +13,8 @@ thiserror = { workspace = true }
 serde = { workspace = true }
 mockall = { workspace = true, optional = true }
 
+[dev-dependencies]
+serde_json = { workspace = true }
+
 [features]
 test-utils = ["dep:mockall"]
