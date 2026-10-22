@@ -3,6 +3,7 @@ import type { BoardView, TemplateCatalogue, Workspace } from '@lib/boardsApi';
 export function sampleBoardView(): BoardView {
   return {
     board: { id: 'b1', workspace_id: 'w1', name: 'Roadmap' },
+    role: 'owner',
     lists: [
       {
         id: 'todo',
@@ -38,12 +39,13 @@ export function sampleWorkspaces(): Workspace[] {
     {
       id: 'w1',
       name: 'Design team',
+      role: 'owner',
       boards: [
         { id: 'b1', workspace_id: 'w1', name: 'Roadmap' },
         { id: 'b2', workspace_id: 'w1', name: 'Bugs' },
       ],
     },
-    { id: 'w2', name: 'Side project', boards: [] },
+    { id: 'w2', name: 'Side project', role: 'owner', boards: [] },
   ];
 }
 
