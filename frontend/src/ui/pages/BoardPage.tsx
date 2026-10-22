@@ -1,24 +1,29 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { BoardMetaProvider } from '@hooks/useBoardMeta';
 import { useEffectiveTheme } from '@hooks/useEffectiveTheme';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useToday } from '@hooks/useToday';
+import { announce } from '@lib/announcer';
 import { useAuthStore } from '@lib/authStore';
 import { type CardFilter, EMPTY_FILTER, cardMatches } from '@lib/boardModel';
 import type { CardSummary } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { lookStyle } from '@lib/boardLooks';
-import { cardDisplayFor } from '@lib/prefs';
+import { type BoardViewKind, boardPrefsFor, cardDisplayFor } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
+import { BoardCalendar } from '../components/board/BoardCalendar';
 import { BoardCanvas } from '../components/board/BoardCanvas';
+import { BoardTable } from '../components/board/BoardTable';
 import { CardDialog } from '../components/board/CardDialog';
 import { FilterBar } from '../components/board/FilterBar';
 import { LabelsDialog } from '../components/board/LabelsDialog';
+import { ViewSwitcher } from '../components/board/ViewSwitcher';
+import { WipLimitDialog } from '../components/board/WipLimitDialog';
 import { DisplayMenu } from '../components/appearance/DisplayMenu';
 import { MembersDialog } from '../components/collab/MembersDialog';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
@@ -39,11 +44,18 @@ export function BoardPage() {
   const renameBoard = useBoardStore((state) => state.renameBoard);
   const setLook = useBoardStore((state) => state.setLook);
   const prefs = usePrefsStore((state) => state.prefs);
+  const updateBoardPrefs = usePrefsStore((state) => state.updateBoard);
+  const toggleListCollapsed = usePrefsStore((state) => state.toggleListCollapsed);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const linkedCard = useRef<string | null>(null);
+  linkedCard.current = searchParams.get('card');
   const theme = useEffectiveTheme();
   const deleteBoard = useBoardStore((state) => state.deleteBoard);
   const createList = useBoardStore((state) => state.createList);
   const renameList = useBoardStore((state) => state.renameList);
   const moveList = useBoardStore((state) => state.moveList);
+  const setListWipLimit = useBoardStore((state) => state.setListWipLimit);
+  const setCardDueDate = useBoardStore((state) => state.setCardDueDate);
   const deleteList = useBoardStore((state) => state.deleteList);
   const createCard = useBoardStore((state) => state.createCard);
   const moveCard = useBoardStore((state) => state.moveCard);
@@ -57,15 +69,23 @@ export function BoardPage() {
   const today = useToday();
   const [deletingBoard, setDeletingBoard] = useState(false);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
+  const [limitListId, setLimitListId] = useState<string | null>(null);
 
   useDocumentTitle(view?.board.name ?? 'Board');
 
   useEffect(() => {
     setFilter(EMPTY_FILTER);
-    setOpenCardId(null);
+    // A link from "my cards" arrives with the card to open, once.
+    setOpenCardId(linkedCard.current);
     void load(boardId);
     return () => reset();
   }, [boardId, load, reset]);
+
+  useEffect(() => {
+    if (searchParams.has('card')) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const workspaceName = useMemo(
     () => workspaces.find((workspace) => workspace.id === view?.board.workspace_id)?.name,
@@ -126,6 +146,14 @@ export function BoardPage() {
   }
 
   const deletingList = view.lists.find((list) => list.id === deletingListId);
+  const limitList = view.lists.find((list) => list.id === limitListId);
+  const own = boardPrefsFor(prefs, view.board.id);
+
+  const boardId_ = view.board.id;
+  function changeView(next: BoardViewKind) {
+    updateBoardPrefs(boardId_, { view: next });
+    announce(`${next === 'board' ? 'Board' : next === 'list' ? 'List' : 'Calendar'} view.`);
+  }
   const editable = canEdit(view.role);
   const workspace = workspaces.find((candidate) => candidate.id === view.board.workspace_id);
 
@@ -157,6 +185,8 @@ export function BoardPage() {
             <DisplayMenu
               boardId={view.board.id}
               look={view.look}
+              view={own.view}
+              listIds={view.lists.map((list) => list.id)}
               canStyle={editable}
               onLookChange={(look) => void setLook(look)}
             />
@@ -198,29 +228,71 @@ export function BoardPage() {
           onChange={setFilter}
           matchCount={counts.matching}
           totalCount={counts.total}
+          leading={<ViewSwitcher value={own.view} onChange={changeView} />}
         />
 
-        <div className="board-page__canvas">
-          <BoardCanvas
-            lists={view.lists}
-            labels={view.labels}
-            matches={matches}
-            freshIds={freshIds}
-            onRenameList={(listId, name) => void renameList(listId, name)}
-            onMoveList={(listId, index) => void moveList(listId, index)}
-            onDeleteList={(listId) => setDeletingListId(listId)}
-            onAddList={createList}
-            onAddCard={createCard}
-            onMoveCard={(cardId, listId, index) => void moveCard(cardId, listId, index)}
-            onOpenCard={setOpenCardId}
-            readOnly={!editable}
-          />
+        <div className="board-page__canvas" key={own.view}>
+          {own.view === 'list' && (
+            <BoardTable
+              boardName={view.board.name}
+              lists={view.lists}
+              labels={view.labels}
+              members={view.members}
+              matches={matches}
+              freshIds={freshIds}
+              editable={editable}
+              onOpenCard={setOpenCardId}
+              onMoveCard={(cardId, listId, index) => void moveCard(cardId, listId, index)}
+            />
+          )}
+          {own.view === 'calendar' && (
+            <BoardCalendar
+              lists={view.lists}
+              labels={view.labels}
+              members={view.members}
+              matches={matches}
+              editable={editable}
+              onOpenCard={setOpenCardId}
+              onSetDueDate={(cardId, day) => void setCardDueDate(cardId, day)}
+            />
+          )}
+          {own.view === 'board' && (
+            <BoardCanvas
+              lists={view.lists}
+              labels={view.labels}
+              matches={matches}
+              freshIds={freshIds}
+              columnWidth={own.column_width}
+              collapsedIds={own.collapsed_lists}
+              onToggleCollapsed={(listId) => toggleListCollapsed(view.board.id, listId)}
+              onEditLimit={setLimitListId}
+              onRenameList={(listId, name) => void renameList(listId, name)}
+              onMoveList={(listId, index) => void moveList(listId, index)}
+              onDeleteList={(listId) => setDeletingListId(listId)}
+              onAddList={createList}
+              onAddCard={createCard}
+              onMoveCard={(cardId, listId, index) => void moveCard(cardId, listId, index)}
+              onOpenCard={setOpenCardId}
+              readOnly={!editable}
+            />
+          )}
         </div>
 
         <CardDialog
           cardId={openCardId}
           onClose={() => setOpenCardId(null)}
           onManageLabels={() => setLabelsOpen(true)}
+          onCustomize={() => navigate('/settings/card')}
+        />
+        <WipLimitDialog
+          open={limitList !== undefined && editable}
+          listName={limitList?.name ?? ''}
+          current={limitList?.wip_limit ?? null}
+          cardCount={limitList?.cards.length ?? 0}
+          onSave={(limit) => {
+            if (limitListId) void setListWipLimit(limitListId, limit);
+          }}
+          onClose={() => setLimitListId(null)}
         />
         <LabelsDialog open={labelsOpen && editable} onClose={() => setLabelsOpen(false)} />
         <MembersDialog
