@@ -1,14 +1,17 @@
 import { type FormEvent, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { ApiError, loginUser } from '@lib/api';
 import { useAuthStore } from '@lib/authStore';
+import { safeNext, withNext } from '@lib/nextPath';
 
 import '@components/AuthForm.css';
 
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const next = safeNext(searchParams.get('next'));
   const notice = (location.state as { notice?: string } | null)?.notice;
   const checkSession = useAuthStore((state) => state.checkSession);
 
@@ -27,7 +30,7 @@ export function LoginPage() {
     try {
       await loginUser(email, password);
       await checkSession();
-      navigate('/dashboard');
+      navigate(next ?? '/dashboard');
     } catch (submitError) {
       setNeedsVerification(submitError instanceof ApiError && submitError.status === 403);
       setError(
@@ -81,7 +84,7 @@ export function LoginPage() {
           {error && <p className="auth__error">{error}</p>}
           {needsVerification && (
             <p className="auth__aside">
-              <Link to={`/verify-email?email=${encodeURIComponent(email)}`}>
+              <Link to={withNext(`/verify-email?email=${encodeURIComponent(email)}`, next)}>
                 Enter your verification code
               </Link>
             </p>
@@ -93,7 +96,7 @@ export function LoginPage() {
         </form>
 
         <p className="auth__switch">
-          No account yet? <Link to="/signup">Create one</Link>
+          No account yet? <Link to={withNext('/signup', next)}>Create one</Link>
         </p>
       </div>
     </div>
