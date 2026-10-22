@@ -1,0 +1,26 @@
+.view-switcher {
+  flex-shrink: 0;
+}
+
+.view-switcher .segmented__option {
+  padding-inline: 0.7rem 0.85rem;
+}
+
+/* On a phone the icons are enough and the labels stay for screen readers. */
+@media (max-width: 599px) {
+  .view-switcher .segmented__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .view-switcher .segmented__option {
+    min-width: 44px;
+    padding-inline: 0.6rem;
+  }
+}
