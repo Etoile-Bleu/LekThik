@@ -1,0 +1,243 @@
+.cal-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.25rem 0.6rem 0.7rem;
+}
+
+.cal-block__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.cal-block__title {
+  font-family: var(--font-display);
+  font-size: 0.98rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.cal-block__nav {
+  display: flex;
+  gap: 0.15rem;
+}
+
+.cal-block__step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.cal-block__step:hover {
+  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+
+.cal-block__step:active {
+  transform: scale(0.92);
+}
+
+.cal-block__step:focus-visible,
+.cal-block__card:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.cal-block__row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.cal-block__weekday {
+  padding-bottom: 0.2rem;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.cal-block__weekday abbr {
+  text-decoration: none;
+}
+
+.cal-block__weeks {
+  animation: cal-block-next var(--duration-base) var(--ease-out);
+}
+
+.cal-block__weeks[data-direction='prev'] {
+  animation-name: cal-block-prev;
+}
+
+.cal-block__cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.cal-block__cell:hover {
+  background: color-mix(in srgb, var(--color-ink) 7%, transparent);
+}
+
+.cal-block__cell[data-outside] {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+.cal-block__cell[data-today] .cal-block__date {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+  font-weight: 700;
+}
+
+.cal-block__cell[data-selected] {
+  box-shadow: inset 0 0 0 2px var(--color-ink);
+}
+
+.cal-block__cell:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -3px;
+}
+
+/* A day with cards due: a dot, or the count when there are several. Late days are square. */
+.cal-block__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 6px;
+  height: 6px;
+  margin-top: 1px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  animation: cal-block-pop var(--duration-base) var(--ease-out);
+}
+
+.cal-block__mark:not(:empty) {
+  min-width: 0.95rem;
+  height: 0.95rem;
+  padding: 0 0.2rem;
+}
+
+.cal-block__mark[data-late] {
+  border-radius: 2px;
+  background: var(--label-red-dot);
+  color: #fff;
+}
+
+.cal-block__day {
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.cal-block__day-title {
+  margin-bottom: 0.3rem;
+  color: var(--color-text-soft-on-light);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.cal-block__none {
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+.cal-block__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cal-block__card {
+  display: block;
+  width: 100%;
+  min-height: 34px;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.cal-block__card:hover {
+  border-color: var(--color-ink);
+  transform: translateY(-1px);
+}
+
+.cal-block__more {
+  padding-left: 0.2rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+@keyframes cal-block-next {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+}
+
+@keyframes cal-block-prev {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+}
+
+@keyframes cal-block-pop {
+  from {
+    transform: scale(0.4);
+  }
+}
+
+@media (forced-colors: active) {
+  .cal-block__cell[data-selected] {
+    outline: 2px solid Highlight;
+  }
+
+  .cal-block__mark {
+    background: CanvasText;
+  }
+}
