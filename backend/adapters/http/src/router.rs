@@ -3,7 +3,7 @@ use std::time::Duration;
 
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
-use axum::http::{HeaderValue, Method, header};
+use axum::http::{HeaderName, HeaderValue, Method, header};
 use axum::middleware;
 use tower_http::cors::CorsLayer;
 use utoipa::OpenApi;
@@ -11,7 +11,9 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
 use utoipa_swagger_ui::SwaggerUi;
 
+use crate::events::*;
 use crate::handlers::*;
+use crate::notify::notify_changes;
 use crate::rate_limit::{RateLimiter, rate_limit};
 use crate::security_headers::with_api_security_headers;
 use crate::state::AppState;
@@ -27,6 +29,9 @@ use crate::state::AppState;
         (name = "lists", description = "Lists inside a board"),
         (name = "cards", description = "Cards inside a list"),
         (name = "labels", description = "Colored priority labels of a board"),
+        (name = "members", description = "Members of a workspace and their roles"),
+        (name = "invitations", description = "Email invitations to join a workspace"),
+        (name = "events", description = "Live change notifications"),
         (name = "templates", description = "Ready made workspaces and boards to start from"),
     )
 )]
@@ -38,7 +43,7 @@ const BOARDS_RATE_LIMIT_MAX_REQUESTS: u32 = 600;
 const BOARDS_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
 const BOARDS_BODY_LIMIT_BYTES: usize = 64 * 1024;
 
-fn boards_router() -> OpenApiRouter<AppState> {
+fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
     let rate_limiter = Arc::new(RateLimiter::new(
         BOARDS_RATE_LIMIT_MAX_REQUESTS,
         Duration::from_secs(BOARDS_RATE_LIMIT_WINDOW_SECONDS),
@@ -61,6 +66,16 @@ fn boards_router() -> OpenApiRouter<AppState> {
         .routes(routes!(move_card))
         .routes(routes!(set_card_labels))
         .routes(routes!(update_label, delete_label))
+        .routes(routes!(list_members))
+        .routes(routes!(change_member_role, remove_member))
+        .routes(routes!(invite_member))
+        .routes(routes!(revoke_invitation))
+        .routes(routes!(list_my_invitations))
+        .routes(routes!(get_my_invitation))
+        .routes(routes!(accept_invitation))
+        .routes(routes!(decline_invitation))
+        .routes(routes!(stream_events))
+        .layer(middleware::from_fn_with_state(state, notify_changes))
         .layer(DefaultBodyLimit::max(BOARDS_BODY_LIMIT_BYTES))
         .layer(middleware::from_fn_with_state(rate_limiter, rate_limit))
 }
@@ -80,7 +95,7 @@ pub fn build(state: AppState) -> Router {
         .routes(routes!(reset_password))
         .layer(middleware::from_fn_with_state(rate_limiter, rate_limit));
 
-    let api_router = with_api_security_headers(auth_router.merge(boards_router()));
+    let api_router = with_api_security_headers(auth_router.merge(boards_router(state.clone())));
 
     let (router, api) = OpenApiRouter::<AppState>::with_openapi(ApiDoc::openapi())
         .nest("/api", api_router)
@@ -120,6 +135,6 @@ fn cors_layer() -> CorsLayer {
             Method::PATCH,
             Method::DELETE,
         ])
-        .allow_headers([header::CONTENT_TYPE])
+        .allow_headers([header::CONTENT_TYPE, HeaderName::from_static("x-client-id")])
         .allow_credentials(true)
 }

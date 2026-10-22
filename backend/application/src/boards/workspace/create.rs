@@ -17,7 +17,7 @@ impl CreateWorkspace {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         name: &str,
         template_id: Option<&str>,
     ) -> Result<WorkspaceWithBoards, BoardsError> {
@@ -27,7 +27,7 @@ impl CreateWorkspace {
             Some(id) => boards_of_template(id)?,
         };
 
-        self.repo.create(owner_id, name, boards).await
+        self.repo.create(user_id, name, boards).await
     }
 }
 
@@ -60,6 +60,7 @@ mod tests {
             workspace: Workspace {
                 id: Uuid::new_v4(),
                 name,
+                role: domain::boards::Role::Owner,
             },
             boards: Vec::new(),
         }
@@ -67,17 +68,17 @@ mod tests {
 
     #[tokio::test]
     async fn creates_a_blank_workspace_with_the_trimmed_name_for_the_owner() {
-        let owner_id = Uuid::new_v4();
+        let user_id = Uuid::new_v4();
         let mut repo = MockWorkspaceRepo::new();
         repo.expect_create()
             .times(1)
             .withf(move |owner, name, boards| {
-                *owner == owner_id && name.as_str() == "Team" && boards.is_empty()
+                *owner == user_id && name.as_str() == "Team" && boards.is_empty()
             })
             .returning(|_, name, _| Ok(created(name.into_string())));
 
         let result = CreateWorkspace::new(Arc::new(repo))
-            .execute(owner_id, "  Team ", None)
+            .execute(user_id, "  Team ", None)
             .await;
 
         assert_eq!(

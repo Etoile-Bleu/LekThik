@@ -25,6 +25,7 @@ validator = { workspace = true }
 tower-http = { workspace = true }
 jsonwebtoken = { workspace = true }
 secrecy = { workspace = true }
+futures-util = { workspace = true }
 
 [dev-dependencies]
 async-trait = { workspace = true }

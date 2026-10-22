@@ -15,6 +15,7 @@ import { useWorkspaceStore } from './workspaceStore';
 const team = {
   id: 'w1',
   name: 'Team',
+  role: 'owner' as const,
   boards: [{ id: 'b1', workspace_id: 'w1', name: 'Roadmap' }],
 };
 
@@ -43,11 +44,16 @@ describe('useWorkspaceStore', () => {
   });
 
   it('adds a created workspace with no boards', async () => {
-    vi.mocked(api.createWorkspace).mockResolvedValueOnce({ id: 'w2', name: 'Design', boards: [] });
+    vi.mocked(api.createWorkspace).mockResolvedValueOnce({
+      id: 'w2',
+      name: 'Design',
+      role: 'owner',
+      boards: [],
+    });
 
     const created = await useWorkspaceStore.getState().createWorkspace('Design');
 
-    expect(created).toEqual({ id: 'w2', name: 'Design', boards: [] });
+    expect(created).toEqual({ id: 'w2', name: 'Design', role: 'owner', boards: [] });
     expect(useWorkspaceStore.getState().workspaces).toHaveLength(1);
   });
 
@@ -56,6 +62,7 @@ describe('useWorkspaceStore', () => {
     vi.mocked(api.createWorkspace).mockResolvedValueOnce({
       id: 'w3',
       name: 'Platform',
+      role: 'owner',
       boards: [board],
     });
 

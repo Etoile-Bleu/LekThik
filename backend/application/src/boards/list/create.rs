@@ -14,12 +14,12 @@ impl CreateList {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         board_id: Uuid,
         name: &str,
     ) -> Result<List, BoardsError> {
         let name = Title::parse(name)?;
-        self.repo.create(owner_id, board_id, name).await
+        self.repo.create(user_id, board_id, name).await
     }
 }
 

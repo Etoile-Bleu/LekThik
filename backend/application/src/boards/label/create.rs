@@ -14,7 +14,7 @@ impl CreateLabel {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         board_id: Uuid,
         name: &str,
         color: &str,
@@ -25,7 +25,7 @@ impl CreateLabel {
         let priority = Priority::parse(priority)?;
 
         self.repo
-            .create(owner_id, board_id, name, color, priority)
+            .create(user_id, board_id, name, color, priority)
             .await
     }
 }

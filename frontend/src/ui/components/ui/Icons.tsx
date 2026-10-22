@@ -151,3 +151,30 @@ export function SignOutIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function UsersIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="7.5" cy="7" r="2.75" />
+      <path d="M2.5 16c.4-2.6 2.4-4 5-4s4.6 1.4 5 4" />
+      <path d="M12.5 4.4a2.75 2.75 0 0 1 0 5.2M14.2 12.3c1.8.5 3 1.8 3.3 3.7" />
+    </Base>
+  );
+}
+
+export function MailIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="2.75" y="4.75" width="14.5" height="10.5" rx="2" />
+      <path d="m3.5 6 6.5 5 6.5-5" />
+    </Base>
+  );
+}
+
+export function LogOutIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M8 4.5H5.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H8M12 7l3 3-3 3M15 10H8" />
+    </Base>
+  );
+}

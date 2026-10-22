@@ -1,18 +1,21 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 import { useAuthStore } from '@lib/authStore';
+import { withNext } from '@lib/nextPath';
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const status = useAuthStore((state) => state.status);
   const checkSession = useAuthStore((state) => state.checkSession);
+  const location = useLocation();
 
   if (status === 'idle' || status === 'loading') {
     return null;
   }
 
   if (status === 'unauthenticated') {
-    return <Navigate to="/login" replace />;
+    const target = location.pathname.startsWith('/invitations/') ? location.pathname : null;
+    return <Navigate to={withNext('/login', target)} replace />;
   }
 
   if (status === 'unreachable') {

@@ -1,7 +1,11 @@
 use std::sync::Arc;
 
-use domain::boards::{BoardRepo, CardRepo, LabelRepo, ListRepo, WorkspaceRepo};
+use domain::boards::{
+    BoardRepo, CardRepo, InvitationRepo, LabelRepo, ListRepo, Locator, MemberRepo, WorkspaceRepo,
+};
 use domain::{Mailer, TokenIssuer, UserRepo, VerificationCodeRepo};
+
+use crate::events::EventHub;
 
 pub const SESSION_COOKIE: &str = "session";
 
@@ -16,4 +20,10 @@ pub struct AppState {
     pub list_repo: Arc<dyn ListRepo>,
     pub card_repo: Arc<dyn CardRepo>,
     pub label_repo: Arc<dyn LabelRepo>,
+    pub member_repo: Arc<dyn MemberRepo>,
+    pub invitation_repo: Arc<dyn InvitationRepo>,
+    pub locator: Arc<dyn Locator>,
+    pub events: EventHub,
+    /// Public address of the web app, used in links sent by email.
+    pub app_base_url: String,
 }

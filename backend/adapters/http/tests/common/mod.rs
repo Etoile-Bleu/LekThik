@@ -6,8 +6,8 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 use adapters_db::{
-    PgBoardRepo, PgCardRepo, PgLabelRepo, PgListRepo, PgUserRepo, PgVerificationCodeRepo,
-    PgWorkspaceRepo,
+    PgBoardRepo, PgCardRepo, PgInvitationRepo, PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo,
+    PgUserRepo, PgVerificationCodeRepo, PgWorkspaceRepo,
 };
 use async_trait::async_trait;
 use axum::body::Body;
@@ -16,6 +16,7 @@ use axum::http::{Request, StatusCode, header};
 use domain::{EmailMessage, Mailer, MailerError};
 use secrecy::SecretString;
 use serde_json::json;
+use server::events::EventHub;
 use server::jwt::JwtTokenIssuer;
 use server::router;
 use server::state::AppState;
@@ -112,6 +113,12 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
     .execute(&pool)
     .await?;
 
+    sqlx::raw_sql(include_str!(
+        "../../../../migrations/006_create_workspace_collaboration.sql"
+    ))
+    .execute(&pool)
+    .await?;
+
     let mailer = Arc::new(RecordingMailer::default());
 
     let state = AppState {
@@ -126,6 +133,11 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
         list_repo: Arc::new(PgListRepo::new(pool.clone())),
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
+        member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
+        invitation_repo: Arc::new(PgInvitationRepo::new(pool.clone())),
+        locator: Arc::new(PgLocator::new(pool.clone())),
+        events: EventHub::new(),
+        app_base_url: "https://app.test".to_string(),
     };
 
     Ok((router::build(state), pool, container, mailer))

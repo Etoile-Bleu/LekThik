@@ -197,3 +197,18 @@
 .dialog--drawer .sidebar {
   padding-top: 3.5rem;
 }
+
+.sidebar__role {
+  flex: none;
+  margin-left: auto;
+  margin-right: 0.35rem;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  color: var(--color-text-soft-on-dark);
+  font-family: var(--font-body);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}

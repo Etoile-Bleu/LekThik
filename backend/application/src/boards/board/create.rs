@@ -14,7 +14,7 @@ impl CreateBoard {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         workspace_id: Uuid,
         name: &str,
         template_id: Option<&str>,
@@ -29,7 +29,7 @@ impl CreateBoard {
         };
 
         self.repo
-            .create(owner_id, workspace_id, name, template)
+            .create(user_id, workspace_id, name, template)
             .await
     }
 }
@@ -50,13 +50,13 @@ mod tests {
 
     #[tokio::test]
     async fn creates_a_blank_board_inside_the_workspace() {
-        let owner_id = Uuid::new_v4();
+        let user_id = Uuid::new_v4();
         let workspace_id = Uuid::new_v4();
         let mut repo = MockBoardRepo::new();
         repo.expect_create()
             .times(1)
             .withf(move |owner, workspace, name, template| {
-                *owner == owner_id
+                *owner == user_id
                     && *workspace == workspace_id
                     && name.as_str() == "Roadmap"
                     && template.is_none()
@@ -66,7 +66,7 @@ mod tests {
             });
 
         let result = CreateBoard::new(Arc::new(repo))
-            .execute(owner_id, workspace_id, "Roadmap", None)
+            .execute(user_id, workspace_id, "Roadmap", None)
             .await;
 
         assert_eq!(

@@ -14,12 +14,12 @@ impl CreateCard {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         list_id: Uuid,
         title: &str,
     ) -> Result<CardSummary, BoardsError> {
         let title = Title::parse(title)?;
-        self.repo.create(owner_id, list_id, title).await
+        self.repo.create(user_id, list_id, title).await
     }
 }
 

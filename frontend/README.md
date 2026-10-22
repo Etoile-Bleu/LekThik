@@ -40,6 +40,7 @@ src/
       app/          Application shell, sidebar and user menu
       board/        Lists, cards, drag and drop canvas, card and label dialogs
       templates/    Template picker with live previews
+      collab/       Members dialog, invitation inbox and card, live status, avatars
     lib/            API client, zustand stores and pure board logic
     hooks/          Small shared hooks
     styles/         Shared button and form styles
@@ -48,6 +49,13 @@ src/
 Drag and drop uses `@dnd-kit` with mouse, touch and keyboard sensors, screen reader announcements,
 and a menu based alternative to dragging. Motion is limited to transforms and opacity and is
 disabled by `prefers-reduced-motion`.
+
+Collaboration: `lib/realtime.ts` opens the server-sent events stream while the app shell is mounted
+and turns each notification into a refetch (debounced, and deferred while this tab still has writes
+in flight, so remote changes never overwrite an optimistic move). The UI follows the signed in
+user's role (`lib/roles.ts`): readers get a view only board with no composers, drag handles or
+menus. Links from invitation emails keep their destination through login and signup with a
+validated `next` parameter (`lib/nextPath.ts`).
 
 Path aliases (`@`, `@components`, `@pages`, `@lib`, `@hooks`, `@types`) are configured in
 `vite.config.ts` and `tsconfig.json`.

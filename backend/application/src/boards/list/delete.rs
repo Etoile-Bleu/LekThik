@@ -12,8 +12,8 @@ impl DeleteList {
         Self { repo }
     }
 
-    pub async fn execute(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
-        self.repo.delete(owner_id, id).await
+    pub async fn execute(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
+        self.repo.delete(user_id, id).await
     }
 }
 
@@ -25,15 +25,15 @@ mod tests {
 
     #[tokio::test]
     async fn deletes_the_list_for_the_owner() {
-        let owner_id = Uuid::new_v4();
+        let user_id = Uuid::new_v4();
         let id = Uuid::new_v4();
         let mut repo = MockListRepo::new();
         repo.expect_delete()
             .times(1)
-            .withf(move |owner, target| *owner == owner_id && *target == id)
+            .withf(move |owner, target| *owner == user_id && *target == id)
             .returning(|_, _| Ok(()));
 
-        let result = DeleteList::new(Arc::new(repo)).execute(owner_id, id).await;
+        let result = DeleteList::new(Arc::new(repo)).execute(user_id, id).await;
 
         assert_eq!(result, Ok(()));
     }

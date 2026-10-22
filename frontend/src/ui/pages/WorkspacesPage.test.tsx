@@ -56,6 +56,7 @@ describe('WorkspacesPage', () => {
     vi.mocked(api.createWorkspace).mockResolvedValueOnce({
       id: 'w9',
       name: 'Marketing',
+      role: 'owner',
       boards: [],
     });
     renderPage();

@@ -30,31 +30,73 @@ async function parseError(response: Response): Promise<string> {
   return `Request failed with status ${response.status}`;
 }
 
-export async function request(path: string, init?: RequestInit): Promise<Response> {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...init?.headers,
-    },
-  });
+export const API_URL = API_BASE;
 
-  if (!response.ok) {
-    throw new ApiError(response.status, await parseError(response));
+// Identifies this browser tab, so the server can tell the live stream which
+// tab made a change and that tab can skip its own echo.
+export const CLIENT_ID =
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `tab-${Math.random().toString(36).slice(2)}`;
+
+let writesInFlight = 0;
+let settleWaiters: Array<() => void> = [];
+
+function finishWrite() {
+  writesInFlight -= 1;
+  if (writesInFlight === 0) {
+    const waiters = settleWaiters;
+    settleWaiters = [];
+    waiters.forEach((resolve) => resolve());
+  }
+}
+
+/** Resolves once none of this tab's own writes is still on the wire. */
+export function whenWritesSettle(): Promise<void> {
+  if (writesInFlight === 0) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => settleWaiters.push(resolve));
+}
+
+export async function request(path: string, init?: RequestInit): Promise<Response> {
+  const isWrite = (init?.method ?? 'GET').toUpperCase() !== 'GET';
+  if (isWrite) {
+    writesInFlight += 1;
   }
 
-  return response;
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-Id': CLIENT_ID,
+        ...init?.headers,
+      },
+    });
+
+    if (!response.ok) {
+      throw new ApiError(response.status, await parseError(response));
+    }
+
+    return response;
+  } finally {
+    if (isWrite) {
+      finishWrite();
+    }
+  }
 }
 
 export async function registerUser(
   email: string,
-  username: string,
-  password: string
+  password: string,
+  username?: string
 ): Promise<void> {
+  const chosen = username?.trim();
   await request('/api/users/register', {
     method: 'POST',
-    body: JSON.stringify({ email, username, password }),
+    body: JSON.stringify({ email, password, ...(chosen ? { username: chosen } : {}) }),
   });
 }
 
