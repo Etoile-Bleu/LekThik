@@ -12,9 +12,9 @@ impl RenameList {
         Self { repo }
     }
 
-    pub async fn execute(&self, owner_id: Uuid, id: Uuid, name: &str) -> Result<List, BoardsError> {
+    pub async fn execute(&self, user_id: Uuid, id: Uuid, name: &str) -> Result<List, BoardsError> {
         let name = Title::parse(name)?;
-        self.repo.rename(owner_id, id, name).await
+        self.repo.rename(user_id, id, name).await
     }
 }
 
