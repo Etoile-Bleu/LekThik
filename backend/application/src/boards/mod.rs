@@ -2,10 +2,15 @@ mod board;
 mod card;
 mod label;
 mod list;
+mod members;
 mod workspace;
 
 pub use board::{CreateBoard, DeleteBoard, GetBoard, RenameBoard};
 pub use card::{CreateCard, DeleteCard, GetCard, MoveCard, SetCardLabels, UpdateCard};
 pub use label::{CreateLabel, DeleteLabel, UpdateLabel};
 pub use list::{CreateList, DeleteList, MoveList, RenameList};
+pub use members::{
+    ChangeMemberRole, GetMyInvitation, InviteMember, ListMembers, ListMyInvitations,
+    MembersOverview, RemoveMember, RespondToInvitation, RevokeInvitation,
+};
 pub use workspace::{CreateWorkspace, DeleteWorkspace, ListWorkspaces, RenameWorkspace};
