@@ -12,8 +12,8 @@ impl GetCard {
         Self { repo }
     }
 
-    pub async fn execute(&self, owner_id: Uuid, id: Uuid) -> Result<Card, BoardsError> {
-        self.repo.get(owner_id, id).await
+    pub async fn execute(&self, user_id: Uuid, id: Uuid) -> Result<Card, BoardsError> {
+        self.repo.get(user_id, id).await
     }
 }
 
@@ -25,7 +25,7 @@ mod tests {
 
     #[tokio::test]
     async fn returns_the_card_for_the_owner() {
-        let owner_id = Uuid::new_v4();
+        let user_id = Uuid::new_v4();
         let id = Uuid::new_v4();
         let card = Card {
             id,
@@ -39,10 +39,10 @@ mod tests {
         let returned = card.clone();
         repo.expect_get()
             .times(1)
-            .withf(move |owner, target| *owner == owner_id && *target == id)
+            .withf(move |owner, target| *owner == user_id && *target == id)
             .returning(move |_, _| Ok(returned.clone()));
 
-        let result = GetCard::new(Arc::new(repo)).execute(owner_id, id).await;
+        let result = GetCard::new(Arc::new(repo)).execute(user_id, id).await;
 
         assert_eq!(result, Ok(card));
     }
