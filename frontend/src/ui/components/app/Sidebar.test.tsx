@@ -7,6 +7,8 @@ import { sampleCatalogue, sampleWorkspaces } from '../../../test/fixtures';
 vi.mock('@lib/boardsApi', () => ({
   fetchTemplates: vi.fn(),
   createWorkspace: vi.fn(),
+  renameWorkspace: vi.fn(),
+  deleteWorkspace: vi.fn(),
   createBoard: vi.fn(),
 }));
 
@@ -65,5 +67,44 @@ describe('Sidebar', () => {
 
     await waitFor(() => expect(api.createWorkspace).toHaveBeenCalledWith('Ops', null));
     expect(await screen.findByText('overview page')).toBeInTheDocument();
+  });
+
+  it('renames a workspace from its menu', async () => {
+    vi.mocked(api.renameWorkspace).mockResolvedValueOnce({ id: 'w1', name: 'Renamed' });
+    renderSidebar();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for workspace Design team' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Rename workspace' }));
+    const dialog = screen.getByRole('dialog', { name: 'Rename workspace' });
+    fireEvent.change(within(dialog).getByLabelText('Workspace name'), {
+      target: { value: 'Renamed' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save name' }));
+
+    await waitFor(() => expect(api.renameWorkspace).toHaveBeenCalledWith('w1', 'Renamed'));
+  });
+
+  it('deletes the workspace after a confirmation and leaves a board that belonged to it', async () => {
+    vi.mocked(api.deleteWorkspace).mockResolvedValueOnce(undefined);
+    renderSidebar();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for workspace Design team' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Delete workspace' }));
+    expect(api.deleteWorkspace).not.toHaveBeenCalled();
+
+    const dialog = screen.getByRole('dialog', { name: 'Delete this workspace?' });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete workspace' }));
+
+    await waitFor(() => expect(api.deleteWorkspace).toHaveBeenCalledWith('w1'));
+    expect(await screen.findByText('overview page')).toBeInTheDocument();
+  });
+
+  it('starts a new board in the chosen workspace from the same menu', async () => {
+    renderSidebar();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for workspace Side project' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'New board' }));
+
+    expect(await screen.findByRole('dialog', { name: 'New board' })).toBeInTheDocument();
   });
 });
