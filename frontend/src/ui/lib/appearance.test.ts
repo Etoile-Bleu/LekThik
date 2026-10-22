@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { type Appearance, applyAppearance, effectiveTheme, pickAppearance } from './appearance';
+import {
+  type Appearance,
+  applyAppearance,
+  effectiveTheme,
+  ensureFont,
+  pickAppearance,
+} from './appearance';
 import { DEFAULT_PREFERENCES } from './prefs';
 
 const calm = { prefersDark: false, prefersContrast: false };
@@ -103,13 +109,21 @@ describe('applyAppearance', () => {
     expect(root.classList.contains('theme-fade')).toBe(false);
   });
 
-  it('loads a reading font only when it is chosen, and only once', () => {
-    applyAppearance(appearance({ reading_font: 'standard' }), calm, root);
-    expect(document.querySelector('link[data-reading-font]')).toBeNull();
-
+  it('never asks another company for a font', async () => {
     applyAppearance(appearance({ reading_font: 'hyperlegible' }), calm, root);
-    applyAppearance(appearance({ reading_font: 'hyperlegible' }), calm, root);
+    applyAppearance(appearance({ reading_font: 'lexend' }), calm, root);
+    await ensureFont('hyperlegible');
 
-    expect(document.querySelectorAll('link[data-reading-font="hyperlegible"]')).toHaveLength(1);
+    expect(document.querySelector('link[href*="googleapis"], link[href*="gstatic"]')).toBeNull();
+    expect(document.head.querySelectorAll('link[rel="stylesheet"]')).toHaveLength(0);
+  });
+
+  it('loads a reading font only when it is chosen, and only once', async () => {
+    const first = ensureFont('hyperlegible');
+    const second = ensureFont('hyperlegible');
+
+    expect(second).toBe(first);
+    await expect(first).resolves.toBeUndefined();
+    await expect(ensureFont('standard')).resolves.toBeUndefined();
   });
 });
