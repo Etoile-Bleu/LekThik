@@ -1,0 +1,5 @@
+pub const MAX_WORKSPACES_PER_USER: i64 = 50;
+pub const MAX_BOARDS_PER_WORKSPACE: i64 = 100;
+pub const MAX_LISTS_PER_BOARD: i64 = 50;
+pub const MAX_CARDS_PER_LIST: i64 = 500;
+pub const MAX_LABELS_PER_BOARD: i64 = 30;
