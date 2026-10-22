@@ -1,0 +1,173 @@
+.workspaces {
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+  max-width: 1040px;
+  margin-inline: auto;
+  padding: 1.75rem 1.25rem 3rem;
+}
+
+.workspaces__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.workspaces__title {
+  font-size: clamp(1.7rem, 3.4vw, 2.2rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.workspaces__subtitle {
+  margin-top: 0.35rem;
+  color: var(--color-text-soft-on-light);
+}
+
+.workspaces__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.9rem;
+  max-width: 560px;
+  padding: 2rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper-card);
+  animation: workspace-in var(--duration-slow) var(--ease-out);
+}
+
+.workspaces__empty h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.workspaces__empty p {
+  color: var(--color-text-soft-on-light);
+}
+
+.workspaces__skeleton {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.workspaces__skeleton div {
+  height: 92px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, #e3e5dc 25%, #eef0e8 50%, #e3e5dc 75%);
+  background-size: 200% 100%;
+  animation: workspace-shimmer 1.4s linear infinite;
+}
+
+.workspace {
+  animation: workspace-in var(--duration-slow) var(--ease-out) both;
+}
+
+.workspace:nth-of-type(2) {
+  animation-delay: 50ms;
+}
+
+.workspace:nth-of-type(3) {
+  animation-delay: 100ms;
+}
+
+.workspace__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.workspace__name {
+  min-width: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.9rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-tile {
+  display: flex;
+  align-items: flex-end;
+  width: 100%;
+  min-height: 92px;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.25;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: var(--shadow-card);
+  transition:
+    transform var(--duration-base) var(--ease-out),
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-base) var(--ease-out);
+}
+
+.board-tile:hover {
+  border-color: var(--color-ink);
+  box-shadow: var(--shadow-popover);
+  transform: translateY(-2px);
+}
+
+.board-tile:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.board-tile__name {
+  overflow-wrap: anywhere;
+}
+
+.board-tile--new {
+  align-items: center;
+  gap: 0.5rem;
+  border-style: dashed;
+  border-color: var(--color-border-strong);
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-soft-on-light);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.board-tile--new:hover {
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+}
+
+@media (min-width: 900px) {
+  .workspaces {
+    padding-inline: 2rem;
+  }
+}
+
+@keyframes workspace-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes workspace-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
