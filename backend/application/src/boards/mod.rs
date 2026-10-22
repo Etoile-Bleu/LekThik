@@ -7,10 +7,11 @@ mod workspace;
 
 pub use board::{CreateBoard, DeleteBoard, GetBoard, RenameBoard, SetBoardLook};
 pub use card::{
-    CreateCard, DeleteCard, GetCard, MoveCard, SetCardAssignees, SetCardLabels, UpdateCard,
+    CreateCard, DeleteCard, GetCard, ListMyCards, MoveCard, SetCardAssignees, SetCardLabels,
+    UpdateCard,
 };
 pub use label::{CreateLabel, DeleteLabel, UpdateLabel};
-pub use list::{CreateList, DeleteList, MoveList, RenameList};
+pub use list::{CreateList, DeleteList, MoveList, RenameList, SetListWipLimit};
 pub use members::{
     ChangeMemberRole, GetMyInvitation, InviteMember, ListMembers, ListMyInvitations,
     MembersOverview, RemoveMember, RespondToInvitation, RevokeInvitation,
