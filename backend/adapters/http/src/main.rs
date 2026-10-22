@@ -2,11 +2,12 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use adapters_db::{
-    PgBoardRepo, PgCardRepo, PgLabelRepo, PgListRepo, PgUserRepo, PgVerificationCodeRepo,
-    PgWorkspaceRepo,
+    PgBoardRepo, PgCardRepo, PgInvitationRepo, PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo,
+    PgUserRepo, PgVerificationCodeRepo, PgWorkspaceRepo,
 };
 use adapters_mail::{MailSender, SmtpMailer};
 use secrecy::SecretString;
+use server::events::EventHub;
 use server::jwt::JwtTokenIssuer;
 use server::state::AppState;
 use server::{db, router};
@@ -46,7 +47,12 @@ async fn main() -> anyhow::Result<()> {
         board_repo: Arc::new(PgBoardRepo::new(pool.clone())),
         list_repo: Arc::new(PgListRepo::new(pool.clone())),
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
-        label_repo: Arc::new(PgLabelRepo::new(pool)),
+        label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
+        member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
+        invitation_repo: Arc::new(PgInvitationRepo::new(pool.clone())),
+        locator: Arc::new(PgLocator::new(pool)),
+        events: EventHub::new(),
+        app_base_url: env_or("APP_BASE_URL", "http://localhost:5173"),
     };
 
     let app = router::build(state);

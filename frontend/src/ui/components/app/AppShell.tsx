@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { useMediaQuery } from '@hooks/useMediaQuery';
+import { useInvitationStore } from '@lib/invitationStore';
+import { startRealtime } from '@lib/realtime';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
+import { InvitationsButton } from '../collab/InvitationsButton';
+import { LiveIndicator } from '../collab/LiveIndicator';
 import { MenuIcon } from '../ui/Icons';
 import { Dialog } from '../ui/Dialog';
 import { Toaster } from '../ui/Toaster';
@@ -15,11 +19,14 @@ export function AppShell() {
   const isWide = useMediaQuery('(min-width: 900px)');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const loadWorkspaces = useWorkspaceStore((state) => state.load);
+  const loadInvitations = useInvitationStore((state) => state.load);
   const location = useLocation();
 
   useEffect(() => {
     void loadWorkspaces();
-  }, [loadWorkspaces]);
+    void loadInvitations();
+    return startRealtime();
+  }, [loadWorkspaces, loadInvitations]);
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -47,6 +54,8 @@ export function AppShell() {
           LekThik
         </Link>
         <div className="shell__spacer" />
+        <LiveIndicator />
+        <InvitationsButton />
         <UserMenu />
       </header>
 

@@ -124,3 +124,15 @@
     background-position: -200% 0;
   }
 }
+
+.board-header__readonly {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 0.7rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 999px;
+  color: var(--color-text-soft-on-light);
+  font-size: 0.82rem;
+  font-weight: 600;
+}

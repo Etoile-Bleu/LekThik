@@ -46,6 +46,7 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:?Missing SMTP_PASSWORD, copy .env.example to .env first}
       MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:?Missing MAIL_FROM_EMAIL, copy .env.example to .env first}
       MAIL_FROM_NAME: ${MAIL_FROM_NAME:-LekThik}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:5173}
     volumes:
       - ./backend:/app
       - backend_target:/app/target

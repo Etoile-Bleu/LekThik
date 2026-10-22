@@ -1,12 +1,15 @@
 import { type FormEvent, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { ApiError, registerUser } from '@lib/api';
+import { safeNext, withNext } from '@lib/nextPath';
 
 import '@components/AuthForm.css';
 
 export function SignupPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const next = safeNext(searchParams.get('next'));
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -26,8 +29,8 @@ export function SignupPage() {
     setIsSubmitting(true);
 
     try {
-      await registerUser(email, username, password);
-      navigate(`/verify-email?email=${encodeURIComponent(email)}`);
+      await registerUser(email, password, username);
+      navigate(withNext(`/verify-email?email=${encodeURIComponent(email)}`, next));
     } catch (submitError) {
       setError(
         submitError instanceof ApiError ? submitError.message : 'Something went wrong, try again.'
@@ -60,7 +63,7 @@ export function SignupPage() {
           </div>
 
           <div className="auth__field">
-            <label htmlFor="signup-username">Username</label>
+            <label htmlFor="signup-username">Username (optional)</label>
             <input
               id="signup-username"
               name="username"
@@ -68,11 +71,13 @@ export function SignupPage() {
               autoComplete="username"
               minLength={3}
               maxLength={32}
-              required
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
-            <span className="auth__hint">3 to 32 characters.</span>
+            <span className="auth__hint">
+              3 to 32 characters, shown to your teammates. Leave empty to use the start of your
+              email.
+            </span>
           </div>
 
           <div className="auth__field">
@@ -112,7 +117,7 @@ export function SignupPage() {
         </form>
 
         <p className="auth__switch">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Already have an account? <Link to={withNext('/login', next)}>Sign in</Link>
         </p>
       </div>
     </div>

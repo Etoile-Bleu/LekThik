@@ -163,6 +163,7 @@
 }
 
 .field input[type='text'],
+.field input[type='email'],
 .field input[type='search'],
 .field textarea,
 .field select {

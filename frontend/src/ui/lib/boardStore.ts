@@ -20,6 +20,7 @@ interface BoardState {
   status: BoardStatus;
   freshIds: string[];
   load: (boardId: string) => Promise<void>;
+  refresh: () => Promise<void>;
   reset: () => void;
   renameBoard: (name: string) => Promise<void>;
   deleteBoard: () => Promise<boolean>;
@@ -76,6 +77,23 @@ export const useBoardStore = create<BoardState>((set, get) => {
         set({ status: notFound ? 'notfound' : 'error' });
         if (!notFound) {
           notifyError(error, 'Could not load this board.');
+        }
+      }
+    },
+
+    // Quietly re-reads the open board after someone else changed it. Only a
+    // 404 is shown: the board was deleted or this user lost access to it.
+    refresh: async () => {
+      const current = get().view;
+      if (!current) return;
+      try {
+        const view = await api.fetchBoard(current.board.id);
+        if (get().view?.board.id === current.board.id) {
+          set({ view, status: 'ready' });
+        }
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) {
+          set({ view: null, status: 'notfound' });
         }
       }
     },

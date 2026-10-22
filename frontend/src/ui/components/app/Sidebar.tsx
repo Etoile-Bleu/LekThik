@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import type { Workspace } from '@lib/boardsApi';
+import { canDeleteWorkspace, canEdit, canManage, ROLE_LABEL } from '@lib/roles';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
+import { MembersDialog } from '../collab/MembersDialog';
 import { TemplatePicker } from '../templates/TemplatePicker';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { ChevronDownIcon, PencilIcon, PlusIcon, TrashIcon } from '../ui/Icons';
+import { ChevronDownIcon, PencilIcon, PlusIcon, TrashIcon, UsersIcon } from '../ui/Icons';
 import { Menu } from '../ui/Menu';
 import { NameDialog } from '../ui/NameDialog';
 import './Sidebar.css';
@@ -30,6 +32,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const [boardTarget, setBoardTarget] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<Workspace | null>(null);
   const [deleting, setDeleting] = useState<Workspace | null>(null);
+  const [membersOf, setMembersOf] = useState<string | null>(null);
 
   function toggle(workspaceId: string) {
     setCollapsed((current) =>
@@ -70,28 +73,48 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                   onClick={() => toggle(workspace.id)}
                 >
                   <span className="sidebar__workspace-name">{workspace.name}</span>
+                  {workspace.role !== 'owner' && (
+                    <span className="sidebar__role">{ROLE_LABEL[workspace.role]}</span>
+                  )}
                   <ChevronDownIcon className="sidebar__chevron" />
                 </button>
                 <Menu
                   label={`Actions for workspace ${workspace.name}`}
                   triggerClassName="sidebar__more"
                   items={[
+                    ...(canEdit(workspace.role)
+                      ? [
+                          {
+                            label: 'New board',
+                            icon: <PlusIcon />,
+                            onSelect: () => setBoardTarget(workspace.id),
+                          },
+                        ]
+                      : []),
                     {
-                      label: 'New board',
-                      icon: <PlusIcon />,
-                      onSelect: () => setBoardTarget(workspace.id),
+                      label: 'Members',
+                      icon: <UsersIcon />,
+                      onSelect: () => setMembersOf(workspace.id),
                     },
-                    {
-                      label: 'Rename workspace',
-                      icon: <PencilIcon />,
-                      onSelect: () => setRenaming(workspace),
-                    },
-                    {
-                      label: 'Delete workspace',
-                      icon: <TrashIcon />,
-                      tone: 'danger',
-                      onSelect: () => setDeleting(workspace),
-                    },
+                    ...(canManage(workspace.role)
+                      ? [
+                          {
+                            label: 'Rename workspace',
+                            icon: <PencilIcon />,
+                            onSelect: () => setRenaming(workspace),
+                          },
+                        ]
+                      : []),
+                    ...(canDeleteWorkspace(workspace.role)
+                      ? [
+                          {
+                            label: 'Delete workspace',
+                            icon: <TrashIcon />,
+                            tone: 'danger' as const,
+                            onSelect: () => setDeleting(workspace),
+                          },
+                        ]
+                      : []),
                   ]}
                 />
               </div>
@@ -112,17 +135,19 @@ export function Sidebar({ onNavigate }: SidebarProps) {
                       </NavLink>
                     </li>
                   ))}
-                  <li>
-                    <button
-                      type="button"
-                      className="sidebar__add"
-                      onClick={() => setBoardTarget(workspace.id)}
-                    >
-                      <PlusIcon size={16} />
-                      <span>New board</span>
-                      <span className="sr-only"> in {workspace.name}</span>
-                    </button>
-                  </li>
+                  {canEdit(workspace.role) && (
+                    <li>
+                      <button
+                        type="button"
+                        className="sidebar__add"
+                        onClick={() => setBoardTarget(workspace.id)}
+                      >
+                        <PlusIcon size={16} />
+                        <span>New board</span>
+                        <span className="sr-only"> in {workspace.name}</span>
+                      </button>
+                    </li>
+                  )}
                 </ul>
               </div>
             </li>
@@ -167,6 +192,10 @@ export function Sidebar({ onNavigate }: SidebarProps) {
           }
           return board !== null;
         }}
+      />
+      <MembersDialog
+        workspace={workspaces.find((workspace) => workspace.id === membersOf) ?? null}
+        onClose={() => setMembersOf(null)}
       />
       <NameDialog
         open={renaming !== null}

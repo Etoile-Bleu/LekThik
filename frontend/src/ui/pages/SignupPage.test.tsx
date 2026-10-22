@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -16,14 +16,14 @@ function fillForm(
 ) {
   const values = {
     email: 'matheo@example.com',
-    username: 'matheo',
+    username: '',
     password: 'a-strong-password',
     confirm: 'a-strong-password',
     ...overrides,
   };
 
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: values.email } });
-  fireEvent.change(screen.getByLabelText('Username'), { target: { value: values.username } });
+  fireEvent.change(screen.getByLabelText(/^Username/), { target: { value: values.username } });
   fireEvent.change(screen.getByLabelText('Password'), { target: { value: values.password } });
   fireEvent.change(screen.getByLabelText('Confirm password'), {
     target: { value: values.confirm },
@@ -49,6 +49,23 @@ describe('SignupPage', () => {
     expect(registerUser).not.toHaveBeenCalled();
   });
 
+  it('sends the chosen username when one is typed', async () => {
+    vi.mocked(registerUser).mockResolvedValueOnce(undefined);
+
+    render(
+      <MemoryRouter>
+        <SignupPage />
+      </MemoryRouter>
+    );
+
+    fillForm({ username: 'Weier' });
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
+
+    await waitFor(() =>
+      expect(registerUser).toHaveBeenCalledWith('matheo@example.com', expect.any(String), 'Weier')
+    );
+  });
+
   it('registers the account and sends the user to verify their email', async () => {
     vi.mocked(registerUser).mockResolvedValueOnce(undefined);
 
@@ -64,7 +81,7 @@ describe('SignupPage', () => {
     fillForm();
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
-    expect(registerUser).toHaveBeenCalledWith('matheo@example.com', 'matheo', 'a-strong-password');
+    expect(registerUser).toHaveBeenCalledWith('matheo@example.com', 'a-strong-password', '');
     expect(await screen.findByText('verify email page')).toBeInTheDocument();
   });
 });

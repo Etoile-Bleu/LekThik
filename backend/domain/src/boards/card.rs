@@ -33,28 +33,28 @@ pub struct CardUpdate {
 pub trait CardRepo: Send + Sync {
     async fn create(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         list_id: Uuid,
         title: Title,
     ) -> Result<CardSummary, BoardsError>;
-    async fn get(&self, owner_id: Uuid, id: Uuid) -> Result<Card, BoardsError>;
+    async fn get(&self, user_id: Uuid, id: Uuid) -> Result<Card, BoardsError>;
     async fn update(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         update: CardUpdate,
     ) -> Result<Card, BoardsError>;
     async fn move_to(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         list_id: Uuid,
         index: usize,
     ) -> Result<(), BoardsError>;
-    async fn delete(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
+    async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
     async fn set_labels(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         label_ids: Vec<Uuid>,
     ) -> Result<Vec<Uuid>, BoardsError>;

@@ -96,3 +96,29 @@ async fn rejects_duplicate_username() -> anyhow::Result<()> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn registers_without_a_username_and_derives_a_unique_one() -> anyhow::Result<()> {
+    let (app, _pool, _container) = spawn_app().await?;
+
+    let mut usernames = Vec::new();
+    for email in ["marie@example.com", "marie@example.org"] {
+        let response = app
+            .clone()
+            .oneshot(common::json_post(
+                "/api/users/register",
+                serde_json::json!({ "email": email, "password": "a-strong-password" }),
+            )?)
+            .await?;
+        assert_eq!(response.status(), StatusCode::CREATED);
+
+        let body = axum::body::to_bytes(response.into_body(), usize::MAX).await?;
+        let body: Value = serde_json::from_slice(&body)?;
+        usernames.push(body["username"].as_str().unwrap_or_default().to_string());
+    }
+
+    assert_eq!(usernames[0], "marie");
+    assert!(usernames[1].starts_with("marie-"), "{usernames:?}");
+
+    Ok(())
+}

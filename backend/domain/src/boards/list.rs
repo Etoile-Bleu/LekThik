@@ -22,13 +22,9 @@ pub struct ListWithCards {
 #[cfg_attr(feature = "test-utils", mockall::automock)]
 #[async_trait]
 pub trait ListRepo: Send + Sync {
-    async fn create(
-        &self,
-        owner_id: Uuid,
-        board_id: Uuid,
-        name: Title,
-    ) -> Result<List, BoardsError>;
-    async fn rename(&self, owner_id: Uuid, id: Uuid, name: Title) -> Result<List, BoardsError>;
-    async fn move_to(&self, owner_id: Uuid, id: Uuid, index: usize) -> Result<(), BoardsError>;
-    async fn delete(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
+    async fn create(&self, user_id: Uuid, board_id: Uuid, name: Title)
+    -> Result<List, BoardsError>;
+    async fn rename(&self, user_id: Uuid, id: Uuid, name: Title) -> Result<List, BoardsError>;
+    async fn move_to(&self, user_id: Uuid, id: Uuid, index: usize) -> Result<(), BoardsError>;
+    async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
 }

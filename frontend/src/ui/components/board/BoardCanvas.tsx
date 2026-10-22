@@ -43,6 +43,7 @@ interface BoardCanvasProps {
   onAddCard: (listId: string, title: string) => Promise<unknown>;
   onMoveCard: (cardId: string, listId: string, index: number) => void;
   onOpenCard: (cardId: string) => void;
+  readOnly?: boolean;
 }
 
 type ActiveItem = { type: 'card' | 'list'; id: string };
@@ -62,6 +63,7 @@ export function BoardCanvas({
   onAddCard,
   onMoveCard,
   onOpenCard,
+  readOnly = false,
 }: BoardCanvasProps) {
   const [draft, setDraft] = useState<BoardListData[] | null>(null);
   const [active, setActive] = useState<ActiveItem | null>(null);
@@ -283,19 +285,24 @@ export function BoardCanvas({
               onDelete={onDeleteList}
               onAddCard={onAddCard}
               onOpenCard={onOpenCard}
+              readOnly={readOnly}
             />
           ))}
         </SortableContext>
-        <div className="board-canvas__add">
-          <Composer
-            variant="column"
-            triggerLabel={lists.length === 0 ? 'Add your first list' : 'Add another list'}
-            inputLabel="Name of the new list"
-            placeholder="Enter a list name"
-            submitLabel="Add list"
-            onSubmit={onAddList}
-          />
-        </div>
+        {readOnly ? (
+          lists.length === 0 && <p className="board-canvas__empty">This board has no lists yet.</p>
+        ) : (
+          <div className="board-canvas__add">
+            <Composer
+              variant="column"
+              triggerLabel={lists.length === 0 ? 'Add your first list' : 'Add another list'}
+              inputLabel="Name of the new list"
+              placeholder="Enter a list name"
+              submitLabel="Add list"
+              onSubmit={onAddList}
+            />
+          </div>
+        )}
       </div>
       <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.2, 0, 0, 1)' }}>
         {activeCard && (

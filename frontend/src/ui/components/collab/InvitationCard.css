@@ -1,0 +1,39 @@
+.invitation-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem 0.85rem;
+  align-items: start;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper-card);
+  box-shadow: var(--shadow-card);
+  animation: invitation-in var(--duration-slow) var(--ease-out);
+}
+
+.invitation-card__title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.invitation-card__meta {
+  margin-top: 0.2rem;
+  color: var(--color-text-soft-on-light);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.invitation-card__actions {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+@keyframes invitation-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use domain::boards::{
     Board, BoardRepo, BoardTemplate, BoardView, BoardsError, CardSummary, ListWithCards,
-    MAX_BOARDS_PER_WORKSPACE, Title,
+    MAX_BOARDS_PER_WORKSPACE, Role, Title,
 };
 use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 use crate::board_seed::insert_board;
 use crate::label_repo::row_to_label;
-use crate::scope::repository_error;
+use crate::scope::{Kind, denial, repository_error};
 
 pub struct PgBoardRepo {
     pool: PgPool,
@@ -35,22 +35,25 @@ fn row_to_board(row: &PgRow) -> Result<Board, BoardsError> {
 impl BoardRepo for PgBoardRepo {
     async fn create(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         workspace_id: Uuid,
         name: Title,
         template: Option<&'static BoardTemplate>,
     ) -> Result<Board, BoardsError> {
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
 
-        let workspace =
-            sqlx::query("SELECT id FROM workspaces WHERE id = $1 AND owner_id = $2 FOR UPDATE")
-                .bind(workspace_id)
-                .bind(owner_id)
-                .fetch_optional(&mut *transaction)
-                .await
-                .map_err(repository_error)?;
+        let workspace = sqlx::query(concat!(
+            "SELECT w.id FROM workspaces w WHERE w.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF w"
+        ))
+        .bind(workspace_id)
+        .bind(user_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
         if workspace.is_none() {
-            return Err(BoardsError::NotFound);
+            return Err(denial(&self.pool, Kind::Workspace, user_id, workspace_id).await);
         }
 
         let existing: i64 =
@@ -70,7 +73,7 @@ impl BoardRepo for PgBoardRepo {
         Ok(board)
     }
 
-    async fn get_view(&self, owner_id: Uuid, id: Uuid) -> Result<BoardView, BoardsError> {
+    async fn get_view(&self, user_id: Uuid, id: Uuid) -> Result<BoardView, BoardsError> {
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
         sqlx::query("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ, READ ONLY")
             .execute(&mut *transaction)
@@ -80,15 +83,28 @@ impl BoardRepo for PgBoardRepo {
         let board_row = sqlx::query(concat!(
             "SELECT b.id, b.workspace_id, b.name FROM ",
             owned_board!(),
-            " WHERE b.id = $1 AND w.owner_id = $2"
+            " WHERE b.id = $1 AND ",
+            member_of!("$2")
         ))
         .bind(id)
-        .bind(owner_id)
+        .bind(user_id)
         .fetch_optional(&mut *transaction)
         .await
         .map_err(repository_error)?
         .ok_or(BoardsError::NotFound)?;
         let board = row_to_board(&board_row)?;
+
+        let role_name: String = sqlx::query_scalar(
+            "SELECT role FROM workspace_members WHERE workspace_id = $1 AND user_id = $2",
+        )
+        .bind(board.workspace_id)
+        .bind(user_id)
+        .fetch_one(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+        let role = Role::parse(&role_name).ok_or_else(|| {
+            BoardsError::Repository(format!("unknown workspace role {role_name}"))
+        })?;
 
         let list_rows = sqlx::query(
             "SELECT id, name FROM lists WHERE board_id = $1 ORDER BY position, created_at, id",
@@ -170,41 +186,46 @@ impl BoardRepo for PgBoardRepo {
 
         Ok(BoardView {
             board,
+            role,
             lists,
             labels,
         })
     }
 
-    async fn rename(&self, owner_id: Uuid, id: Uuid, name: Title) -> Result<Board, BoardsError> {
-        let row = sqlx::query(
+    async fn rename(&self, user_id: Uuid, id: Uuid, name: Title) -> Result<Board, BoardsError> {
+        let Some(row) = sqlx::query(concat!(
             "UPDATE boards b SET name = $3 FROM workspaces w \
-                WHERE b.id = $2 AND w.id = b.workspace_id AND w.owner_id = $1 \
-                RETURNING b.id, b.workspace_id, b.name",
-        )
-        .bind(owner_id)
+                WHERE b.id = $2 AND w.id = b.workspace_id AND ",
+            writer_of!("$1"),
+            " RETURNING b.id, b.workspace_id, b.name"
+        ))
+        .bind(user_id)
         .bind(id)
         .bind(name.as_str())
         .fetch_optional(&self.pool)
         .await
         .map_err(repository_error)?
-        .ok_or(BoardsError::NotFound)?;
+        else {
+            return Err(denial(&self.pool, Kind::Board, user_id, id).await);
+        };
 
         row_to_board(&row)
     }
 
-    async fn delete(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
-        let result = sqlx::query(
+    async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
+        let result = sqlx::query(concat!(
             "DELETE FROM boards b USING workspaces w \
-                WHERE b.id = $2 AND w.id = b.workspace_id AND w.owner_id = $1",
-        )
-        .bind(owner_id)
+                WHERE b.id = $2 AND w.id = b.workspace_id AND ",
+            admin_of!("$1")
+        ))
+        .bind(user_id)
         .bind(id)
         .execute(&self.pool)
         .await
         .map_err(repository_error)?;
 
         if result.rows_affected() == 0 {
-            return Err(BoardsError::NotFound);
+            return Err(denial(&self.pool, Kind::Board, user_id, id).await);
         }
 
         Ok(())

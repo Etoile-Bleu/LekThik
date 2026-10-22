@@ -32,3 +32,7 @@ export function notifyError(error: unknown, fallback = 'Something went wrong, tr
   const message = error instanceof Error && error.message ? error.message : fallback;
   useToastStore.getState().push('error', message);
 }
+
+export function notifySuccess(message: string): void {
+  useToastStore.getState().push('success', message);
+}
