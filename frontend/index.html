@@ -10,6 +10,48 @@
       content="LekThik is a Trello-style board for teams, built to prove that ZamSync, an offline-first sync engine, can be added to a finished app without rebuilding it."
     />
     <title>LekThik</title>
+    <script>
+      // Applies the saved appearance before the first paint so there is no flash
+      // of the wrong theme. Mirrors lib/appearance.ts, keep the two in step.
+      (function () {
+        try {
+          var saved = JSON.parse(localStorage.getItem('lekthik.appearance.v1') || 'null') || {};
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var more = window.matchMedia('(prefers-contrast: more)').matches;
+          var theme = saved.theme;
+          if (theme !== 'light' && theme !== 'dark' && theme !== 'contrast') {
+            theme = more ? 'contrast' : dark ? 'dark' : 'light';
+          }
+          var root = document.documentElement;
+          root.dataset.theme = theme;
+          root.dataset.density = saved.density || 'comfortable';
+          root.dataset.text = saved.text_size || 'normal';
+          root.dataset.motion = saved.motion || 'system';
+          root.dataset.cvd = saved.color_vision || 'standard';
+          root.dataset.font = saved.reading_font || 'standard';
+          root.dataset.spacing = saved.letter_spacing || 'normal';
+          if (saved.label_shapes) root.dataset.shapes = 'on';
+          if (saved.strong_focus) root.dataset.focus = 'strong';
+          if (saved.large_targets) root.dataset.targets = 'large';
+          if (saved.flat_backgrounds) root.dataset.flat = 'on';
+          var fonts = {
+            hyperlegible:
+              'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap',
+            lexend:
+              'https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap',
+          };
+          if (fonts[saved.reading_font]) {
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = fonts[saved.reading_font];
+            link.dataset.readingFont = saved.reading_font;
+            document.head.appendChild(link);
+          }
+        } catch (error) {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
