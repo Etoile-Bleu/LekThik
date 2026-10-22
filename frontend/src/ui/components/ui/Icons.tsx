@@ -405,3 +405,48 @@ export function SettingsIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function ImageIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="4" width="14" height="12" rx="2" />
+      <circle cx="7.5" cy="8.5" r="1.3" />
+      <path d="m4 14.5 4-3.5 3 2.5 2.5-2L17 14" />
+    </Base>
+  );
+}
+
+export function PlayIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="2.75" y="4.5" width="14.5" height="11" rx="2.5" />
+      <path d="m8.5 7.6 4 2.4-4 2.4V7.6Z" fill="currentColor" />
+    </Base>
+  );
+}
+
+export function LinkIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M8.5 11.5a3 3 0 0 0 4.2 0l2.6-2.6a3 3 0 0 0-4.2-4.2l-.9.9" />
+      <path d="M11.5 8.5a3 3 0 0 0-4.2 0L4.7 11.1a3 3 0 0 0 4.2 4.2l.9-.9" />
+    </Base>
+  );
+}
+
+export function ShieldIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 2.8 4.5 5v4.6c0 3.4 2.3 5.9 5.5 7.1 3.2-1.2 5.5-3.7 5.5-7.1V5L10 2.8Z" />
+      <path d="m7.6 9.8 1.8 1.8 3.2-3.5" />
+    </Base>
+  );
+}
+
+export function UploadIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 13V4.5M6.5 8 10 4.5 13.5 8M4 13.5v2h12v-2" />
+    </Base>
+  );
+}

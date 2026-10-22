@@ -1,3 +1,4 @@
+mod block_image;
 mod create;
 mod create_block;
 mod delete;
@@ -6,6 +7,7 @@ mod rename;
 mod set_config;
 mod set_wip_limit;
 
+pub use block_image::*;
 pub use create::*;
 pub use create_block::*;
 pub use delete::*;

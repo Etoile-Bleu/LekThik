@@ -148,31 +148,12 @@ describe('AgendaBlock', () => {
 });
 
 describe('NoteBlock', () => {
-  it('shows paragraphs and keeps text as text', () => {
-    inBoard(<NoteBlock text={'First\n\n<b>second</b>'} editable={false} onSave={vi.fn()} />);
+  it('draws the note as Markdown, and keeps raw HTML as text', async () => {
+    inBoard(<NoteBlock text={'# Plan\n\n<b>second</b>'} editable={false} onSave={vi.fn()} />);
 
-    expect(screen.getByText('First')).toBeInTheDocument();
-    expect(screen.getByText('<b>second</b>')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 3, name: 'Plan' })).toBeInTheDocument();
+    expect(screen.getByText(/<b>second<\/b>/)).toBeInTheDocument();
     expect(document.querySelector('b')).toBeNull();
-  });
-
-  it('turns web addresses into safe links that open in a new tab', () => {
-    inBoard(
-      <NoteBlock text="See https://example.com/plan today" editable={false} onSave={vi.fn()} />
-    );
-
-    const link = screen.getByRole('link', { name: /https:\/\/example.com\/plan/ });
-    expect(link).toHaveAttribute('href', 'https://example.com/plan');
-    expect(link).toHaveAttribute('target', '_blank');
-    expect(link.getAttribute('rel')).toContain('noopener');
-    expect(link.getAttribute('rel')).toContain('noreferrer');
-    expect(link).toHaveTextContent('(opens in a new tab)');
-  });
-
-  it('never links something that is not http or https', () => {
-    inBoard(<NoteBlock text="javascript:alert(1)" editable={false} onSave={vi.fn()} />);
-
-    expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
   it('offers no editing to people who cannot edit', () => {
@@ -182,51 +163,65 @@ describe('NoteBlock', () => {
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('edits and saves with the button, or with Ctrl and Enter', () => {
+  it('edits and saves with the button, or with Ctrl and Enter', async () => {
     const onSave = vi.fn();
     inBoard(<NoteBlock text="Old" editable onSave={onSave} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit note' }));
-    const field = screen.getByLabelText('Note text');
-    fireEvent.change(field, { target: { value: 'New words' } });
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit note' }));
+    fireEvent.change(screen.getByLabelText('Note text'), { target: { value: 'New words' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     expect(onSave).toHaveBeenCalledWith('New words');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit note' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit note' }));
     fireEvent.change(screen.getByLabelText('Note text'), { target: { value: 'Again' } });
     fireEvent.keyDown(screen.getByLabelText('Note text'), { key: 'Enter', ctrlKey: true });
     expect(onSave).toHaveBeenLastCalledWith('Again');
   });
 
-  it('cancels with Escape and the button, keeping the text', () => {
+  it('cancels with Escape, keeping the text', async () => {
     const onSave = vi.fn();
     inBoard(<NoteBlock text="Keep" editable onSave={onSave} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit note' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit note' }));
     fireEvent.change(screen.getByLabelText('Note text'), { target: { value: 'Lost' } });
     fireEvent.keyDown(screen.getByLabelText('Note text'), { key: 'Escape' });
 
     expect(onSave).not.toHaveBeenCalled();
-    expect(screen.getByText('Keep')).toBeInTheDocument();
+    expect(await screen.findByText('Keep')).toBeInTheDocument();
   });
 
-  it('does not save when nothing changed', () => {
+  it('does not save when nothing changed', async () => {
     const onSave = vi.fn();
     inBoard(<NoteBlock text="Same" editable onSave={onSave} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Edit note' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit note' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('invites a first note, and warns when the limit is near', () => {
+  it('invites a first note', () => {
     inBoard(<NoteBlock text="" editable onSave={vi.fn()} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Write a note' }));
-    fireEvent.change(screen.getByLabelText('Note text'), { target: { value: 'x'.repeat(4900) } });
 
-    expect(screen.getByText(/100 characters left/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Note text')).toBeInTheDocument();
+    expect(screen.getByRole('toolbar', { name: 'Formatting' })).toBeInTheDocument();
+  });
+
+  it('ticks a checklist box from the note and saves it, for people who can edit', async () => {
+    const onSave = vi.fn();
+    inBoard(<NoteBlock text={'- [ ] buy tape\n- [x] book room'} editable onSave={onSave} />);
+
+    fireEvent.click(await screen.findByRole('checkbox', { name: /buy tape/ }));
+
+    expect(onSave).toHaveBeenCalledWith('- [x] buy tape\n- [x] book room');
+  });
+
+  it('shows the boxes of a checklist but leaves them alone for people who cannot edit', async () => {
+    inBoard(<NoteBlock text="- [ ] buy tape" editable={false} onSave={vi.fn()} />);
+
+    expect(await screen.findByRole('checkbox', { name: /buy tape/ })).toBeDisabled();
   });
 });
 

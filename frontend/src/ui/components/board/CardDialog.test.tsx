@@ -57,9 +57,7 @@ describe('CardDialog', () => {
       within(dialog).getByRole('heading', { level: 2, name: /Write the spec/ })
     ).toBeInTheDocument();
     expect(within(dialog).getByText('To do', { selector: 'strong' })).toBeInTheDocument();
-    await waitFor(() =>
-      expect(within(dialog).getByLabelText('Description')).toHaveValue('Cover the happy path')
-    );
+    expect(await within(dialog).findByText('Cover the happy path')).toBeInTheDocument();
     expect(within(dialog).getByRole('checkbox', { name: /Urgent/ })).toBeChecked();
     expect(within(dialog).getByRole('checkbox', { name: /Low/ })).not.toBeChecked();
   });
@@ -67,8 +65,9 @@ describe('CardDialog', () => {
   it('saves the description when the field loses focus', async () => {
     vi.mocked(api.updateCard).mockResolvedValueOnce({ ...detail, description: 'New details' });
     setup();
-    const field = await screen.findByLabelText('Description');
-    await waitFor(() => expect(field).toHaveValue('Cover the happy path'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit description' }));
+    const field = screen.getByRole('textbox', { name: 'Description' });
+    expect(field).toHaveValue('Cover the happy path');
 
     fireEvent.change(field, { target: { value: 'New details' } });
     fireEvent.blur(field);
@@ -81,8 +80,8 @@ describe('CardDialog', () => {
 
   it('does not call the api when the description did not change', async () => {
     setup();
-    const field = await screen.findByLabelText('Description');
-    await waitFor(() => expect(field).toHaveValue('Cover the happy path'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit description' }));
+    const field = screen.getByRole('textbox', { name: 'Description' });
 
     fireEvent.blur(field);
 
@@ -118,6 +117,89 @@ describe('CardDialog', () => {
     await screen.findByRole('dialog', { name: 'Card Write the spec' });
 
     expect(screen.getByRole('button', { name: 'Move card' })).toBeDisabled();
+  });
+
+  describe('description', () => {
+    it('is drawn as Markdown, with headings below the title of the card', async () => {
+      vi.mocked(api.fetchCard).mockResolvedValue({
+        ...detail,
+        description: '# Plan\n\nSome **bold** words',
+      });
+      render(<CardDialog cardId="c1" onClose={vi.fn()} onManageLabels={vi.fn()} />);
+
+      expect(await screen.findByRole('heading', { level: 3, name: 'Plan' })).toBeInTheDocument();
+      expect(screen.getByText('bold').tagName).toBe('STRONG');
+    });
+
+    it('keeps raw HTML in a description as text', async () => {
+      vi.mocked(api.fetchCard).mockResolvedValue({
+        ...detail,
+        description: '<img src=x onerror=alert(1)> hello',
+      });
+      render(<CardDialog cardId="c1" onClose={vi.fn()} onManageLabels={vi.fn()} />);
+
+      await screen.findByText(/hello/);
+      expect(document.querySelector('img')).toBeNull();
+    });
+
+    it('ticks a checklist box straight from the card and saves it', async () => {
+      vi.mocked(api.fetchCard).mockResolvedValue({
+        ...detail,
+        description: '- [ ] write the spec\n- [ ] review it',
+      });
+      vi.mocked(api.updateCard).mockResolvedValue({
+        ...detail,
+        description: '- [x] write the spec\n- [ ] review it',
+      });
+      render(<CardDialog cardId="c1" onClose={vi.fn()} onManageLabels={vi.fn()} />);
+
+      fireEvent.click(await screen.findByRole('checkbox', { name: /write the spec/ }));
+
+      await waitFor(() =>
+        expect(api.updateCard).toHaveBeenCalledWith('c1', {
+          description: '- [x] write the spec\n- [ ] review it',
+        })
+      );
+    });
+
+    it('goes back to what was saved when editing is cancelled', async () => {
+      setup();
+      fireEvent.click(await screen.findByRole('button', { name: 'Edit description' }));
+      fireEvent.change(screen.getByRole('textbox', { name: 'Description' }), {
+        target: { value: 'Lost words' },
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+      expect(await screen.findByText('Cover the happy path')).toBeInTheDocument();
+      expect(api.updateCard).not.toHaveBeenCalled();
+    });
+
+    it('invites a first description, and shows no editing to readers', async () => {
+      vi.mocked(api.fetchCard).mockResolvedValue({ ...detail, description: '' });
+      const { unmount } = render(
+        <CardDialog cardId="c1" onClose={vi.fn()} onManageLabels={vi.fn()} />
+      );
+      expect(await screen.findByRole('button', { name: 'Add a description' })).toBeInTheDocument();
+      unmount();
+
+      const view = sampleBoardView();
+      view.role = 'reader';
+      useBoardStore.setState({ view, status: 'ready', freshIds: [] });
+      render(<CardDialog cardId="c1" onClose={vi.fn()} onManageLabels={vi.fn()} />);
+
+      expect(await screen.findByText('No description.')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /description/i })).not.toBeInTheDocument();
+    });
+
+    it('offers the formatting toolbar and a preview while writing', async () => {
+      setup();
+
+      fireEvent.click(await screen.findByRole('button', { name: 'Edit description' }));
+
+      expect(screen.getByRole('toolbar', { name: 'Formatting' })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: 'Preview' })).toBeInTheDocument();
+    });
   });
 
   it('asks before deleting and then closes', async () => {

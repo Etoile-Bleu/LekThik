@@ -52,3 +52,10 @@
     transform: translateY(-3px);
   }
 }
+
+.block-settings__picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
