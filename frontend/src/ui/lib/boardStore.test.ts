@@ -38,6 +38,8 @@ function sampleView(): BoardView {
         id: 'todo',
         name: 'To do',
         wip_limit: null,
+        kind: 'list',
+        config: {},
         cards: [
           {
             id: 'a',
@@ -61,7 +63,7 @@ function sampleView(): BoardView {
           },
         ],
       },
-      { id: 'done', name: 'Done', wip_limit: null, cards: [] },
+      { id: 'done', name: 'Done', wip_limit: null, kind: 'list', config: {}, cards: [] },
     ],
     labels: [
       { id: 'urgent', board_id: 'b1', name: 'Urgent', color: 'red', priority: 'urgent' },
