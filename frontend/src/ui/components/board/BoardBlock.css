@@ -1,0 +1,36 @@
+/* A block is a list in the row, so it keeps the list's frame and header. What changes is inside. */
+.board-block[data-size='wide'] {
+  width: calc(var(--list-width) * var(--column-scale, 1) * 1.65);
+}
+
+.board-block__kind {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: 0.1rem;
+  color: var(--color-text-muted);
+}
+
+.board-block__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.board-block__rail-kind {
+  order: 1;
+  display: inline-flex;
+  color: var(--color-text-muted);
+}
+
+.board-block[data-kind='counter'] .board-block__body {
+  overflow-y: visible;
+}
+
+@media (max-width: 599px) {
+  .board-block[data-size='wide'] {
+    width: min(92vw, 420px);
+  }
+}

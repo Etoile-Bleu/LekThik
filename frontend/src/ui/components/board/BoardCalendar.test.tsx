@@ -25,6 +25,8 @@ const lists: BoardList[] = [
     id: 'todo',
     name: 'To do',
     wip_limit: null,
+    kind: 'list',
+    config: {},
     cards: [
       card('a', 'Write the post', '2026-10-22'),
       card('b', 'Fix the bug', '2026-10-22'),

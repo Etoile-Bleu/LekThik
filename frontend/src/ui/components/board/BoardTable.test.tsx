@@ -26,13 +26,15 @@ const lists: BoardList[] = [
     id: 'todo',
     name: 'To do',
     wip_limit: null,
+    kind: 'list',
+    config: {},
     cards: [
       card('a', 'Banana', { due_date: '2026-11-02', label_ids: ['low'] }),
       card('b', 'Apple', { label_ids: ['urgent'], assignee_ids: ['u-wen'] }),
       card('c', 'Cherry', { due_date: '2026-10-30' }),
     ],
   },
-  { id: 'done', name: 'Done', wip_limit: null, cards: [] },
+  { id: 'done', name: 'Done', wip_limit: null, kind: 'list', config: {}, cards: [] },
 ];
 
 function setup(props: Partial<React.ComponentProps<typeof BoardTable>> = {}) {
@@ -148,7 +150,9 @@ describe('BoardTable', () => {
   });
 
   it('invites the first card when there are none', () => {
-    setup({ lists: [{ id: 'todo', name: 'To do', wip_limit: null, cards: [] }] });
+    setup({
+      lists: [{ id: 'todo', name: 'To do', wip_limit: null, kind: 'list', config: {}, cards: [] }],
+    });
 
     expect(screen.getByText('No cards yet')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();

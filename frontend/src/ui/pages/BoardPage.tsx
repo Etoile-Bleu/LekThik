@@ -11,11 +11,22 @@ import { type CardFilter, EMPTY_FILTER, cardMatches } from '@lib/boardModel';
 import type { CardSummary } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { lookStyle } from '@lib/boardLooks';
+import {
+  DEFAULT_AGENDA,
+  DEFAULT_CALENDAR,
+  DEFAULT_COUNTER,
+  DEFAULT_NOTE,
+  KIND_LABEL,
+  isCardList,
+} from '@lib/blocks';
+import type { PanelConfig, PanelKind } from '@lib/boardsApi';
 import { type BoardViewKind, boardPrefsFor, cardDisplayFor } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
+import { AddBlockDialog } from '../components/board/AddBlockDialog';
+import { BlockSettingsDialog } from '../components/board/BlockSettingsDialog';
 import { BoardCalendar } from '../components/board/BoardCalendar';
 import { BoardCanvas } from '../components/board/BoardCanvas';
 import { BoardTable } from '../components/board/BoardTable';
@@ -52,6 +63,8 @@ export function BoardPage() {
   const theme = useEffectiveTheme();
   const deleteBoard = useBoardStore((state) => state.deleteBoard);
   const createList = useBoardStore((state) => state.createList);
+  const createBlock = useBoardStore((state) => state.createBlock);
+  const setBlockConfig = useBoardStore((state) => state.setBlockConfig);
   const renameList = useBoardStore((state) => state.renameList);
   const moveList = useBoardStore((state) => state.moveList);
   const setListWipLimit = useBoardStore((state) => state.setListWipLimit);
@@ -70,6 +83,8 @@ export function BoardPage() {
   const [deletingBoard, setDeletingBoard] = useState(false);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
   const [limitListId, setLimitListId] = useState<string | null>(null);
+  const [pickingBlock, setPickingBlock] = useState(false);
+  const [blockSettingsId, setBlockSettingsId] = useState<string | null>(null);
 
   useDocumentTitle(view?.board.name ?? 'Board');
 
@@ -147,9 +162,41 @@ export function BoardPage() {
 
   const deletingList = view.lists.find((list) => list.id === deletingListId);
   const limitList = view.lists.find((list) => list.id === limitListId);
+  const settingsBlock = view.lists.find((list) => list.id === blockSettingsId) ?? null;
   const own = boardPrefsFor(prefs, view.board.id);
 
   const boardId_ = view.board.id;
+
+  const DEFAULTS: Record<Exclude<PanelKind, 'list'>, PanelConfig> = {
+    calendar: DEFAULT_CALENDAR,
+    agenda: DEFAULT_AGENDA,
+    note: DEFAULT_NOTE,
+    counter: DEFAULT_COUNTER,
+  };
+
+  function saveNote(blockId: string, text: string) {
+    const current = view?.lists.find((list) => list.id === blockId)?.config as
+      { size?: 'normal' | 'wide' } | undefined;
+    void setBlockConfig(blockId, 'note', { size: current?.size ?? 'normal', text });
+  }
+
+  /** "Note", then "Note 2" and so on, so two blocks never share a name a screen reader would read twice. */
+  function uniqueName(base: string): string {
+    const taken = new Set(view?.lists.map((list) => list.name) ?? []);
+    if (!taken.has(base)) return base;
+    let count = 2;
+    while (taken.has(`${base} ${count}`)) count += 1;
+    return `${base} ${count}`;
+  }
+
+  async function addBlock(kind: Exclude<PanelKind, 'list'>) {
+    const block = await createBlock(kind, uniqueName(KIND_LABEL[kind]), DEFAULTS[kind]);
+    if (!block) return;
+    announce(`${KIND_LABEL[kind]} block added.`);
+    // A counter needs to be pointed at something before it says anything useful.
+    if (kind === 'counter') setBlockSettingsId(block.id);
+  }
+
   function changeView(next: BoardViewKind) {
     updateBoardPrefs(boardId_, { view: next });
     announce(`${next === 'board' ? 'Board' : next === 'list' ? 'List' : 'Calendar'} view.`);
@@ -266,6 +313,9 @@ export function BoardPage() {
               collapsedIds={own.collapsed_lists}
               onToggleCollapsed={(listId) => toggleListCollapsed(view.board.id, listId)}
               onEditLimit={setLimitListId}
+              onBlockSettings={setBlockSettingsId}
+              onSaveNote={saveNote}
+              onAddBlock={() => setPickingBlock(true)}
               onRenameList={(listId, name) => void renameList(listId, name)}
               onMoveList={(listId, index) => void moveList(listId, index)}
               onDeleteList={(listId) => setDeletingListId(listId)}
@@ -283,6 +333,19 @@ export function BoardPage() {
           onClose={() => setOpenCardId(null)}
           onManageLabels={() => setLabelsOpen(true)}
           onCustomize={() => navigate('/settings/card')}
+        />
+        <AddBlockDialog
+          open={pickingBlock && editable}
+          onPick={(kind) => void addBlock(kind)}
+          onClose={() => setPickingBlock(false)}
+        />
+        <BlockSettingsDialog
+          block={editable ? settingsBlock : null}
+          panels={view.lists}
+          onSave={(blockId, kind, config) =>
+            void setBlockConfig(blockId, kind as Exclude<PanelKind, 'list'>, config)
+          }
+          onClose={() => setBlockSettingsId(null)}
         />
         <WipLimitDialog
           open={limitList !== undefined && editable}
@@ -316,13 +379,17 @@ export function BoardPage() {
 
         <ConfirmDialog
           open={deletingList !== undefined}
-          title="Delete this list?"
+          title={
+            deletingList && !isCardList(deletingList) ? 'Delete this block?' : 'Delete this list?'
+          }
           message={
             deletingList
-              ? `“${deletingList.name}” and its ${deletingList.cards.length} card${deletingList.cards.length === 1 ? '' : 's'} will be removed for good.`
+              ? isCardList(deletingList)
+                ? `“${deletingList.name}” and its ${deletingList.cards.length} card${deletingList.cards.length === 1 ? '' : 's'} will be removed for good.`
+                : `“${deletingList.name}” will be removed. The cards on this board are not affected.`
               : ''
           }
-          confirmLabel="Delete list"
+          confirmLabel={deletingList && !isCardList(deletingList) ? 'Delete block' : 'Delete list'}
           onCancel={() => setDeletingListId(null)}
           onConfirm={() => {
             if (deletingListId) {

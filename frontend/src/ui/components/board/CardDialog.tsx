@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
+import { isCardList } from '@lib/blocks';
 import { findCard } from '@lib/boardModel';
 import { type CardDetail, fetchCard, updateCard } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
@@ -214,7 +215,7 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
                     );
                   }}
                 >
-                  {view.lists.map((list) => (
+                  {view.lists.filter(isCardList).map((list) => (
                     <option key={list.id} value={list.id}>
                       {list.name}
                     </option>
