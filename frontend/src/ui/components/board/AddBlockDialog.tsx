@@ -14,6 +14,33 @@ interface AddBlockDialogProps {
 /** A tiny drawing of what each block looks like, so the choice is made by looking. */
 function Preview({ kind }: { kind: Exclude<PanelKind, 'list'> }) {
   switch (kind) {
+    case 'image':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          <rect x="10" y="8" width="76" height="48" rx="5" className="add-block__faint" />
+          <circle cx="30" cy="24" r="6" className="add-block__accent" />
+          <path d="M10 50 34 32l16 12 14-10 22 18v4H10Z" className="add-block__ink" />
+        </svg>
+      );
+    case 'embed':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          <rect x="10" y="8" width="76" height="44" rx="5" className="add-block__faint" />
+          <circle cx="48" cy="30" r="12" className="add-block__ink" />
+          <path d="M44 24l10 6-10 6V24Z" className="add-block__accent" />
+          <rect x="10" y="57" width="44" height="3" rx="1.5" className="add-block__faint" />
+        </svg>
+      );
+    case 'link':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          <rect x="8" y="14" width="80" height="36" rx="5" className="add-block__faint" />
+          <rect x="16" y="22" width="20" height="20" rx="4" className="add-block__ink" />
+          <rect x="44" y="23" width="36" height="5" rx="2.5" className="add-block__ink" />
+          <rect x="44" y="32" width="22" height="4" rx="2" className="add-block__accent" />
+          <rect x="44" y="39" width="30" height="3" rx="1.5" className="add-block__faint" />
+        </svg>
+      );
     case 'calendar':
       return (
         <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
