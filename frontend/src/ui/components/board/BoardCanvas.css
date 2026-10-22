@@ -12,13 +12,21 @@
   scroll-padding-inline: 1.25rem;
 }
 
+.board-canvas[data-width='narrow'] {
+  --column-scale: 0.82;
+}
+
+.board-canvas[data-width='wide'] {
+  --column-scale: 1.3;
+}
+
 .board-canvas > .board-list {
   max-height: 100%;
 }
 
 .board-canvas__add {
   flex: 0 0 auto;
-  width: var(--list-width);
+  width: calc(var(--list-width) * var(--column-scale, 1));
   scroll-snap-align: start;
 }
 
