@@ -22,10 +22,18 @@ pub struct BoardSummary {
     pub name: String,
 }
 
+/// A workspace member as the board needs them: enough to draw an avatar and to assign.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BoardMember {
+    pub user_id: Uuid,
+    pub username: String,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardView {
     pub board: Board,
     pub role: Role,
+    pub members: Vec<BoardMember>,
     pub lists: Vec<ListWithCards>,
     pub labels: Vec<Label>,
 }
