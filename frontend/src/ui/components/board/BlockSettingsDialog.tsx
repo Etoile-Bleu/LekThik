@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useId, useState } from 'react';
+import { type FormEvent, useEffect, useId, useRef, useState } from 'react';
 
 import {
   DEFAULT_AGENDA,
@@ -6,7 +6,10 @@ import {
   agendaConfig,
   calendarConfig,
   counterConfig,
+  embedConfig,
+  imageConfig,
   isCardList,
+  linkConfig,
   noteConfig,
 } from '@lib/blocks';
 import type {
@@ -15,10 +18,16 @@ import type {
   BoardList,
   CounterConfig,
   CounterMetric,
+  EmbedConfig,
+  ImageConfig,
+  LinkConfig,
   PanelConfig,
 } from '@lib/boardsApi';
+import { parseEmbedUrl } from '@lib/embeds';
+import { PICTURE_TYPES, checkPicture, checkWebAddress } from '@lib/media';
 
 import { Dialog } from '../ui/Dialog';
+import { UploadIcon } from '../ui/Icons';
 import { Segmented } from '../ui/Segmented';
 import { Switch } from '../ui/Switch';
 import './BlockSettingsDialog.css';
@@ -28,6 +37,8 @@ interface BlockSettingsDialogProps {
   /** Every panel of the board, to choose the list that means done. */
   panels: BoardList[];
   onSave: (blockId: string, kind: BoardList['kind'], config: PanelConfig) => void;
+  /** Puts a new picture in an image block. Resolves true when it worked. */
+  onReplacePicture?: (blockId: string, file: File) => Promise<boolean>;
   onClose: () => void;
 }
 
@@ -58,21 +69,43 @@ function initial(block: BoardList): PanelConfig {
       return noteConfig(block);
     case 'counter':
       return counterConfig(block);
+    case 'image':
+      return imageConfig(block);
+    case 'link':
+      return linkConfig(block);
+    case 'embed':
+      return embedConfig(block) ?? { size: 'wide', provider: 'youtube', id: '', title: '' };
     default:
       return {};
   }
 }
 
 /** Settings of one block. The title is edited on the block itself, as for a list. */
-export function BlockSettingsDialog({ block, panels, onSave, onClose }: BlockSettingsDialogProps) {
+export function BlockSettingsDialog({
+  block,
+  panels,
+  onSave,
+  onReplacePicture,
+  onClose,
+}: BlockSettingsDialogProps) {
   const [draft, setDraft] = useState<PanelConfig>({});
+  const [address, setAddress] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const mediaId = useId();
   const labelId = useId();
   const metricId = useId();
   const listId = useId();
   const dateId = useId();
 
   useEffect(() => {
-    if (block) setDraft(initial(block));
+    if (block) {
+      setDraft(initial(block));
+      setAddress('');
+      setFile(null);
+      setBusy(false);
+    }
   }, [block]);
 
   if (!block) {
@@ -88,21 +121,56 @@ export function BlockSettingsDialog({ block, panels, onSave, onClose }: BlockSet
   const size = (draft as { size?: BlockSize }).size ?? 'normal';
   const needsList = block.kind === 'counter' && counter.metric === 'done_percent';
   const needsDate = block.kind === 'counter' && counter.metric === 'days_left';
+  const image = draft as ImageConfig;
+  const embed = draft as EmbedConfig;
+  const link = draft as LinkConfig;
+  const mediaProblem =
+    block.kind === 'image'
+      ? image.alt?.trim()
+        ? file
+          ? checkPicture(file)
+          : null
+        : 'Describe the picture.'
+      : block.kind === 'embed'
+        ? embed.title?.trim()
+          ? address.trim() !== '' && !parseEmbedUrl(address)
+            ? 'Only YouTube, Vimeo and Google Calendar addresses can be used.'
+            : null
+          : 'Name it, for people who cannot see it.'
+        : block.kind === 'link'
+          ? checkWebAddress(link.url ?? '')
+          : null;
   const missing =
     (needsList && !counter.done_list_id) || (needsDate && !counter.date)
       ? needsList
         ? 'Choose the list that means done.'
         : 'Choose the date to count down to.'
-      : null;
+      : mediaProblem;
 
   function update(changes: Partial<PanelConfig>) {
     setDraft((current) => ({ ...current, ...changes }) as PanelConfig);
   }
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
     if (!block || missing) return;
-    onSave(block.id, block.kind, draft);
+
+    if (block.kind === 'image' && file && onReplacePicture) {
+      setBusy(true);
+      const done = await onReplacePicture(block.id, file);
+      setBusy(false);
+      if (!done) return;
+    }
+
+    let config = draft;
+    if (block.kind === 'embed') {
+      // A new address is recognised by the server, otherwise what was stored is kept as it is.
+      config =
+        address.trim() !== ''
+          ? { size: embed.size, title: embed.title.trim(), url: address.trim() }
+          : { size: embed.size, provider: embed.provider, id: embed.id, title: embed.title.trim() };
+    }
+    onSave(block.id, block.kind, config);
     onClose();
   }
 
@@ -211,6 +279,122 @@ export function BlockSettingsDialog({ block, panels, onSave, onClose }: BlockSet
           </>
         )}
 
+        {block.kind === 'image' && (
+          <>
+            <div className="field">
+              <label htmlFor={`${mediaId}-alt`}>Description of the picture</label>
+              <textarea
+                id={`${mediaId}-alt`}
+                rows={3}
+                maxLength={300}
+                value={image.alt}
+                aria-required="true"
+                onChange={(event) => update({ alt: event.target.value })}
+              />
+              <p className="block-settings__hint">It is read out instead of the picture.</p>
+            </div>
+            <div className="field">
+              <label htmlFor={`${mediaId}-caption`}>Caption (optional)</label>
+              <input
+                id={`${mediaId}-caption`}
+                type="text"
+                maxLength={300}
+                autoComplete="off"
+                value={image.caption}
+                onChange={(event) => update({ caption: event.target.value })}
+              />
+            </div>
+            {onReplacePicture && (
+              <div className="block-settings__field">
+                <span className="block-settings__label">
+                  {block.image_version ? 'Replace the picture' : 'Add the picture'}
+                </span>
+                <div className="block-settings__picker">
+                  <button
+                    type="button"
+                    className="btn btn--outline btn--sm"
+                    onClick={() => fileInput.current?.click()}
+                  >
+                    <UploadIcon size={15} /> Choose a picture
+                  </button>
+                  <span className="block-settings__hint">
+                    {file ? file.name : 'PNG, JPEG or WebP, up to 5 MB.'}
+                  </span>
+                  <input
+                    ref={fileInput}
+                    type="file"
+                    className="sr-only"
+                    tabIndex={-1}
+                    aria-label="Picture file"
+                    accept={PICTURE_TYPES.join(',')}
+                    onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                  />
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {block.kind === 'embed' && (
+          <>
+            <div className="field">
+              <label htmlFor={`${mediaId}-title`}>Name</label>
+              <input
+                id={`${mediaId}-title`}
+                type="text"
+                maxLength={100}
+                autoComplete="off"
+                value={embed.title}
+                aria-required="true"
+                onChange={(event) => update({ title: event.target.value })}
+              />
+              <p className="block-settings__hint">It names the frame for screen readers.</p>
+            </div>
+            <div className="field">
+              <label htmlFor={`${mediaId}-address`}>Show something else (optional)</label>
+              <input
+                id={`${mediaId}-address`}
+                type="text"
+                inputMode="url"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="Paste a new address"
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+              />
+            </div>
+          </>
+        )}
+
+        {block.kind === 'link' && (
+          <>
+            <div className="field">
+              <label htmlFor={`${mediaId}-url`}>Address</label>
+              <input
+                id={`${mediaId}-url`}
+                type="text"
+                inputMode="url"
+                autoComplete="off"
+                spellCheck={false}
+                value={link.url}
+                aria-required="true"
+                onChange={(event) => update({ url: event.target.value })}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor={`${mediaId}-ltitle`}>Title (optional)</label>
+              <input
+                id={`${mediaId}-ltitle`}
+                type="text"
+                maxLength={100}
+                autoComplete="off"
+                value={link.title}
+                onChange={(event) => update({ title: event.target.value })}
+              />
+            </div>
+          </>
+        )}
+
         {missing && (
           <p className="block-settings__error" role="alert">
             {missing}
@@ -221,8 +405,8 @@ export function BlockSettingsDialog({ block, panels, onSave, onClose }: BlockSet
           <button type="button" className="btn btn--ghost" onClick={onClose}>
             Cancel
           </button>
-          <button type="submit" className="btn btn--primary" disabled={missing !== null}>
-            Save
+          <button type="submit" className="btn btn--primary" disabled={missing !== null || busy}>
+            {busy ? 'Saving…' : 'Save'}
           </button>
         </div>
       </form>
