@@ -81,8 +81,12 @@ export function Menu({
       return undefined;
     }
 
-    const enabled = menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)');
-    enabled?.focus();
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        close(true);
+      }
+    }
 
     function handlePointerDown(event: PointerEvent) {
       const target = event.target as Node;
@@ -96,14 +100,22 @@ export function Menu({
     }
 
     document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleEscape);
     window.addEventListener('resize', handleDismiss);
     window.addEventListener('scroll', handleDismiss, true);
     return () => {
       document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleEscape);
       window.removeEventListener('resize', handleDismiss);
       window.removeEventListener('scroll', handleDismiss, true);
     };
   }, [open, close]);
+
+  useEffect(() => {
+    if (open && position) {
+      menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')?.focus();
+    }
+  }, [open, position]);
 
   function focusItem(step: number | 'first' | 'last') {
     const nodes = Array.from(
@@ -213,7 +225,8 @@ export function Menu({
               </button>
             ))}
           </div>,
-          document.body
+          (triggerRef.current?.closest('dialog, nav, main, aside, header') as HTMLElement | null) ??
+            document.body
         )}
     </>
   );
