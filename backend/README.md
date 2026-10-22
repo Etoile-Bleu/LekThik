@@ -112,6 +112,8 @@ emails) so a client can draw avatars without another request.
 | --- | --- |
 | `PATCH /api/cards/{id}` with `due_date` | Set a day, send `null` to clear it, leave it out to keep it |
 | `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
+| `GET /api/users/me/cards` | Cards assigned to me across workspaces, soonest due first |
+| `PUT /api/lists/{id}/wip-limit` | Set a list's work in progress limit (1 to 99), or `null` to remove it |
 
 ### Preferences and board look
 
@@ -122,6 +124,21 @@ card shows, and per board choices for at most 200 boards. A save replaces the wh
 fields and values are refused, and someone who never saved gets the defaults. The types live in
 `domain/src/preferences.rs`, so adding a setting is a field with a default and nothing breaks for
 people who saved before.
+
+The same object holds how a person lays out their boards: for each board a view (`board`, `list` or
+`calendar`), a column width and the lists folded into a rail, and one card dialog layout (the order of
+the properties and which are hidden, every property listed once). These are personal, so they never
+change what teammates see. At most 50 lists can be folded per board.
+
+A list can carry a work in progress limit from 1 to 99 (`PUT /api/lists/{id}/wip-limit`, writers and
+above, `null` removes it). It is shared with the board, returned in the board view, and only warns:
+adding or moving cards past it still works. The field must be present, so an empty body can never
+clear a limit by accident.
+
+`GET /api/users/me/cards` lists every card assigned to the signed in person in the workspaces they
+still belong to, soonest due date first and undated cards last, with the list, board and workspace
+each one lives in (at most 500). Grouping by urgency happens in the browser, against the viewer's own
+local day.
 
 A board also has a shared look, a background tint and an accent colour picked from fixed presets
 (`PUT /api/boards/{id}/look`, writers and above). Presets, not free colours, so contrast stays
