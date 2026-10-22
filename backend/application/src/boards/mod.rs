@@ -5,7 +5,7 @@ mod list;
 mod members;
 mod workspace;
 
-pub use board::{CreateBoard, DeleteBoard, GetBoard, RenameBoard};
+pub use board::{CreateBoard, DeleteBoard, GetBoard, RenameBoard, SetBoardLook};
 pub use card::{
     CreateCard, DeleteCard, GetCard, MoveCard, SetCardAssignees, SetCardLabels, UpdateCard,
 };
