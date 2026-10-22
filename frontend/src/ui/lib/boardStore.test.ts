@@ -28,13 +28,33 @@ function sampleView(): BoardView {
   return {
     board: { id: 'b1', workspace_id: 'w1', name: 'Roadmap' },
     role: 'owner',
+    members: [
+      { user_id: 'u-me', username: 'amir' },
+      { user_id: 'u-wen', username: 'wen' },
+    ],
     lists: [
       {
         id: 'todo',
         name: 'To do',
         cards: [
-          { id: 'a', list_id: 'todo', title: 'A', has_description: false, label_ids: ['urgent'] },
-          { id: 'b', list_id: 'todo', title: 'B', has_description: false, label_ids: [] },
+          {
+            id: 'a',
+            list_id: 'todo',
+            title: 'A',
+            has_description: false,
+            label_ids: ['urgent'],
+            assignee_ids: [],
+            due_date: null,
+          },
+          {
+            id: 'b',
+            list_id: 'todo',
+            title: 'B',
+            has_description: false,
+            label_ids: [],
+            assignee_ids: [],
+            due_date: null,
+          },
         ],
       },
       { id: 'done', name: 'Done', cards: [] },
@@ -105,6 +125,8 @@ describe('useBoardStore', () => {
       title: 'C',
       has_description: false,
       label_ids: [],
+      assignee_ids: [],
+      due_date: null,
     });
 
     const created = await useBoardStore.getState().createCard('done', 'C');
