@@ -1,0 +1,71 @@
+.label-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 100%;
+  min-height: 22px;
+  padding: 0.1rem 0.55rem 0.1rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--chip-fg) 24%, transparent);
+  border-radius: 999px;
+  background: var(--chip-bg);
+  color: var(--chip-fg);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.label-chip__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.priority-bars {
+  flex-shrink: 0;
+}
+
+.label-chip--slate {
+  --chip-bg: var(--label-slate-bg);
+  --chip-fg: var(--label-slate-fg);
+}
+
+.label-chip--red {
+  --chip-bg: var(--label-red-bg);
+  --chip-fg: var(--label-red-fg);
+}
+
+.label-chip--orange {
+  --chip-bg: var(--label-orange-bg);
+  --chip-fg: var(--label-orange-fg);
+}
+
+.label-chip--amber {
+  --chip-bg: var(--label-amber-bg);
+  --chip-fg: var(--label-amber-fg);
+}
+
+.label-chip--green {
+  --chip-bg: var(--label-green-bg);
+  --chip-fg: var(--label-green-fg);
+}
+
+.label-chip--teal {
+  --chip-bg: var(--label-teal-bg);
+  --chip-fg: var(--label-teal-fg);
+}
+
+.label-chip--blue {
+  --chip-bg: var(--label-blue-bg);
+  --chip-fg: var(--label-blue-fg);
+}
+
+.label-chip--violet {
+  --chip-bg: var(--label-violet-bg);
+  --chip-fg: var(--label-violet-fg);
+}
+
+.label-chip--pink {
+  --chip-bg: var(--label-pink-bg);
+  --chip-fg: var(--label-pink-fg);
+}
