@@ -14,12 +14,12 @@ impl MoveCard {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         list_id: Uuid,
         index: usize,
     ) -> Result<(), BoardsError> {
-        self.repo.move_to(owner_id, id, list_id, index).await
+        self.repo.move_to(user_id, id, list_id, index).await
     }
 }
 
