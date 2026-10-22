@@ -149,7 +149,7 @@
 }
 
 .card-dialog__description textarea:focus-visible {
-  border-color: var(--color-accent);
+  border-color: var(--color-focus);
   background: var(--color-paper-card);
   outline: none;
 }
