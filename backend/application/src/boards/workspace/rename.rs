@@ -14,12 +14,12 @@ impl RenameWorkspace {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         name: &str,
     ) -> Result<Workspace, BoardsError> {
         let name = Title::parse(name)?;
-        self.repo.rename(owner_id, id, name).await
+        self.repo.rename(user_id, id, name).await
     }
 }
 
@@ -31,23 +31,24 @@ mod tests {
 
     #[tokio::test]
     async fn renames_the_workspace_with_the_trimmed_name() {
-        let owner_id = Uuid::new_v4();
+        let user_id = Uuid::new_v4();
         let id = Uuid::new_v4();
         let mut repo = MockWorkspaceRepo::new();
         repo.expect_rename()
             .times(1)
             .withf(move |owner, target, name| {
-                *owner == owner_id && *target == id && name.as_str() == "Renamed"
+                *owner == user_id && *target == id && name.as_str() == "Renamed"
             })
             .returning(|_, id, name| {
                 Ok(Workspace {
                     id,
                     name: name.into_string(),
+                    role: domain::boards::Role::Admin,
                 })
             });
 
         let result = RenameWorkspace::new(Arc::new(repo))
-            .execute(owner_id, id, " Renamed ")
+            .execute(user_id, id, " Renamed ")
             .await;
 
         assert_eq!(result.expect("rename should succeed").name, "Renamed");
