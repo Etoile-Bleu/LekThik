@@ -11,6 +11,7 @@ export function SignupPage() {
   const [searchParams] = useSearchParams();
   const next = safeNext(searchParams.get('next'));
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,7 +29,7 @@ export function SignupPage() {
     setIsSubmitting(true);
 
     try {
-      await registerUser(email, password);
+      await registerUser(email, password, username);
       navigate(withNext(`/verify-email?email=${encodeURIComponent(email)}`, next));
     } catch (submitError) {
       setError(
@@ -59,6 +60,24 @@ export function SignupPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
             />
+          </div>
+
+          <div className="auth__field">
+            <label htmlFor="signup-username">Username (optional)</label>
+            <input
+              id="signup-username"
+              name="username"
+              type="text"
+              autoComplete="username"
+              minLength={3}
+              maxLength={32}
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+            />
+            <span className="auth__hint">
+              3 to 32 characters, shown to your teammates. Leave empty to use the start of your
+              email.
+            </span>
           </div>
 
           <div className="auth__field">
