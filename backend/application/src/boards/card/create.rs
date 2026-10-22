@@ -43,6 +43,8 @@ mod tests {
                     title: title.into_string(),
                     has_description: false,
                     label_ids: Vec::new(),
+                    assignee_ids: Vec::new(),
+                    due_date: None,
                 })
             });
 
