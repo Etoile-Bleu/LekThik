@@ -121,8 +121,10 @@ impl BoardRepo for PgBoardRepo {
         })?;
 
         let list_rows = sqlx::query(
-            "SELECT id, name, wip_limit, kind, config::text AS config FROM lists \
-                WHERE board_id = $1 ORDER BY position, created_at, id",
+            "SELECT id, name, wip_limit, kind, config::text AS config, \
+                (SELECT (extract(epoch FROM i.updated_at) * 1000000)::bigint \
+                    FROM block_images i WHERE i.block_id = lists.id) AS image_version \
+                FROM lists WHERE board_id = $1 ORDER BY position, created_at, id",
         )
         .bind(board.id)
         .fetch_all(&mut *transaction)
@@ -218,6 +220,7 @@ impl BoardRepo for PgBoardRepo {
                     .map_err(repository_error)?
                     .and_then(|limit| u8::try_from(limit).ok()),
                 config: crate::list_repo::row_to_config(row)?,
+                image_version: row.try_get("image_version").map_err(repository_error)?,
                 cards: Vec::new(),
             });
         }
