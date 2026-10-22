@@ -11,6 +11,7 @@ domain = { path = "../../domain" }
 application = { path = "../../application" }
 adapters-db = { path = "../db" }
 adapters-mail = { path = "../mail" }
+adapters-image = { path = "../image" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
@@ -28,6 +29,7 @@ secrecy = { workspace = true }
 futures-util = { workspace = true }
 
 [dev-dependencies]
+image = { workspace = true }
 async-trait = { workspace = true }
 mockall = { workspace = true }
 testcontainers = { workspace = true }
