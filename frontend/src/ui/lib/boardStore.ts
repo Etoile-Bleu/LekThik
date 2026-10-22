@@ -34,6 +34,8 @@ interface BoardState {
   moveCard: (cardId: string, listId: string, index: number) => Promise<void>;
   deleteCard: (cardId: string) => Promise<void>;
   setCardLabels: (cardId: string, labelIds: string[]) => Promise<void>;
+  setCardAssignees: (cardId: string, userIds: string[]) => Promise<void>;
+  setCardDueDate: (cardId: string, day: string | null) => Promise<void>;
   createLabel: (input: LabelInput) => Promise<Label | null>;
   updateLabel: (labelId: string, changes: Partial<LabelInput>) => Promise<void>;
   deleteLabel: (labelId: string) => Promise<void>;
@@ -235,6 +237,30 @@ export const useBoardStore = create<BoardState>((set, get) => {
       }));
       try {
         await api.setCardLabels(cardId, labelIds);
+      } catch (error) {
+        await recoverFrom(error);
+      }
+    },
+
+    setCardAssignees: async (cardId, userIds) => {
+      update((current) => ({
+        ...current,
+        lists: patchCard(current.lists, cardId, { assignee_ids: userIds }),
+      }));
+      try {
+        await api.setCardAssignees(cardId, userIds);
+      } catch (error) {
+        await recoverFrom(error);
+      }
+    },
+
+    setCardDueDate: async (cardId, day) => {
+      update((current) => ({
+        ...current,
+        lists: patchCard(current.lists, cardId, { due_date: day }),
+      }));
+      try {
+        await api.updateCard(cardId, { due_date: day });
       } catch (error) {
         await recoverFrom(error);
       }
