@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use domain::boards::{BoardsError, Card, CardRepo, CardUpdate, Description, Title};
+use domain::boards::{BoardsError, Card, CardRepo, CardUpdate, Description, DueDate, Title};
 use uuid::Uuid;
 
 pub struct UpdateCard {
@@ -18,10 +18,14 @@ impl UpdateCard {
         id: Uuid,
         title: Option<&str>,
         description: Option<&str>,
+        due_date: Option<Option<&str>>,
     ) -> Result<Card, BoardsError> {
         let update = CardUpdate {
             title: title.map(Title::parse).transpose()?,
             description: description.map(Description::parse).transpose()?,
+            due_date: due_date
+                .map(|day| day.map(DueDate::parse).transpose())
+                .transpose()?,
         };
 
         self.repo.update(user_id, id, update).await
@@ -41,6 +45,8 @@ mod tests {
             title: title.to_string(),
             description: description.to_string(),
             label_ids: Vec::new(),
+            assignee_ids: Vec::new(),
+            due_date: None,
         }
     }
 
@@ -56,7 +62,13 @@ mod tests {
             .returning(|_, _, _| Ok(card_with("Kept", "Details")));
 
         let result = UpdateCard::new(Arc::new(repo))
-            .execute(Uuid::new_v4(), Uuid::new_v4(), None, Some("Details  "))
+            .execute(
+                Uuid::new_v4(),
+                Uuid::new_v4(),
+                None,
+                Some("Details  "),
+                None,
+            )
             .await;
 
         assert_eq!(
@@ -73,16 +85,60 @@ mod tests {
             .returning(|_, _, _| Ok(card_with("Kept", "")));
 
         let result = UpdateCard::new(Arc::new(repo))
-            .execute(Uuid::new_v4(), Uuid::new_v4(), None, Some(""))
+            .execute(Uuid::new_v4(), Uuid::new_v4(), None, Some(""), None)
             .await;
 
         assert!(result.is_ok());
     }
 
     #[tokio::test]
+    async fn sets_and_clears_the_due_date_only_when_asked() {
+        let mut repo = MockCardRepo::new();
+        repo.expect_update()
+            .times(3)
+            .withf(|_, _, update| match &update.due_date {
+                None => true,
+                Some(None) => true,
+                Some(Some(day)) => day.as_str() == "2026-10-31",
+            })
+            .returning(|_, _, _| Ok(card_with("Kept", "")));
+        let use_case = UpdateCard::new(Arc::new(repo));
+        let (user, id) = (Uuid::new_v4(), Uuid::new_v4());
+
+        assert!(use_case.execute(user, id, None, None, None).await.is_ok());
+        assert!(
+            use_case
+                .execute(user, id, None, None, Some(None))
+                .await
+                .is_ok()
+        );
+        assert!(
+            use_case
+                .execute(user, id, None, None, Some(Some("2026-10-31")))
+                .await
+                .is_ok()
+        );
+    }
+
+    #[tokio::test]
+    async fn rejects_an_invalid_due_date_before_reaching_the_repository() {
+        let result = UpdateCard::new(Arc::new(MockCardRepo::new()))
+            .execute(
+                Uuid::new_v4(),
+                Uuid::new_v4(),
+                None,
+                None,
+                Some(Some("2026-02-30")),
+            )
+            .await;
+
+        assert!(matches!(result, Err(BoardsError::Invalid(_))));
+    }
+
+    #[tokio::test]
     async fn rejects_a_blank_title_before_reaching_the_repository() {
         let result = UpdateCard::new(Arc::new(MockCardRepo::new()))
-            .execute(Uuid::new_v4(), Uuid::new_v4(), Some("   "), None)
+            .execute(Uuid::new_v4(), Uuid::new_v4(), Some("   "), None, None)
             .await;
 
         assert!(matches!(result, Err(BoardsError::Invalid(_))));
@@ -96,6 +152,7 @@ mod tests {
                 Uuid::new_v4(),
                 None,
                 Some(&"a".repeat(10_001)),
+                None,
             )
             .await;
 
