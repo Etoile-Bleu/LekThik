@@ -12,8 +12,8 @@ impl MoveList {
         Self { repo }
     }
 
-    pub async fn execute(&self, owner_id: Uuid, id: Uuid, index: usize) -> Result<(), BoardsError> {
-        self.repo.move_to(owner_id, id, index).await
+    pub async fn execute(&self, user_id: Uuid, id: Uuid, index: usize) -> Result<(), BoardsError> {
+        self.repo.move_to(user_id, id, index).await
     }
 }
 
