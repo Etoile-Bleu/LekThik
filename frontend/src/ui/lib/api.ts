@@ -88,10 +88,15 @@ export async function request(path: string, init?: RequestInit): Promise<Respons
   }
 }
 
-export async function registerUser(email: string, password: string): Promise<void> {
+export async function registerUser(
+  email: string,
+  password: string,
+  username?: string
+): Promise<void> {
+  const chosen = username?.trim();
   await request('/api/users/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, ...(chosen ? { username: chosen } : {}) }),
   });
 }
 
