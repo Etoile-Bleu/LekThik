@@ -19,6 +19,8 @@ vi.mock('@lib/boardsApi', async (importOriginal) => {
 
 import * as api from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
+import { DEFAULT_PREFERENCES } from '@lib/prefs';
+import { usePrefsStore } from '@lib/prefsStore';
 import { useToastStore } from '@lib/toastStore';
 
 import { CardDialog } from './CardDialog';
@@ -44,6 +46,7 @@ describe('CardDialog', () => {
     vi.clearAllMocks();
     useToastStore.setState({ toasts: [] });
     useBoardStore.setState({ view: sampleBoardView(), status: 'ready', freshIds: [] });
+    usePrefsStore.setState({ prefs: DEFAULT_PREFERENCES, loaded: true, saveState: 'idle' });
   });
 
   it('shows the card with its list, description and labels', async () => {
@@ -246,6 +249,89 @@ describe('CardDialog', () => {
       expect(
         within(dialog).queryByRole('button', { name: 'Assign to me' })
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('layout', () => {
+    function propertyNames(dialog: HTMLElement): string[] {
+      return within(dialog)
+        .getAllByRole('group')
+        .map((group) => group.textContent ?? '')
+        .map((text) =>
+          ['Assignees', 'Due date', 'Labels', 'List'].find((name) => text.startsWith(name))
+        )
+        .filter((name): name is string => name !== undefined);
+    }
+
+    it('shows the properties in the default order', async () => {
+      setup();
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      expect(propertyNames(dialog)).toEqual(['Assignees', 'Due date', 'Labels', 'List']);
+    });
+
+    it('follows the order the person chose', async () => {
+      usePrefsStore.setState({
+        prefs: {
+          ...DEFAULT_PREFERENCES,
+          card_dialog: { order: ['labels', 'list', 'assignees', 'due_date'], hidden: [] },
+        },
+      });
+      setup();
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      expect(propertyNames(dialog)).toEqual(['Labels', 'List', 'Assignees', 'Due date']);
+    });
+
+    it('tucks hidden properties away, and shows them on request', async () => {
+      usePrefsStore.setState({
+        prefs: {
+          ...DEFAULT_PREFERENCES,
+          card_dialog: {
+            order: ['assignees', 'due_date', 'labels', 'list'],
+            hidden: ['list', 'assignees'],
+          },
+        },
+      });
+      setup();
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      expect(propertyNames(dialog)).toEqual(['Due date', 'Labels']);
+      const more = within(dialog).getByRole('button', { name: '2 hidden properties' });
+      expect(more).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(more);
+
+      expect(propertyNames(dialog)).toEqual(['Due date', 'Labels', 'Assignees', 'List']);
+      expect(
+        within(dialog).getByRole('button', { name: 'Hide the other properties' })
+      ).toHaveAttribute('aria-expanded', 'true');
+    });
+
+    it('offers no disclosure when nothing is hidden', async () => {
+      setup();
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      expect(
+        within(dialog).queryByRole('button', { name: /hidden propert/ })
+      ).not.toBeInTheDocument();
+    });
+
+    it('hands over to the settings, away from the delete button', async () => {
+      const onCustomize = vi.fn();
+      vi.mocked(api.fetchCard).mockResolvedValue(detail);
+      render(
+        <CardDialog
+          cardId="c1"
+          onClose={vi.fn()}
+          onManageLabels={vi.fn()}
+          onCustomize={onCustomize}
+        />
+      );
+
+      fireEvent.click(await screen.findByRole('button', { name: /Customise this layout/ }));
+
+      expect(onCustomize).toHaveBeenCalled();
     });
   });
 });
