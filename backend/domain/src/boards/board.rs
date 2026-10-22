@@ -4,6 +4,7 @@ use uuid::Uuid;
 use super::error::BoardsError;
 use super::label::Label;
 use super::list::ListWithCards;
+use super::role::Role;
 use super::templates::BoardTemplate;
 use super::text::Title;
 
@@ -24,6 +25,7 @@ pub struct BoardSummary {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoardView {
     pub board: Board,
+    pub role: Role,
     pub lists: Vec<ListWithCards>,
     pub labels: Vec<Label>,
 }
@@ -33,12 +35,12 @@ pub struct BoardView {
 pub trait BoardRepo: Send + Sync {
     async fn create(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         workspace_id: Uuid,
         name: Title,
         template: Option<&'static BoardTemplate>,
     ) -> Result<Board, BoardsError>;
-    async fn get_view(&self, owner_id: Uuid, id: Uuid) -> Result<BoardView, BoardsError>;
-    async fn rename(&self, owner_id: Uuid, id: Uuid, name: Title) -> Result<Board, BoardsError>;
-    async fn delete(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
+    async fn get_view(&self, user_id: Uuid, id: Uuid) -> Result<BoardView, BoardsError>;
+    async fn rename(&self, user_id: Uuid, id: Uuid, name: Title) -> Result<Board, BoardsError>;
+    async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
 }
