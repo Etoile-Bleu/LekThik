@@ -8,7 +8,8 @@ pub struct RegisterUserRequestDto {
     #[validate(email)]
     pub email: String,
     #[validate(length(min = 3, max = 32))]
-    pub username: String,
+    #[serde(default)]
+    pub username: Option<String>,
     #[validate(length(min = 8))]
     pub password: String,
 }
