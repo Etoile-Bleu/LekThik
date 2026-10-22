@@ -11,7 +11,7 @@
 
 .sidebar__header {
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid #262a3a;
+  border-bottom: 1px solid var(--chrome-border);
 }
 
 .sidebar__overview,
@@ -23,7 +23,7 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
-  min-height: 38px;
+  min-height: var(--density-row);
   padding: 0 0.7rem;
   border: none;
   border-radius: var(--radius-md);
@@ -157,7 +157,7 @@
 .sidebar__footer {
   margin-top: auto;
   padding-top: 0.75rem;
-  border-top: 1px solid #262a3a;
+  border-top: 1px solid var(--chrome-border);
 }
 
 .sidebar__create {
