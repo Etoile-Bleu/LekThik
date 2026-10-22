@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useAuthStore } from '@lib/authStore';
 
@@ -55,5 +55,18 @@ describe('ProtectedRoute', () => {
     renderProtectedRoute();
 
     expect(screen.getByText('secret dashboard')).toBeInTheDocument();
+  });
+
+  it('offers a retry instead of a login redirect when the server is unreachable', () => {
+    const checkSession = vi.fn().mockResolvedValue(undefined);
+    useAuthStore.setState({ status: 'unreachable', checkSession });
+
+    renderProtectedRoute();
+
+    expect(screen.getByRole('alert')).toHaveTextContent('We cannot reach LekThik right now');
+    expect(screen.queryByText('login page')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(checkSession).toHaveBeenCalledTimes(1);
   });
 });
