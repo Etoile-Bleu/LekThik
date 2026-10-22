@@ -1,0 +1,126 @@
+.add-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1.5rem;
+}
+
+.add-block__title {
+  padding-right: 2.5rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.add-block__lead {
+  max-width: 44ch;
+  color: var(--color-text-soft-on-light);
+}
+
+.add-block__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.add-block__grid > li {
+  animation: add-block-in var(--duration-base) var(--ease-out) backwards;
+  animation-delay: calc(var(--option-index, 0) * 45ms);
+}
+
+.add-block__option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  padding: 0.7rem 0.7rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-base) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.add-block__option:hover {
+  border-color: var(--color-ink);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+
+.add-block__option:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.add-block__option:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.add-block__preview {
+  display: block;
+  width: 100%;
+  padding: 0.3rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.add-block__preview svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.add-block__ink {
+  fill: var(--color-ink);
+}
+
+.add-block__faint {
+  fill: color-mix(in srgb, var(--color-ink) 16%, transparent);
+}
+
+.add-block__accent {
+  fill: var(--color-accent);
+}
+
+.add-block__late {
+  fill: var(--label-red-dot);
+}
+
+.add-block__digits {
+  fill: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.add-block__name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.add-block__description {
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+@keyframes add-block-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
