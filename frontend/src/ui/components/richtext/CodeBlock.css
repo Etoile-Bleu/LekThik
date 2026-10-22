@@ -1,0 +1,169 @@
+/*
+ * Token colours are chosen against the code background of each theme, every one at 4.5:1 or
+ * better, comments and line text included, since a code block is where contrast is usually missed.
+ */
+.rt-code {
+  --code-bg: #f4f5ef;
+  --code-text: #1c2230;
+  --code-comment: #566070;
+  --code-keyword: #6b21a8;
+  --code-string: #0f6b3a;
+  --code-number: #8a4410;
+  --code-title: #1d4ed8;
+  --code-attr: #8a2a22;
+  --code-builtin: #0b5f8a;
+
+  margin: 0.7rem 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+html[data-theme='dark'] .rt-code {
+  --code-bg: #151823;
+  --code-text: #e8ebf2;
+  --code-comment: #a3acbd;
+  --code-keyword: #d8b4fe;
+  --code-string: #86efac;
+  --code-number: #fdba74;
+  --code-title: #93c5fd;
+  --code-attr: #fca5a5;
+  --code-builtin: #7dd3fc;
+}
+
+html[data-theme='contrast'] .rt-code {
+  --code-bg: #000000;
+  --code-text: #ffffff;
+  --code-comment: #d6d6d6;
+  --code-keyword: #ffd24d;
+  --code-string: #7dffb0;
+  --code-number: #ffb066;
+  --code-title: #8fd0ff;
+  --code-attr: #ff9d9d;
+  --code-builtin: #7fe7ff;
+}
+
+.rt-code__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0.4rem 0.15rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--code-bg) 94%, var(--color-ink));
+  color: var(--code-comment);
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  text-transform: lowercase;
+}
+
+.rt-code__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 30px;
+  padding: 0 0.55rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--code-text);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.rt-code__copy:hover {
+  background: color-mix(in srgb, var(--code-text) 12%, transparent);
+}
+
+.rt-code__copy:focus-visible,
+.rt-code__scroll:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.rt-code__scroll {
+  overflow: auto;
+  max-height: 22rem;
+}
+
+.rt-code pre {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  background: transparent;
+}
+
+.rt-code code {
+  color: var(--code-text);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  white-space: pre;
+  tab-size: 2;
+}
+
+.rt-code .hljs-comment,
+.rt-code .hljs-quote {
+  color: var(--code-comment);
+  font-style: italic;
+}
+
+.rt-code .hljs-keyword,
+.rt-code .hljs-selector-tag,
+.rt-code .hljs-literal,
+.rt-code .hljs-doctag {
+  color: var(--code-keyword);
+  font-weight: 600;
+}
+
+.rt-code .hljs-string,
+.rt-code .hljs-regexp,
+.rt-code .hljs-addition {
+  color: var(--code-string);
+}
+
+.rt-code .hljs-number,
+.rt-code .hljs-symbol,
+.rt-code .hljs-bullet {
+  color: var(--code-number);
+}
+
+.rt-code .hljs-title,
+.rt-code .hljs-section,
+.rt-code .hljs-selector-id,
+.rt-code .hljs-selector-class {
+  color: var(--code-title);
+  font-weight: 600;
+}
+
+.rt-code .hljs-attr,
+.rt-code .hljs-attribute,
+.rt-code .hljs-variable,
+.rt-code .hljs-template-variable,
+.rt-code .hljs-deletion {
+  color: var(--code-attr);
+}
+
+.rt-code .hljs-built_in,
+.rt-code .hljs-type,
+.rt-code .hljs-meta,
+.rt-code .hljs-name {
+  color: var(--code-builtin);
+}
+
+.rt-code .hljs-emphasis {
+  font-style: italic;
+}
+
+.rt-code .hljs-strong {
+  font-weight: 700;
+}
+
+@media (forced-colors: active) {
+  .rt-code {
+    border-color: CanvasText;
+  }
+}
