@@ -11,13 +11,13 @@ mod workspace;
 
 pub use board::{BoardLookDto, BoardMemberDto, BoardResponseDto, BoardSummaryDto, BoardViewDto};
 pub use card::{
-    CardAssigneesResponseDto, CardLabelsResponseDto, CardResponseDto, CardSummaryDto,
-    CreateCardRequestDto, MoveCardRequestDto, SetCardAssigneesRequestDto, SetCardLabelsRequestDto,
-    UpdateCardRequestDto,
+    AssignedCardDto, CardAssigneesResponseDto, CardLabelsResponseDto, CardResponseDto,
+    CardSummaryDto, CreateCardRequestDto, MoveCardRequestDto, SetCardAssigneesRequestDto,
+    SetCardLabelsRequestDto, UpdateCardRequestDto,
 };
 pub use common::ErrorResponseDto;
 pub use label::{CreateLabelRequestDto, LabelDto, UpdateLabelRequestDto};
-pub use list::{ListResponseDto, ListWithCardsDto, MoveListRequestDto};
+pub use list::{ListResponseDto, ListWithCardsDto, MoveListRequestDto, WipLimitRequestDto};
 pub use members::{
     ChangeRoleRequestDto, InvitationDto, InviteMemberRequestDto, MemberDto, MembersResponseDto,
 };
