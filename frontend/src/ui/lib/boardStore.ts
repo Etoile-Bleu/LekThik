@@ -3,7 +3,16 @@ import { create } from 'zustand';
 import { ApiError } from './api';
 import * as api from './boardsApi';
 import type { BoardLook } from './boardLooks';
-import type { BoardView, CardSummary, Label, LabelColor, Priority } from './boardsApi';
+import type {
+  BoardList,
+  BoardView,
+  CardSummary,
+  Label,
+  LabelColor,
+  PanelConfig,
+  PanelKind,
+  Priority,
+} from './boardsApi';
 import { moveCard, moveList, patchCard, removeCard } from './boardModel';
 import { notifyError } from './toastStore';
 import { useWorkspaceStore } from './workspaceStore';
@@ -27,6 +36,16 @@ interface BoardState {
   setLook: (look: BoardLook) => Promise<void>;
   deleteBoard: () => Promise<boolean>;
   createList: (name: string) => Promise<void>;
+  createBlock: (
+    kind: Exclude<PanelKind, 'list'>,
+    name: string,
+    config: PanelConfig
+  ) => Promise<BoardList | null>;
+  setBlockConfig: (
+    blockId: string,
+    kind: Exclude<PanelKind, 'list'>,
+    config: PanelConfig
+  ) => Promise<void>;
   renameList: (listId: string, name: string) => Promise<void>;
   moveList: (listId: string, index: number) => Promise<void>;
   setListWipLimit: (listId: string, limit: number | null) => Promise<void>;
@@ -150,10 +169,42 @@ export const useBoardStore = create<BoardState>((set, get) => {
         markFresh(list.id);
         update((current) => ({
           ...current,
-          lists: [...current.lists, { id: list.id, name: list.name, wip_limit: null, cards: [] }],
+          lists: [
+            ...current.lists,
+            { id: list.id, name: list.name, wip_limit: null, kind: 'list', config: {}, cards: [] },
+          ],
         }));
       } catch (error) {
         notifyError(error);
+      }
+    },
+
+    createBlock: async (kind, name, config) => {
+      const view = get().view;
+      if (!view) return null;
+      try {
+        const block = await api.createBlock(view.board.id, kind, name, config);
+        markFresh(block.id);
+        update((current) => ({
+          ...current,
+          lists: [...current.lists, { ...block, cards: [] }],
+        }));
+        return block;
+      } catch (error) {
+        notifyError(error);
+        return null;
+      }
+    },
+
+    setBlockConfig: async (blockId, kind, config) => {
+      update((current) => ({
+        ...current,
+        lists: current.lists.map((list) => (list.id === blockId ? { ...list, config } : list)),
+      }));
+      try {
+        await api.setBlockConfig(blockId, kind, config);
+      } catch (error) {
+        await recoverFrom(error);
       }
     },
 
