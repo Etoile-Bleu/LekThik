@@ -11,6 +11,18 @@ const PRIORITY_LEVEL: Record<Priority, number> = {
   urgent: 4,
 };
 
+const COLOR_SHAPES: Record<LabelColor, string> = {
+  slate: 'ring',
+  red: 'triangle',
+  orange: 'diamond',
+  amber: 'square',
+  green: 'circle',
+  teal: 'hexagon',
+  blue: 'triangle-down',
+  violet: 'cross',
+  pink: 'pentagon',
+};
+
 export function PriorityBars({ priority }: { priority: Priority }) {
   const level = PRIORITY_LEVEL[priority];
 
@@ -49,6 +61,7 @@ interface LabelChipProps {
 export function LabelChip({ name, color, priority, showPriorityText = true }: LabelChipProps) {
   return (
     <span className={`label-chip label-chip--${color}`}>
+      <span className="label-chip__shape" data-shape={COLOR_SHAPES[color]} aria-hidden="true" />
       {priority !== 'none' && <PriorityBars priority={priority} />}
       <span className="label-chip__name">{name}</span>
       {showPriorityText && priority !== 'none' && (
