@@ -148,6 +148,7 @@ mod tests {
             format!("lists/{id}/move"),
             format!("cards/{id}"),
             format!("cards/{id}/labels"),
+            format!("cards/{id}/assignees"),
             format!("labels/{id}"),
         ] {
             let plan = plan_for(&Method::PATCH, &path(&rest)).expect(&rest);

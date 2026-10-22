@@ -178,3 +178,21 @@ export function LogOutIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="4.5" width="14" height="12.5" rx="2" />
+      <path d="M3 8.5h14M7 3v3M13 3v3" />
+    </Base>
+  );
+}
+
+export function AlertIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 3.5 17 16H3L10 3.5Z" />
+      <path d="M10 8.5v3.2M10 13.8v.01" />
+    </Base>
+  );
+}

@@ -6,6 +6,8 @@ import type { CardSummary, Label } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
 
 import { GripIcon, TextLinesIcon } from '../ui/Icons';
+import { AssigneeStack } from './AssigneeStack';
+import { DueBadge } from './DueBadge';
 import { LabelChip } from './LabelChip';
 import './BoardCard.css';
 
@@ -38,6 +40,12 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
               <span className="sr-only">Has a description</span>
             </span>
           )}
+        </span>
+      )}
+      {(card.due_date || card.assignee_ids.length > 0) && (
+        <span className="board-card__foot">
+          {card.due_date && <DueBadge day={card.due_date} />}
+          <AssigneeStack ids={card.assignee_ids} />
         </span>
       )}
     </>

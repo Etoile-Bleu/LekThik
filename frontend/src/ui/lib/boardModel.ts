@@ -37,6 +37,36 @@ export function matchesFilter(card: CardSummary, selectedLabelIds: string[]): bo
   return card.label_ids.some((id) => selectedLabelIds.includes(id));
 }
 
+export interface CardFilter {
+  labelIds: string[];
+  mine: boolean;
+  overdue: boolean;
+}
+
+export const EMPTY_FILTER: CardFilter = { labelIds: [], mine: false, overdue: false };
+
+export function isFiltering(filter: CardFilter): boolean {
+  return filter.labelIds.length > 0 || filter.mine || filter.overdue;
+}
+
+/** Labels combine with OR, the other two narrow the result further. */
+export function cardMatches(
+  card: CardSummary,
+  filter: CardFilter,
+  context: { meId: string | undefined; today: string }
+): boolean {
+  if (!matchesFilter(card, filter.labelIds)) {
+    return false;
+  }
+  if (filter.mine && !(context.meId && card.assignee_ids.includes(context.meId))) {
+    return false;
+  }
+  if (filter.overdue && !(card.due_date && card.due_date < context.today)) {
+    return false;
+  }
+  return true;
+}
+
 export function findCard(
   lists: BoardList[],
   cardId: string

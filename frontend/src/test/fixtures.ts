@@ -4,6 +4,10 @@ export function sampleBoardView(): BoardView {
   return {
     board: { id: 'b1', workspace_id: 'w1', name: 'Roadmap' },
     role: 'owner',
+    members: [
+      { user_id: 'u-me', username: 'amir' },
+      { user_id: 'u-wen', username: 'wen' },
+    ],
     lists: [
       {
         id: 'todo',
@@ -15,6 +19,8 @@ export function sampleBoardView(): BoardView {
             title: 'Write the spec',
             has_description: true,
             label_ids: ['urgent'],
+            assignee_ids: [],
+            due_date: null,
           },
           {
             id: 'c2',
@@ -22,6 +28,8 @@ export function sampleBoardView(): BoardView {
             title: 'Design the board',
             has_description: false,
             label_ids: [],
+            assignee_ids: [],
+            due_date: null,
           },
         ],
       },

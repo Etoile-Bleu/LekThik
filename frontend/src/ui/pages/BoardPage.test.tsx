@@ -21,10 +21,12 @@ vi.mock('@lib/boardsApi', async (importOriginal) => {
     moveCard: vi.fn(),
     deleteCard: vi.fn(),
     setCardLabels: vi.fn(),
+    setCardAssignees: vi.fn(),
   };
 });
 
 import { ApiError } from '@lib/api';
+import { useAuthStore } from '@lib/authStore';
 import * as api from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { useToastStore } from '@lib/toastStore';
@@ -84,6 +86,8 @@ describe('BoardPage', () => {
       title: 'Ship it',
       has_description: false,
       label_ids: [],
+      assignee_ids: [],
+      due_date: null,
     });
     renderBoard();
     await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
@@ -131,7 +135,7 @@ describe('BoardPage', () => {
     renderBoard();
     await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
 
-    const filter = screen.getByRole('group', { name: 'Filter cards by label' });
+    const filter = screen.getByRole('group', { name: 'Filter cards' });
     fireEvent.click(within(filter).getByRole('button', { name: /Urgent/ }));
 
     const matching = screen.getByRole('button', { name: /^Write the spec/ }).closest('li');
@@ -142,6 +146,49 @@ describe('BoardPage', () => {
 
     fireEvent.click(within(filter).getByRole('button', { name: 'Clear' }));
     expect(other).not.toHaveAttribute('data-dimmed');
+  });
+
+  it('narrows the board to my cards and to overdue cards', async () => {
+    const view = sampleBoardView();
+    view.lists[0].cards[0].assignee_ids = ['u-me'];
+    view.lists[0].cards[1].due_date = '2000-01-02';
+    vi.mocked(api.fetchBoard).mockResolvedValue(view);
+    useAuthStore.setState({
+      user: { id: 'u-me', email: 'amir@example.com', username: 'amir' },
+      status: 'authenticated',
+    });
+    renderBoard();
+    await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+
+    const filter = screen.getByRole('group', { name: 'Filter cards' });
+    const assigned = screen.getByRole('button', { name: /^Write the spec/ }).closest('li');
+    const late = screen.getByRole('button', { name: /^Design the board/ }).closest('li');
+
+    fireEvent.click(within(filter).getByRole('button', { name: 'My cards' }));
+    expect(assigned).not.toHaveAttribute('data-dimmed');
+    expect(late).toHaveAttribute('data-dimmed');
+    expect(within(filter).getByText('1 of 2 cards match')).toBeInTheDocument();
+
+    fireEvent.click(within(filter).getByRole('button', { name: 'My cards' }));
+    fireEvent.click(within(filter).getByRole('button', { name: 'Overdue' }));
+    expect(late).not.toHaveAttribute('data-dimmed');
+    expect(assigned).toHaveAttribute('data-dimmed');
+
+    fireEvent.click(within(filter).getByRole('button', { name: 'My cards' }));
+    expect(within(filter).getByText('0 of 2 cards match')).toBeInTheDocument();
+  });
+
+  it('shows who a card is assigned to and when it is due', async () => {
+    const view = sampleBoardView();
+    view.lists[0].cards[0].assignee_ids = ['u-wen'];
+    view.lists[0].cards[0].due_date = '2000-01-02';
+    vi.mocked(api.fetchBoard).mockResolvedValue(view);
+    renderBoard();
+
+    const card = (await screen.findByRole('button', { name: /^Write the spec/ })).closest('li');
+
+    expect(within(card as HTMLElement).getByText(/Assigned to wen/)).toBeInTheDocument();
+    expect(within(card as HTMLElement).getByText(/^Overdue, /)).toBeInTheDocument();
   });
 
   it('confirms before deleting a list and removes it', async () => {
@@ -181,6 +228,8 @@ describe('BoardPage', () => {
       title: 'Write the spec',
       description: 'Cover the happy path',
       label_ids: ['urgent'],
+      assignee_ids: [],
+      due_date: null,
     });
     renderBoard();
     await screen.findByRole('heading', { level: 1, name: /Roadmap/ });

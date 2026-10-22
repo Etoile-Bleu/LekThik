@@ -9,10 +9,11 @@ mod template;
 mod user;
 mod workspace;
 
-pub use board::{BoardResponseDto, BoardSummaryDto, BoardViewDto};
+pub use board::{BoardMemberDto, BoardResponseDto, BoardSummaryDto, BoardViewDto};
 pub use card::{
-    CardLabelsResponseDto, CardResponseDto, CardSummaryDto, CreateCardRequestDto,
-    MoveCardRequestDto, SetCardLabelsRequestDto, UpdateCardRequestDto,
+    CardAssigneesResponseDto, CardLabelsResponseDto, CardResponseDto, CardSummaryDto,
+    CreateCardRequestDto, MoveCardRequestDto, SetCardAssigneesRequestDto, SetCardLabelsRequestDto,
+    UpdateCardRequestDto,
 };
 pub use common::ErrorResponseDto;
 pub use label::{CreateLabelRequestDto, LabelDto, UpdateLabelRequestDto};

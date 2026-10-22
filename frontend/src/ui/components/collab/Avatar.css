@@ -16,6 +16,12 @@
   font-size: 0.95rem;
 }
 
+.avatar--xs {
+  width: 22px;
+  height: 22px;
+  font-size: 0.7rem;
+}
+
 .avatar--sm {
   width: 26px;
   height: 26px;
