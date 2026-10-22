@@ -100,6 +100,19 @@ requires a username of 3 to 32 characters, unique across accounts.
 | `POST /api/invitations/{id}/accept`, `.../decline` | Answer an invitation |
 | `GET /api/events` | Live change stream (server-sent events) |
 
+### Assignees and due dates
+
+A card can carry a due date (a calendar day, `YYYY-MM-DD`, no time zone, validated in
+`domain/src/boards/due_date.rs`) and up to 10 assignees. Only members of the card's workspace can be
+assigned, readers cannot change either, and leaving or being removed from a workspace clears that
+person's assignments there. The board view returns the workspace members (id and username only, no
+emails) so a client can draw avatars without another request.
+
+| Endpoint | Purpose |
+| --- | --- |
+| `PATCH /api/cards/{id}` with `due_date` | Set a day, send `null` to clear it, leave it out to keep it |
+| `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
+
 ### Real time
 
 `GET /api/events` keeps one server-sent events stream per signed in user. Events carry identifiers
