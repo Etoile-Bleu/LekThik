@@ -69,6 +69,41 @@
   gap: 0.5rem;
 }
 
+.sidebar__row {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.sidebar__row .sidebar__toggle {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar__more {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-soft-on-dark);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.sidebar__more:hover,
+.sidebar__more[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-on-dark);
+}
+
 .sidebar__toggle {
   justify-content: space-between;
   color: var(--color-text-on-dark);
