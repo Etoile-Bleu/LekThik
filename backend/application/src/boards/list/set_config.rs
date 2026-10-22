@@ -69,7 +69,7 @@ mod tests {
     async fn refuses_bad_settings_without_asking_the_repository() {
         for (kind, config) in [
             ("list", json!({})),
-            ("note", json!({ "text": "x".repeat(6000) })),
+            ("note", json!({ "text": "x".repeat(10_001) })),
             ("agenda", json!({ "range": "decade" })),
             ("nope", json!({})),
         ] {
