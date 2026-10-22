@@ -86,8 +86,8 @@ Invitations (`workspace_invitations`) target an email address. The invitee gets 
 `{APP_BASE_URL}/invitations/{id}`, signs in with that address and accepts or declines there or from
 the in-app inbox. Only the invited address, once verified, can open or answer an invitation, anybody
 else gets `404`. Invitations expire after 7 days, re-inviting an address renews its pending
-invitation, and a workspace holds at most 50 members and 50 pending invitations. Registration no
-longer asks for a username, one is derived from the email address.
+invitation, and a workspace holds at most 50 members and 50 pending invitations. Registration
+requires a username of 3 to 32 characters, unique across accounts.
 
 | Endpoint | Purpose |
 | --- | --- |

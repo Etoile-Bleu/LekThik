@@ -6,6 +6,9 @@ import { safeNext, withNext } from '@lib/nextPath';
 
 import '@components/AuthForm.css';
 
+const USERNAME_MIN = 3;
+const USERNAME_MAX = 32;
+
 export function SignupPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -21,6 +24,12 @@ export function SignupPage() {
     event.preventDefault();
     setError(null);
 
+    const chosenUsername = username.trim();
+    if (chosenUsername.length < USERNAME_MIN || chosenUsername.length > USERNAME_MAX) {
+      setError(`Username must be ${USERNAME_MIN} to ${USERNAME_MAX} characters.`);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
@@ -29,7 +38,7 @@ export function SignupPage() {
     setIsSubmitting(true);
 
     try {
-      await registerUser(email, password, username);
+      await registerUser(email, password, chosenUsername);
       navigate(withNext(`/verify-email?email=${encodeURIComponent(email)}`, next));
     } catch (submitError) {
       setError(
@@ -63,21 +72,19 @@ export function SignupPage() {
           </div>
 
           <div className="auth__field">
-            <label htmlFor="signup-username">Username (optional)</label>
+            <label htmlFor="signup-username">Username</label>
             <input
               id="signup-username"
               name="username"
               type="text"
               autoComplete="username"
-              minLength={3}
-              maxLength={32}
+              minLength={USERNAME_MIN}
+              maxLength={USERNAME_MAX}
+              required
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
-            <span className="auth__hint">
-              3 to 32 characters, shown to your teammates. Leave empty to use the start of your
-              email.
-            </span>
+            <span className="auth__hint">3 to 32 characters, shown to your teammates.</span>
           </div>
 
           <div className="auth__field">

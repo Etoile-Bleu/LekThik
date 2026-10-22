@@ -91,12 +91,11 @@ export async function request(path: string, init?: RequestInit): Promise<Respons
 export async function registerUser(
   email: string,
   password: string,
-  username?: string
+  username: string
 ): Promise<void> {
-  const chosen = username?.trim();
   await request('/api/users/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password, ...(chosen ? { username: chosen } : {}) }),
+    body: JSON.stringify({ email, password, username: username.trim() }),
   });
 }
 
