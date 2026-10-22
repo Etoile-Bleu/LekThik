@@ -1,26 +1,39 @@
-.due-field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
+.due-field__input {
+  width: 10.5rem;
+  min-height: 34px;
+  padding: 0 0.6rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  accent-color: var(--color-accent);
+  transition: border-color var(--duration-fast) ease;
 }
 
-.due-field input[type='date'] {
-  accent-color: var(--color-accent);
+.due-field__input:hover {
+  border-color: var(--color-border-strong);
+}
+
+.due-field__input:focus-visible {
+  border-color: var(--color-accent);
+  outline-offset: 0;
 }
 
 .due-field__quick {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   gap: 0.35rem;
 }
 
 .due-field__chip {
-  min-height: 32px;
+  min-height: 30px;
   padding: 0 0.7rem;
-  border: 1px solid var(--color-border-strong);
+  border: 1.5px solid var(--color-border);
   border-radius: 999px;
   background: var(--color-paper-card);
-  color: var(--color-ink);
+  color: var(--color-text-soft-on-light);
   font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 600;
@@ -28,15 +41,17 @@
   transition:
     background-color var(--duration-fast) ease,
     border-color var(--duration-fast) ease,
+    color var(--duration-fast) ease,
     transform var(--duration-fast) var(--ease-out);
 }
 
 .due-field__chip:hover {
-  border-color: var(--color-ink);
+  border-color: var(--color-border-strong);
+  color: var(--color-ink);
 }
 
 .due-field__chip:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 
 .due-field__chip[aria-pressed='true'] {
@@ -47,18 +62,15 @@
 
 .due-field__chip--clear {
   border-style: dashed;
-  color: var(--color-text-soft-on-light);
-}
-
-.due-field__summary {
-  color: var(--color-text-soft-on-light);
-  font-size: 0.84rem;
 }
 
 .due-field__readonly {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.9rem;
+}
+
+.due-field__none {
+  color: var(--color-text-muted);
 }
