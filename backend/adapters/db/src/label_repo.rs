@@ -6,7 +6,7 @@ use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
-use crate::scope::repository_error;
+use crate::scope::{Kind, denial, repository_error};
 
 pub struct PgLabelRepo {
     pool: PgPool,
@@ -37,7 +37,7 @@ pub(crate) fn row_to_label(row: &PgRow) -> Result<Label, BoardsError> {
 impl LabelRepo for PgLabelRepo {
     async fn create(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         board_id: Uuid,
         name: Title,
         color: LabelColor,
@@ -48,15 +48,17 @@ impl LabelRepo for PgLabelRepo {
         let board = sqlx::query(concat!(
             "SELECT b.id FROM ",
             owned_board!(),
-            " WHERE b.id = $1 AND w.owner_id = $2 FOR UPDATE OF b"
+            " WHERE b.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
         ))
         .bind(board_id)
-        .bind(owner_id)
+        .bind(user_id)
         .fetch_optional(&mut *transaction)
         .await
         .map_err(repository_error)?;
         if board.is_none() {
-            return Err(BoardsError::NotFound);
+            return Err(denial(&self.pool, Kind::Board, user_id, board_id).await);
         }
 
         let existing: i64 = sqlx::query_scalar("SELECT count(*) FROM labels WHERE board_id = $1")
@@ -87,20 +89,21 @@ impl LabelRepo for PgLabelRepo {
 
     async fn update(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         update: LabelUpdate,
     ) -> Result<Label, BoardsError> {
-        let row = sqlx::query(
+        let Some(row) = sqlx::query(concat!(
             "UPDATE labels lb SET \
                 name = COALESCE($3, lb.name), \
                 color = COALESCE($4, lb.color), \
                 priority = COALESCE($5, lb.priority) \
                 FROM boards b, workspaces w \
-                WHERE lb.id = $2 AND b.id = lb.board_id AND w.id = b.workspace_id AND w.owner_id = $1 \
-                RETURNING lb.id, lb.board_id, lb.name, lb.color, lb.priority",
-        )
-        .bind(owner_id)
+                WHERE lb.id = $2 AND b.id = lb.board_id AND w.id = b.workspace_id AND ",
+            writer_of!("$1"),
+            " RETURNING lb.id, lb.board_id, lb.name, lb.color, lb.priority"
+        ))
+        .bind(user_id)
         .bind(id)
         .bind(update.name.as_ref().map(Title::as_str))
         .bind(update.color.map(LabelColor::as_str))
@@ -108,24 +111,27 @@ impl LabelRepo for PgLabelRepo {
         .fetch_optional(&self.pool)
         .await
         .map_err(repository_error)?
-        .ok_or(BoardsError::NotFound)?;
+        else {
+            return Err(denial(&self.pool, Kind::Label, user_id, id).await);
+        };
 
         row_to_label(&row)
     }
 
-    async fn delete(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
-        let result = sqlx::query(
+    async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
+        let result = sqlx::query(concat!(
             "DELETE FROM labels lb USING boards b, workspaces w \
-                WHERE lb.id = $2 AND b.id = lb.board_id AND w.id = b.workspace_id AND w.owner_id = $1",
-        )
-        .bind(owner_id)
+                WHERE lb.id = $2 AND b.id = lb.board_id AND w.id = b.workspace_id AND ",
+            writer_of!("$1")
+        ))
+        .bind(user_id)
         .bind(id)
         .execute(&self.pool)
         .await
         .map_err(repository_error)?;
 
         if result.rows_affected() == 0 {
-            return Err(BoardsError::NotFound);
+            return Err(denial(&self.pool, Kind::Label, user_id, id).await);
         }
 
         Ok(())
