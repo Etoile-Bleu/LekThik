@@ -25,9 +25,12 @@ export interface BoardSummary {
   name: string;
 }
 
+export type Role = 'owner' | 'admin' | 'writer' | 'reader';
+
 export interface Workspace {
   id: string;
   name: string;
+  role: Role;
   boards: BoardSummary[];
 }
 
@@ -55,6 +58,7 @@ export interface BoardList {
 
 export interface BoardView {
   board: BoardSummary;
+  role: Role;
   lists: BoardList[];
   labels: Label[];
 }
