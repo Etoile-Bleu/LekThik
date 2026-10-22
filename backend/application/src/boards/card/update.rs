@@ -14,7 +14,7 @@ impl UpdateCard {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         title: Option<&str>,
         description: Option<&str>,
@@ -24,7 +24,7 @@ impl UpdateCard {
             description: description.map(Description::parse).transpose()?,
         };
 
-        self.repo.update(owner_id, id, update).await
+        self.repo.update(user_id, id, update).await
     }
 }
 
