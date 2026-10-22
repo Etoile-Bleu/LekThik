@@ -126,7 +126,7 @@
 }
 
 .swatch input:focus-visible + .swatch__dot {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 
@@ -211,11 +211,11 @@
 .segment input:checked + .segment__face {
   border-color: var(--color-ink);
   background: var(--color-ink);
-  color: var(--color-text-on-dark);
+  color: var(--color-on-ink);
 }
 
 .segment input:focus-visible + .segment__face {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 
