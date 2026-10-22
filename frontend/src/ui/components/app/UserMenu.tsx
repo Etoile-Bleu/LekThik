@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 
 import { logoutUser } from '@lib/api';
+import { resetMyCards } from '@lib/myCardsStore';
 import { usePrefsStore } from '@lib/prefsStore';
 import { useAuthStore } from '@lib/authStore';
 import { useBoardStore } from '@lib/boardStore';
@@ -26,6 +27,7 @@ export function UserMenu() {
     useWorkspaceStore.getState().reset();
     useBoardStore.getState().reset();
     usePrefsStore.getState().reset();
+    resetMyCards();
     clearUser();
     navigate('/');
   }
