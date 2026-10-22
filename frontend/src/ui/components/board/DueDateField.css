@@ -17,7 +17,7 @@
 }
 
 .due-field__input:focus-visible {
-  border-color: var(--color-accent);
+  border-color: var(--color-focus);
   outline-offset: 0;
 }
 
@@ -57,7 +57,7 @@
 .due-field__chip[aria-pressed='true'] {
   border-color: var(--color-ink);
   background: var(--color-ink);
-  color: var(--color-text-on-dark);
+  color: var(--color-on-ink);
 }
 
 .due-field__chip--clear {
