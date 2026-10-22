@@ -3,6 +3,7 @@ mod card;
 mod common;
 mod label;
 mod list;
+mod members;
 mod name;
 mod template;
 mod user;
@@ -16,6 +17,9 @@ pub use card::{
 pub use common::ErrorResponseDto;
 pub use label::{CreateLabelRequestDto, LabelDto, UpdateLabelRequestDto};
 pub use list::{ListResponseDto, ListWithCardsDto, MoveListRequestDto};
+pub use members::{
+    ChangeRoleRequestDto, InvitationDto, InviteMemberRequestDto, MemberDto, MembersResponseDto,
+};
 pub use name::{CreateNamedRequestDto, NameRequestDto};
 pub use template::{
     BoardTemplateDto, TemplateCardDto, TemplateLabelDto, TemplateListDto, TemplatesResponseDto,
