@@ -78,4 +78,28 @@ describe('Menu', () => {
 
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
+
+  it('opens inside the modal dialog that holds its trigger so it stays on top and usable', () => {
+    render(
+      <dialog open aria-label="Drawer">
+        <Menu label="Drawer actions" items={[{ label: 'Rename', onSelect: () => undefined }]} />
+      </dialog>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Drawer actions' }));
+
+    const menu = screen.getByRole('menu', { name: 'Drawer actions' });
+    expect(menu.closest('dialog')).toBe(screen.getByRole('dialog', { name: 'Drawer' }));
+  });
+
+  it('closes on Escape even when the focus is still on the trigger', () => {
+    renderMenu();
+    const trigger = screen.getByRole('button', { name: 'List actions' });
+    fireEvent.click(trigger);
+    trigger.focus();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
 });
