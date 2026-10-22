@@ -110,7 +110,7 @@
   gap: 0.35rem;
   border-color: var(--color-ink);
   background: var(--color-ink);
-  color: var(--color-text-on-dark);
+  color: var(--color-on-ink);
 }
 
 .filter-pill__check {
