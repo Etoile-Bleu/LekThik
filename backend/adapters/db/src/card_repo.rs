@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use domain::boards::{
-    BoardsError, Card, CardRepo, CardSummary, CardUpdate, Description, MAX_ASSIGNEES_PER_CARD,
-    MAX_CARDS_PER_LIST, Title,
+    AssignedCard, BoardsError, Card, CardRepo, CardSummary, CardUpdate, Description,
+    MAX_ASSIGNEES_PER_CARD, MAX_CARDS_PER_LIST, Title,
 };
 use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
@@ -127,6 +127,40 @@ impl CardRepo for PgCardRepo {
         .ok_or(BoardsError::NotFound)?;
 
         self.card_from_row(&row).await
+    }
+
+    async fn assigned_to(&self, user_id: Uuid) -> Result<Vec<AssignedCard>, BoardsError> {
+        let rows = sqlx::query(concat!(
+            "SELECT c.id, c.title, c.due_date::text AS due_date, l.id AS list_id, \
+                l.name AS list_name, b.id AS board_id, b.name AS board_name, \
+                w.id AS workspace_id, w.name AS workspace_name \
+                FROM card_assignees ca JOIN cards c ON c.id = ca.card_id \
+                JOIN lists l ON l.id = c.list_id JOIN boards b ON b.id = l.board_id \
+                JOIN workspaces w ON w.id = b.workspace_id \
+                WHERE ca.user_id = $1 AND ",
+            member_of!("$1"),
+            " ORDER BY c.due_date NULLS LAST, c.created_at, c.id LIMIT 500"
+        ))
+        .bind(user_id)
+        .fetch_all(&self.pool)
+        .await
+        .map_err(repository_error)?;
+
+        rows.iter()
+            .map(|row| {
+                Ok(AssignedCard {
+                    id: row.try_get("id").map_err(repository_error)?,
+                    title: row.try_get("title").map_err(repository_error)?,
+                    due_date: row.try_get("due_date").map_err(repository_error)?,
+                    list_id: row.try_get("list_id").map_err(repository_error)?,
+                    list_name: row.try_get("list_name").map_err(repository_error)?,
+                    board_id: row.try_get("board_id").map_err(repository_error)?,
+                    board_name: row.try_get("board_name").map_err(repository_error)?,
+                    workspace_id: row.try_get("workspace_id").map_err(repository_error)?,
+                    workspace_name: row.try_get("workspace_name").map_err(repository_error)?,
+                })
+            })
+            .collect()
     }
 
     async fn update(
