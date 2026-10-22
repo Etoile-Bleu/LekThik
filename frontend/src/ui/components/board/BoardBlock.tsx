@@ -16,7 +16,10 @@ import {
   ClockIcon,
   GripIcon,
   HashIcon,
+  ImageIcon,
+  LinkIcon,
   NoteIcon,
+  PlayIcon,
   SettingsIcon,
   TrashIcon,
 } from '../ui/Icons';
@@ -25,6 +28,9 @@ import { Menu } from '../ui/Menu';
 import { AgendaBlock } from './blocks/AgendaBlock';
 import { CalendarBlock } from './blocks/CalendarBlock';
 import { CounterBlock } from './blocks/CounterBlock';
+import { EmbedBlock } from './blocks/EmbedBlock';
+import { ImageBlock } from './blocks/ImageBlock';
+import { LinkBlock } from './blocks/LinkBlock';
 import { NoteBlock } from './blocks/NoteBlock';
 import './BoardBlock.css';
 
@@ -56,6 +62,12 @@ export function KindIcon({ kind, size = 16 }: { kind: PanelKind; size?: number }
       return <NoteIcon size={size} />;
     case 'counter':
       return <HashIcon size={size} />;
+    case 'image':
+      return <ImageIcon size={size} />;
+    case 'embed':
+      return <PlayIcon size={size} />;
+    case 'link':
+      return <LinkIcon size={size} />;
     default:
       return null;
   }
@@ -216,6 +228,11 @@ export function BoardBlock({
           <AgendaBlock block={block} panels={panels} onOpenCard={onOpenCard} />
         )}
         {block.kind === 'counter' && <CounterBlock block={block} panels={panels} />}
+        {block.kind === 'image' && (
+          <ImageBlock block={block} editable={!readOnly} onAddPicture={onSettings} />
+        )}
+        {block.kind === 'embed' && <EmbedBlock block={block} />}
+        {block.kind === 'link' && <LinkBlock block={block} />}
         {block.kind === 'note' && (
           <NoteBlock
             text={noteConfig(block).text}

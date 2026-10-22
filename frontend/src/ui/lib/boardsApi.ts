@@ -56,7 +56,9 @@ export interface CardSummary {
   due_date: string | null;
 }
 
-export type PanelKind = 'list' | 'calendar' | 'agenda' | 'note' | 'counter';
+export type PanelKind =
+  'list' | 'calendar' | 'agenda' | 'note' | 'counter' | 'image' | 'embed' | 'link';
+export type EmbedProvider = 'youtube' | 'vimeo' | 'google_calendar';
 export type BlockSize = 'normal' | 'wide';
 export type AgendaRange = 'today' | 'week';
 export type CounterMetric = 'overdue' | 'done_percent' | 'days_left' | 'total_cards';
@@ -83,8 +85,34 @@ export interface CounterConfig {
   /** `YYYY-MM-DD`, for the days left. */
   date: string | null;
 }
+/** A picture kept by LekThik. The description is required, it is what a screen reader says. */
+export interface ImageConfig {
+  size: BlockSize;
+  alt: string;
+  caption: string;
+}
+/** A video or calendar, stored as the provider and its identifier only. */
+export interface EmbedConfig {
+  size: BlockSize;
+  provider: EmbedProvider;
+  id: string;
+  /** Names the frame for screen readers. */
+  title: string;
+}
+export interface LinkConfig {
+  size: BlockSize;
+  url: string;
+  title: string;
+}
 export type PanelConfig =
-  Record<string, unknown> | CalendarConfig | AgendaConfig | NoteConfig | CounterConfig;
+  | ImageConfig
+  | EmbedConfig
+  | LinkConfig
+  | Record<string, unknown>
+  | CalendarConfig
+  | AgendaConfig
+  | NoteConfig
+  | CounterConfig;
 
 /**
  * One panel of a board: a list of cards, or a block that shows something else.
@@ -97,6 +125,8 @@ export interface BoardList {
   wip_limit: number | null;
   kind: PanelKind;
   config: PanelConfig;
+  /** Changes with every new picture of an image block, `null` while it has none. */
+  image_version?: number | null;
   cards: CardSummary[];
 }
 
@@ -270,6 +300,20 @@ export function createBlock(
   config: PanelConfig
 ): Promise<BoardList> {
   return send<BoardList>(`/api/boards/${boardId}/blocks`, 'POST', { kind, name, config });
+}
+
+export async function uploadBlockImage(id: string, file: Blob): Promise<{ image_version: number }> {
+  const response = await request(`/api/blocks/${id}/image`, {
+    method: 'PUT',
+    body: file,
+    headers: { 'Content-Type': 'application/octet-stream' },
+  });
+  return (await response.json()) as { image_version: number };
+}
+
+export async function fetchBlockImage(id: string): Promise<Blob> {
+  const response = await request(`/api/blocks/${id}/image`);
+  return response.blob();
 }
 
 export function setBlockConfig(

@@ -150,6 +150,7 @@ mod tests {
             format!("lists/{id}/wip-limit"),
             format!("boards/{id}/blocks"),
             format!("blocks/{id}/config"),
+            format!("blocks/{id}/image"),
             format!("cards/{id}"),
             format!("cards/{id}/labels"),
             format!("cards/{id}/assignees"),

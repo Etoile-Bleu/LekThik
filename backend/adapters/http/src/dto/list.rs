@@ -40,6 +40,8 @@ pub struct ListWithCardsDto {
     pub kind: String,
     #[schema(value_type = Object)]
     pub config: serde_json::Value,
+    /// Changes with every new picture of an image block, `null` while it has none.
+    pub image_version: Option<i64>,
     pub cards: Vec<CardSummaryDto>,
 }
 
@@ -51,6 +53,7 @@ impl From<ListWithCards> for ListWithCardsDto {
             wip_limit: list.wip_limit,
             kind: list.config.kind().as_str().to_string(),
             config: list.config.to_value(),
+            image_version: list.image_version,
             cards: list.cards.into_iter().map(Into::into).collect(),
         }
     }
@@ -99,4 +102,10 @@ pub struct SetBlockConfigRequestDto {
     #[serde(default)]
     #[schema(value_type = Object)]
     pub config: serde_json::Value,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct BlockImageResponseDto {
+    /// Changes with every upload, so clients know when to fetch the picture again.
+    pub image_version: i64,
 }

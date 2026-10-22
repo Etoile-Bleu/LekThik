@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["domain", "application", "adapters/http", "adapters/db", "adapters/mail"]
+members = ["domain", "application", "adapters/http", "adapters/db", "adapters/mail", "adapters/image"]
 
 [workspace.package]
 edition = "2024"
@@ -34,4 +34,5 @@ tower = { version = "0.5", features = ["util"] }
 tower-http = { version = "0.7.1", features = ["cors", "set-header"] }
 jsonwebtoken = { version = "11.1.0", default-features = false, features = ["use_pem", "rust_crypto"] }
 secrecy = "0.10.3"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "webp"] }
 futures-util = { version = "0.3", default-features = false, features = ["std"] }

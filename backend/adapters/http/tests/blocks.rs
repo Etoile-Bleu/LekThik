@@ -185,7 +185,7 @@ async fn settings_can_change_but_the_kind_never_does() -> anyhow::Result<()> {
     for bad in [
         json!({ "kind": "calendar", "config": {} }),
         json!({ "kind": "list", "config": {} }),
-        json!({ "kind": "note", "config": { "text": "x".repeat(5001) } }),
+        json!({ "kind": "note", "config": { "text": "x".repeat(10_001) } }),
         json!({ "kind": "note", "config": { "colour": "red" } }),
         json!({ "kind": "gantt", "config": {} }),
     ] {

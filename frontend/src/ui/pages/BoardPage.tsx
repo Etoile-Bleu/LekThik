@@ -6,6 +6,7 @@ import { useEffectiveTheme } from '@hooks/useEffectiveTheme';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useToday } from '@hooks/useToday';
 import { announce } from '@lib/announcer';
+import { notifyError } from '@lib/toastStore';
 import { useAuthStore } from '@lib/authStore';
 import { type CardFilter, EMPTY_FILTER, cardMatches } from '@lib/boardModel';
 import type { CardSummary } from '@lib/boardsApi';
@@ -19,13 +20,14 @@ import {
   KIND_LABEL,
   isCardList,
 } from '@lib/blocks';
-import type { PanelConfig, PanelKind } from '@lib/boardsApi';
+import { type PanelConfig, type PanelKind, uploadBlockImage } from '@lib/boardsApi';
 import { type BoardViewKind, boardPrefsFor, cardDisplayFor } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
 import { AddBlockDialog } from '../components/board/AddBlockDialog';
+import { type MediaInput, type MediaKind, MediaDialog } from '../components/board/MediaDialog';
 import { BlockSettingsDialog } from '../components/board/BlockSettingsDialog';
 import { BoardCalendar } from '../components/board/BoardCalendar';
 import { BoardCanvas } from '../components/board/BoardCanvas';
@@ -65,6 +67,7 @@ export function BoardPage() {
   const createList = useBoardStore((state) => state.createList);
   const createBlock = useBoardStore((state) => state.createBlock);
   const setBlockConfig = useBoardStore((state) => state.setBlockConfig);
+  const setImageVersion = useBoardStore((state) => state.setImageVersion);
   const renameList = useBoardStore((state) => state.renameList);
   const moveList = useBoardStore((state) => state.moveList);
   const setListWipLimit = useBoardStore((state) => state.setListWipLimit);
@@ -85,6 +88,7 @@ export function BoardPage() {
   const [limitListId, setLimitListId] = useState<string | null>(null);
   const [pickingBlock, setPickingBlock] = useState(false);
   const [blockSettingsId, setBlockSettingsId] = useState<string | null>(null);
+  const [mediaKind, setMediaKind] = useState<MediaKind | null>(null);
 
   useDocumentTitle(view?.board.name ?? 'Board');
 
@@ -167,7 +171,7 @@ export function BoardPage() {
 
   const boardId_ = view.board.id;
 
-  const DEFAULTS: Record<Exclude<PanelKind, 'list'>, PanelConfig> = {
+  const DEFAULTS: Record<'calendar' | 'agenda' | 'note' | 'counter', PanelConfig> = {
     calendar: DEFAULT_CALENDAR,
     agenda: DEFAULT_AGENDA,
     note: DEFAULT_NOTE,
@@ -189,7 +193,46 @@ export function BoardPage() {
     return `${base} ${count}`;
   }
 
-  async function addBlock(kind: Exclude<PanelKind, 'list'>) {
+  function pickBlock(kind: Exclude<PanelKind, 'list'>) {
+    // Pictures, videos and links need something from the person before there is a block.
+    if (kind === 'image' || kind === 'embed' || kind === 'link') {
+      setMediaKind(kind);
+      return;
+    }
+    void addBlock(kind);
+  }
+
+  /** Adds a picture, video or link block. A picture that cannot be kept takes its block with it. */
+  async function addMedia(input: MediaInput): Promise<boolean> {
+    const block = await createBlock(input.kind, uniqueName(input.name), input.config);
+    if (!block) return false;
+    if (input.file) {
+      try {
+        const saved = await uploadBlockImage(block.id, input.file);
+        setImageVersion(block.id, saved.image_version);
+      } catch (error) {
+        notifyError(error, 'The picture could not be added.');
+        await deleteList(block.id);
+        return false;
+      }
+    }
+    announce(`${KIND_LABEL[input.kind]} added.`);
+    return true;
+  }
+
+  async function replacePicture(blockId: string, file: File): Promise<boolean> {
+    try {
+      const saved = await uploadBlockImage(blockId, file);
+      setImageVersion(blockId, saved.image_version);
+      announce('Picture replaced.');
+      return true;
+    } catch (error) {
+      notifyError(error, 'The picture could not be added.');
+      return false;
+    }
+  }
+
+  async function addBlock(kind: 'calendar' | 'agenda' | 'note' | 'counter') {
     const block = await createBlock(kind, uniqueName(KIND_LABEL[kind]), DEFAULTS[kind]);
     if (!block) return;
     announce(`${KIND_LABEL[kind]} block added.`);
@@ -336,12 +379,18 @@ export function BoardPage() {
         />
         <AddBlockDialog
           open={pickingBlock && editable}
-          onPick={(kind) => void addBlock(kind)}
+          onPick={pickBlock}
           onClose={() => setPickingBlock(false)}
+        />
+        <MediaDialog
+          kind={editable ? mediaKind : null}
+          onSubmit={addMedia}
+          onClose={() => setMediaKind(null)}
         />
         <BlockSettingsDialog
           block={editable ? settingsBlock : null}
           panels={view.lists}
+          onReplacePicture={replacePicture}
           onSave={(blockId, kind, config) =>
             void setBlockConfig(blockId, kind as Exclude<PanelKind, 'list'>, config)
           }

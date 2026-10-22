@@ -244,9 +244,7 @@ describe('BoardPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Write the spec/ }));
 
     const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
-    await waitFor(() =>
-      expect(within(dialog).getByLabelText('Description')).toHaveValue('Cover the happy path')
-    );
+    expect(await within(dialog).findByText('Cover the happy path')).toBeInTheDocument();
   });
 
   describe('views and layout', () => {

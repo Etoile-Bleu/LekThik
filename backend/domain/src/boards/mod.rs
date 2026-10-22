@@ -2,7 +2,9 @@ mod block;
 mod board;
 mod card;
 mod due_date;
+mod embed;
 mod error;
+mod image;
 mod invitation;
 mod label;
 mod label_style;
@@ -14,16 +16,23 @@ mod members;
 mod role;
 mod templates;
 mod text;
+mod web_url;
 mod workspace;
 
 pub use block::{
-    AgendaConfig, AgendaRange, BlockConfig, BlockSize, COUNTER_LABEL_MAX_CHARS, CalendarConfig,
-    CounterConfig, CounterMetric, ListKind, NOTE_MAX_CHARS, NoteConfig,
+    ALT_MAX_CHARS, AgendaConfig, AgendaRange, BLOCK_TITLE_MAX_CHARS, BlockConfig, BlockSize,
+    CAPTION_MAX_CHARS, COUNTER_LABEL_MAX_CHARS, CalendarConfig, CounterConfig, CounterMetric,
+    EmbedConfig, ImageConfig, LinkConfig, ListKind, NOTE_MAX_CHARS, NoteConfig,
 };
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};
 pub use due_date::DueDate;
+pub use embed::{EmbedProvider, parse_embed_url};
 pub use error::BoardsError;
+pub use image::{
+    BlockImage, BlockImageRepo, IMAGE_MAX_EDGE, IMAGE_MAX_PIXELS, IMAGE_MAX_STORED_BYTES,
+    IMAGE_MAX_UPLOAD_BYTES, ImageSanitizer,
+};
 pub use invitation::{Invitation, InvitationRepo, InvitationStatus, NewInvitation};
 pub use label::{Label, LabelRepo, LabelUpdate};
 pub use label_style::{LabelColor, Priority};
@@ -42,12 +51,15 @@ pub use templates::{
     board_template, board_templates, workspace_template, workspace_templates,
 };
 pub use text::{DESCRIPTION_MAX_CHARS, Description, LABEL_NAME_MAX_CHARS, TITLE_MAX_CHARS, Title};
+pub use web_url::{WEB_URL_MAX_CHARS, parse_link};
 pub use workspace::{Workspace, WorkspaceRepo, WorkspaceWithBoards};
 
 #[cfg(feature = "test-utils")]
 pub use board::MockBoardRepo;
 #[cfg(feature = "test-utils")]
 pub use card::MockCardRepo;
+#[cfg(feature = "test-utils")]
+pub use image::{MockBlockImageRepo, MockImageSanitizer};
 #[cfg(feature = "test-utils")]
 pub use invitation::MockInvitationRepo;
 #[cfg(feature = "test-utils")]

@@ -4,6 +4,9 @@ import type {
   CalendarConfig,
   CardSummary,
   CounterConfig,
+  EmbedConfig,
+  ImageConfig,
+  LinkConfig,
   NoteConfig,
   PanelKind,
 } from './boardsApi';
@@ -17,6 +20,9 @@ export function isCardList(panel: BoardList): boolean {
 export const DEFAULT_CALENDAR: CalendarConfig = { size: 'normal' };
 export const DEFAULT_AGENDA: AgendaConfig = { size: 'normal', range: 'week', mine_only: false };
 export const DEFAULT_NOTE: NoteConfig = { size: 'normal', text: '' };
+/** Pictures and videos want room, so they start wide. */
+export const DEFAULT_IMAGE: ImageConfig = { size: 'wide', alt: '', caption: '' };
+export const DEFAULT_LINK: LinkConfig = { size: 'normal', url: '', title: '' };
 export const DEFAULT_COUNTER: CounterConfig = {
   size: 'normal',
   metric: 'overdue',
@@ -34,6 +40,23 @@ export function agendaConfig(panel: BoardList): AgendaConfig {
 }
 export function noteConfig(panel: BoardList): NoteConfig {
   return { ...DEFAULT_NOTE, ...(panel.config as Partial<NoteConfig>) };
+}
+export function imageConfig(panel: BoardList): ImageConfig {
+  return { ...DEFAULT_IMAGE, ...(panel.config as Partial<ImageConfig>) };
+}
+export function linkConfig(panel: BoardList): LinkConfig {
+  return { ...DEFAULT_LINK, ...(panel.config as Partial<LinkConfig>) };
+}
+/** An embed has no sensible defaults: without a provider and an identifier there is nothing to show. */
+export function embedConfig(panel: BoardList): EmbedConfig | null {
+  const config = panel.config as Partial<EmbedConfig>;
+  if (!config.provider || !config.id) return null;
+  return {
+    size: config.size ?? 'wide',
+    provider: config.provider,
+    id: config.id,
+    title: config.title ?? '',
+  };
 }
 export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
@@ -71,6 +94,21 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
     label: 'Counter',
     description: 'One number: late cards, progress, days left or a total.',
   },
+  {
+    kind: 'image',
+    label: 'Picture',
+    description: 'A moodboard, a plan or a logo, with a description for people who cannot see it.',
+  },
+  {
+    kind: 'embed',
+    label: 'Video or calendar',
+    description: 'YouTube, Vimeo or a Google Calendar. Nothing loads until someone presses play.',
+  },
+  {
+    kind: 'link',
+    label: 'Link',
+    description: 'A card for a page, with its site shown and nothing fetched from it.',
+  },
 ];
 
 export const KIND_LABEL: Record<PanelKind, string> = {
@@ -79,6 +117,9 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   agenda: 'Agenda',
   note: 'Note',
   counter: 'Counter',
+  image: 'Picture',
+  embed: 'Video or calendar',
+  link: 'Link',
 };
 
 export function cardsOf(panels: BoardList[]): CardSummary[] {
@@ -258,43 +299,6 @@ export function readCounter(
       };
     }
   }
-}
-
-export type TextPart = { text: string; href?: string };
-
-const URL_PATTERN = /\bhttps?:\/\/[^\s<>"']+/gi;
-const TRAILING = /[.,;:!?)\]}]+$/;
-
-/**
- * Splits text into plain parts and web addresses. Only http and https become
- * links, so nothing like `javascript:` can ever be one, and the text is never
- * read as markup.
- */
-export function linkify(text: string): TextPart[] {
-  const parts: TextPart[] = [];
-  let cursor = 0;
-
-  for (const match of text.matchAll(URL_PATTERN)) {
-    const start = match.index ?? 0;
-    let url = match[0];
-    const trailing = TRAILING.exec(url)?.[0] ?? '';
-    url = url.slice(0, url.length - trailing.length);
-
-    let href: string | undefined;
-    try {
-      const parsed = new URL(url);
-      href = parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : undefined;
-    } catch {
-      href = undefined;
-    }
-
-    if (start > cursor) parts.push({ text: text.slice(cursor, start) });
-    parts.push(href ? { text: url, href } : { text: url });
-    cursor = start + url.length;
-  }
-
-  if (cursor < text.length) parts.push({ text: text.slice(cursor) });
-  return parts;
 }
 
 /** A calendar block marks the days that have cards due, with how many. */

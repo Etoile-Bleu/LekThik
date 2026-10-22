@@ -43,6 +43,24 @@ const BOARDS_RATE_LIMIT_MAX_REQUESTS: u32 = 600;
 const BOARDS_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
 const BOARDS_BODY_LIMIT_BYTES: usize = 64 * 1024;
 
+const MEDIA_RATE_LIMIT_MAX_REQUESTS: u32 = 120;
+const MEDIA_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
+/// A little above the largest picture, for the request around it.
+const MEDIA_BODY_LIMIT_BYTES: usize = domain::boards::IMAGE_MAX_UPLOAD_BYTES + 16 * 1024;
+
+/// Pictures travel on their own routes, with a larger body limit than the rest of the API.
+fn media_router() -> OpenApiRouter<AppState> {
+    let rate_limiter = Arc::new(RateLimiter::new(
+        MEDIA_RATE_LIMIT_MAX_REQUESTS,
+        Duration::from_secs(MEDIA_RATE_LIMIT_WINDOW_SECONDS),
+    ));
+
+    OpenApiRouter::<AppState>::new()
+        .routes(routes!(set_block_image, get_block_image))
+        .layer(DefaultBodyLimit::max(MEDIA_BODY_LIMIT_BYTES))
+        .layer(middleware::from_fn_with_state(rate_limiter, rate_limit))
+}
+
 fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
     let rate_limiter = Arc::new(RateLimiter::new(
         BOARDS_RATE_LIMIT_MAX_REQUESTS,
@@ -102,7 +120,11 @@ pub fn build(state: AppState) -> Router {
         .routes(routes!(reset_password))
         .layer(middleware::from_fn_with_state(rate_limiter, rate_limit));
 
-    let api_router = with_api_security_headers(auth_router.merge(boards_router(state.clone())));
+    let api_router = with_api_security_headers(
+        auth_router
+            .merge(boards_router(state.clone()))
+            .merge(media_router()),
+    );
 
     let (router, api) = OpenApiRouter::<AppState>::with_openapi(ApiDoc::openapi())
         .nest("/api", api_router)

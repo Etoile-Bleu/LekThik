@@ -6,9 +6,11 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 use adapters_db::{
-    PgBoardRepo, PgCardRepo, PgInvitationRepo, PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo,
-    PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo, PgWorkspaceRepo,
+    PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgInvitationRepo, PgLabelRepo, PgListRepo,
+    PgLocator, PgMemberRepo, PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo,
+    PgWorkspaceRepo,
 };
+use adapters_image::ImageCrateSanitizer;
 use async_trait::async_trait;
 use axum::body::Body;
 use axum::extract::ConnectInfo;
@@ -143,6 +145,12 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
     .execute(&pool)
     .await?;
 
+    sqlx::raw_sql(include_str!(
+        "../../../../migrations/011_add_media_blocks.sql"
+    ))
+    .execute(&pool)
+    .await?;
+
     let mailer = Arc::new(RecordingMailer::default());
 
     let state = AppState {
@@ -155,6 +163,8 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
         workspace_repo: Arc::new(PgWorkspaceRepo::new(pool.clone())),
         board_repo: Arc::new(PgBoardRepo::new(pool.clone())),
         list_repo: Arc::new(PgListRepo::new(pool.clone())),
+        block_image_repo: Arc::new(PgBlockImageRepo::new(pool.clone())),
+        image_sanitizer: Arc::new(ImageCrateSanitizer::new()),
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
         member_repo: Arc::new(PgMemberRepo::new(pool.clone())),

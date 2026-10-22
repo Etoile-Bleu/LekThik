@@ -47,23 +47,40 @@ export function effectiveTheme(theme: Theme, system: SystemSettings): EffectiveT
   return system.prefersDark ? 'dark' : 'light';
 }
 
-const FONT_URLS: Partial<Record<ReadingFont, string>> = {
-  hyperlegible:
-    'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap',
-  lexend: 'https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap',
+/** Reading fonts are bundled too, and only fetched by the browser when somebody chooses one. */
+const FONT_LOADERS: Partial<Record<ReadingFont, () => Promise<unknown>>> = {
+  hyperlegible: () =>
+    Promise.all([
+      import('@fontsource/atkinson-hyperlegible/400.css'),
+      import('@fontsource/atkinson-hyperlegible/700.css'),
+    ]),
+  lexend: () =>
+    Promise.all([
+      import('@fontsource/lexend/400.css'),
+      import('@fontsource/lexend/500.css'),
+      import('@fontsource/lexend/600.css'),
+      import('@fontsource/lexend/700.css'),
+    ]),
 };
 
-/** Fetches a reading font only when someone picks it, so nobody else pays for it. */
-export function ensureFont(font: ReadingFont): void {
-  const url = FONT_URLS[font];
-  if (!url || document.querySelector(`link[data-reading-font="${font}"]`)) {
-    return;
+const requested = new Map<ReadingFont, Promise<void>>();
+
+/** Makes a reading font available, once, and only when someone picks it. */
+export function ensureFont(font: ReadingFont): Promise<void> {
+  const load = FONT_LOADERS[font];
+  if (!load) return Promise.resolve();
+  let pending = requested.get(font);
+  if (!pending) {
+    pending = load().then(
+      () => undefined,
+      () => {
+        // A font that cannot load leaves the standard one in place. Try again next time.
+        requested.delete(font);
+      }
+    );
+    requested.set(font, pending);
   }
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = url;
-  link.dataset.readingFont = font;
-  document.head.appendChild(link);
+  return pending;
 }
 
 function setFlag(root: HTMLElement, name: string, value: string | null): void {

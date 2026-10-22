@@ -12,7 +12,8 @@ pub use card::{
 };
 pub use label::{CreateLabel, DeleteLabel, UpdateLabel};
 pub use list::{
-    CreateBlock, CreateList, DeleteList, MoveList, RenameList, SetBlockConfig, SetListWipLimit,
+    CreateBlock, CreateList, DeleteList, GetBlockImage, MoveList, RenameList, SetBlockConfig,
+    SetBlockImage, SetListWipLimit,
 };
 pub use members::{
     ChangeMemberRole, GetMyInvitation, InviteMember, ListMembers, ListMyInvitations,

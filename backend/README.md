@@ -114,6 +114,8 @@ emails) so a client can draw avatars without another request.
 | `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
 | `GET /api/users/me/cards` | Cards assigned to me across workspaces, soonest due first |
 | `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note or counter block |
+| `PUT /api/blocks/{id}/image` | Set the picture of an image block (the file as the body) |
+| `GET /api/blocks/{id}/image` | The picture of an image block, for members only |
 | `PUT /api/blocks/{id}/config` | Change the settings of a block, the kind must match |
 | `PUT /api/lists/{id}/wip-limit` | Set a list's work in progress limit (1 to 99), or `null` to remove it |
 
@@ -146,6 +148,19 @@ updates are the ones lists already have. `POST /api/boards/{id}/blocks` adds one
 characters without control characters, a counter measuring the share done must name a list of the same
 board, and a block never changes kind. Cards can only be added to, or moved into, lists. Every list in
 the board view carries its `kind` and `config`.
+
+Three more kinds of block hold content that needs care. `image` keeps a picture: it is uploaded with
+`PUT /api/blocks/{id}/image` (the raw file, at most 5 MB, on a route of its own with a larger body limit)
+and read with `GET /api/blocks/{id}/image`. The `adapters/image` crate decodes the upload and writes a
+new picture from its pixels, which drops every piece of metadata, applies the camera orientation first,
+caps the pixels and the stored size, and accepts only real PNG, JPEG and WebP judged by their bytes, never
+SVG. The result is stored in `block_images` (a row per block, `ON DELETE CASCADE`, so it goes with its
+block, board or workspace), served only to members with the stored type and `nosniff`, and the board view
+carries an `image_version` so clients fetch it again only when it changes. Who may upload is checked
+before anything is decoded. `embed` keeps a provider (YouTube, Vimeo or Google Calendar) and an
+identifier recognised from an address by `domain/src/boards/embed.rs`, never the address itself, so the
+frame built from it can only point at that provider. `link` keeps a plain `http` or `https` address
+(`web_url.rs`: no credentials, no odd hosts) and nothing is fetched from it. See `docs/privacy.md`.
 
 `GET /api/users/me/cards` lists every card assigned to the signed in person in the workspaces they
 still belong to, soonest due date first and undated cards last, with the list, board and workspace
