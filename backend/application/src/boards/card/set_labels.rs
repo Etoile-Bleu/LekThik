@@ -15,7 +15,7 @@ impl SetCardLabels {
 
     pub async fn execute(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         label_ids: Vec<Uuid>,
     ) -> Result<Vec<Uuid>, BoardsError> {
@@ -31,7 +31,7 @@ impl SetCardLabels {
             ));
         }
 
-        self.repo.set_labels(owner_id, id, unique).await
+        self.repo.set_labels(user_id, id, unique).await
     }
 }
 
