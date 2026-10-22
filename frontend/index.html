@@ -34,30 +34,11 @@
           if (saved.strong_focus) root.dataset.focus = 'strong';
           if (saved.large_targets) root.dataset.targets = 'large';
           if (saved.flat_backgrounds) root.dataset.flat = 'on';
-          var fonts = {
-            hyperlegible:
-              'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap',
-            lexend:
-              'https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap',
-          };
-          if (fonts[saved.reading_font]) {
-            var link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = fonts[saved.reading_font];
-            link.dataset.readingFont = saved.reading_font;
-            document.head.appendChild(link);
-          }
         } catch (error) {
           document.documentElement.dataset.theme = 'light';
         }
       })();
     </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
     <div id="root"></div>
