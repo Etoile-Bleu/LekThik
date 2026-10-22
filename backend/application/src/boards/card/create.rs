@@ -42,6 +42,7 @@ mod tests {
                     list_id,
                     title: title.into_string(),
                     has_description: false,
+                    description_preview: String::new(),
                     label_ids: Vec::new(),
                     assignee_ids: Vec::new(),
                     due_date: None,
