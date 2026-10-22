@@ -5,7 +5,7 @@ use adapters_db::{
     PgBoardRepo, PgCardRepo, PgLabelRepo, PgListRepo, PgUserRepo, PgVerificationCodeRepo,
     PgWorkspaceRepo,
 };
-use adapters_mail::{BrevoMailer, MailSender};
+use adapters_mail::{MailSender, SmtpMailer};
 use secrecy::SecretString;
 use server::jwt::JwtTokenIssuer;
 use server::state::AppState;
@@ -15,6 +15,10 @@ fn required_env(name: &str) -> anyhow::Result<String> {
     std::env::var(name).map_err(|_| anyhow::anyhow!("{name} is not set"))
 }
 
+fn env_or(name: &str, default: &str) -> String {
+    std::env::var(name).unwrap_or_else(|_| default.to_string())
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let pool = db::connect().await?;
@@ -22,13 +26,16 @@ async fn main() -> anyhow::Result<()> {
 
     let jwt_secret = SecretString::from(required_env("JWT_SECRET")?);
 
-    let mailer = BrevoMailer::new(
-        SecretString::from(required_env("BREVO_API_KEY")?),
+    let mailer = SmtpMailer::new(
+        &env_or("SMTP_RELAY", "smtp-relay.brevo.com"),
+        required_env("SMTP_USERNAME")?,
+        SecretString::from(required_env("SMTP_PASSWORD")?),
         MailSender {
-            name: std::env::var("MAIL_FROM_NAME").unwrap_or_else(|_| "LekThik".to_string()),
+            name: env_or("MAIL_FROM_NAME", "LekThik"),
             email: required_env("MAIL_FROM_EMAIL")?,
         },
-    )?;
+    )
+    .map_err(|error| anyhow::anyhow!("invalid mailer configuration: {error}"))?;
 
     let state = AppState {
         user_repo: Arc::new(PgUserRepo::new(pool.clone())),
