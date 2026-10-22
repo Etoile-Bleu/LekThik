@@ -1,0 +1,195 @@
+.rt {
+  color: var(--color-ink);
+  font-size: 0.94rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.rt > :first-child {
+  margin-top: 0;
+}
+
+.rt > :last-child {
+  margin-bottom: 0;
+}
+
+.rt p,
+.rt ul,
+.rt ol,
+.rt blockquote {
+  margin: 0.55em 0;
+}
+
+.rt-plain {
+  white-space: pre-wrap;
+}
+
+.rt-heading {
+  margin: 0.9em 0 0.35em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+h3.rt-heading {
+  font-size: 1.12em;
+}
+
+h4.rt-heading {
+  font-size: 1.02em;
+}
+
+h5.rt-heading,
+h6.rt-heading {
+  font-size: 0.94em;
+}
+
+.rt ul,
+.rt ol {
+  padding-left: 1.4em;
+}
+
+.rt li + li {
+  margin-top: 0.2em;
+}
+
+.rt a {
+  color: var(--color-accent-text);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.rt a:hover {
+  text-decoration-thickness: 2.5px;
+}
+
+.rt a:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.rt-note {
+  color: var(--color-text-muted);
+  font-size: 0.82em;
+  font-weight: 400;
+}
+
+.rt blockquote {
+  padding: 0.1em 0 0.1em 0.9em;
+  border-left: 3px solid var(--color-border-strong);
+  color: var(--color-text-soft-on-light);
+}
+
+.rt hr {
+  margin: 1em 0;
+  border: none;
+  border-top: 1px solid var(--color-border);
+}
+
+.rt :not(pre) > code {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  background: var(--color-surface);
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+}
+
+/* Tables scroll inside their own region, which a keyboard can reach. */
+.rt-table {
+  margin: 0.7em 0;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.rt-table:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.rt-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+}
+
+.rt-table th,
+.rt-table td {
+  padding: 0.45em 0.7em;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.rt-table th {
+  background: var(--color-surface);
+  font-weight: 600;
+}
+
+.rt-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* A checklist: the whole line is the label, so the box has a name and a wide target. */
+.rt-task {
+  margin-left: -1.4em;
+  list-style: none;
+}
+
+.rt-task label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55em;
+  cursor: pointer;
+}
+
+.rt-task label > p {
+  margin: 0;
+}
+
+.rt-check {
+  flex-shrink: 0;
+  width: 1.1em;
+  height: 1.1em;
+  margin-top: 0.28em;
+  accent-color: var(--color-accent-text);
+}
+
+.rt-check:disabled {
+  cursor: default;
+}
+
+.rt-task:has(.rt-check:checked) label {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+/* KaTeX: formulas share the text colour and scroll rather than overflow. */
+.rt .katex {
+  font-size: 1.05em;
+}
+
+.rt .katex-display {
+  margin: 0.7em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.2em 0;
+}
+
+.rt .katex-error {
+  color: var(--color-danger-ink);
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+@media (forced-colors: active) {
+  .rt-table,
+  .rt blockquote {
+    border-color: CanvasText;
+  }
+}
