@@ -1,17 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { BoardMetaProvider } from '@hooks/useBoardMeta';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useToday } from '@hooks/useToday';
-import { type AssignedCard, fetchMyCards } from '@lib/boardsApi';
 import { groupMyCards } from '@lib/myCards';
+import { useMyCardsStore } from '@lib/myCardsStore';
 
 import { DueBadge } from '../components/board/DueBadge';
 import { AlertIcon, CheckCircleIcon } from '../components/ui/Icons';
 import './MyCardsPage.css';
-
-type Status = 'loading' | 'ready' | 'error';
 
 /**
  * Every card assigned to you, across workspaces, ordered by how soon it is
@@ -20,30 +18,30 @@ type Status = 'loading' | 'ready' | 'error';
  */
 export function MyCardsPage() {
   const today = useToday();
-  const [cards, setCards] = useState<AssignedCard[]>([]);
-  const [status, setStatus] = useState<Status>('loading');
+  const cards = useMyCardsStore((state) => state.cards);
+  const status = useMyCardsStore((state) => state.status);
+  const load = useMyCardsStore((state) => state.load);
+  const refresh = useMyCardsStore((state) => state.refresh);
+  const watch = useMyCardsStore((state) => state.watch);
   const [workspaceId, setWorkspaceId] = useState('');
 
   useDocumentTitle('My cards');
 
-  const load = useCallback(async () => {
-    try {
-      setCards(await fetchMyCards());
-      setStatus('ready');
-    } catch {
-      setStatus('error');
-    }
-  }, []);
-
   useEffect(() => {
-    void load();
-    // Coming back to the tab is when assignments are most likely to have changed.
-    const refresh = () => {
-      if (document.visibilityState === 'visible') void load();
+    // Cards already on screen stay while they are checked, so coming back never flashes.
+    void (useMyCardsStore.getState().status === 'ready' ? refresh() : load());
+    // The live stream keeps the page current while it is open; coming back to the tab covers
+    // the time the stream was not listening.
+    const stopWatching = watch();
+    const onShow = () => {
+      if (document.visibilityState === 'visible') void refresh();
     };
-    document.addEventListener('visibilitychange', refresh);
-    return () => document.removeEventListener('visibilitychange', refresh);
-  }, [load]);
+    document.addEventListener('visibilitychange', onShow);
+    return () => {
+      stopWatching();
+      document.removeEventListener('visibilitychange', onShow);
+    };
+  }, [load, refresh, watch]);
 
   const workspaces = useMemo(() => {
     const seen = new Map<string, string>();
