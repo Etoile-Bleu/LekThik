@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use domain::boards::{
-    Board, BoardRepo, BoardTemplate, BoardView, BoardsError, CardSummary, ListWithCards,
-    MAX_BOARDS_PER_WORKSPACE, Role, Title,
+    Board, BoardMember, BoardRepo, BoardTemplate, BoardView, BoardsError, CardSummary,
+    ListWithCards, MAX_BOARDS_PER_WORKSPACE, Role, Title,
 };
 use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
@@ -115,7 +115,8 @@ impl BoardRepo for PgBoardRepo {
         .map_err(repository_error)?;
 
         let card_rows = sqlx::query(
-            "SELECT c.id, c.list_id, c.title, c.description <> '' AS has_description \
+            "SELECT c.id, c.list_id, c.title, c.description <> '' AS has_description, \
+                c.due_date::text AS due_date \
                 FROM cards c JOIN lists l ON l.id = c.list_id \
                 WHERE l.board_id = $1 ORDER BY c.position, c.created_at, c.id",
         )
@@ -130,6 +131,26 @@ impl BoardRepo for PgBoardRepo {
                 WHERE l.board_id = $1 ORDER BY cl.label_id",
         )
         .bind(board.id)
+        .fetch_all(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        let assignee_rows = sqlx::query(
+            "SELECT ca.card_id, ca.user_id FROM card_assignees ca \
+                JOIN cards c ON c.id = ca.card_id JOIN lists l ON l.id = c.list_id \
+                WHERE l.board_id = $1 ORDER BY ca.assigned_at, ca.user_id",
+        )
+        .bind(board.id)
+        .fetch_all(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        let member_rows = sqlx::query(
+            "SELECT m.user_id, u.username FROM workspace_members m \
+                JOIN users u ON u.id = m.user_id WHERE m.workspace_id = $1 \
+                ORDER BY lower(u.username), m.user_id",
+        )
+        .bind(board.workspace_id)
         .fetch_all(&mut *transaction)
         .await
         .map_err(repository_error)?;
@@ -152,6 +173,23 @@ impl BoardRepo for PgBoardRepo {
             labels_by_card.entry(card_id).or_default().push(label_id);
         }
 
+        let mut assignees_by_card: HashMap<Uuid, Vec<Uuid>> = HashMap::new();
+        for row in &assignee_rows {
+            let card_id: Uuid = row.try_get("card_id").map_err(repository_error)?;
+            let assignee: Uuid = row.try_get("user_id").map_err(repository_error)?;
+            assignees_by_card.entry(card_id).or_default().push(assignee);
+        }
+
+        let members = member_rows
+            .iter()
+            .map(|row| {
+                Ok(BoardMember {
+                    user_id: row.try_get("user_id").map_err(repository_error)?,
+                    username: row.try_get("username").map_err(repository_error)?,
+                })
+            })
+            .collect::<Result<Vec<_>, BoardsError>>()?;
+
         let mut lists = Vec::with_capacity(list_rows.len());
         let mut list_positions: HashMap<Uuid, usize> = HashMap::new();
         for row in &list_rows {
@@ -173,6 +211,8 @@ impl BoardRepo for PgBoardRepo {
                 title: row.try_get("title").map_err(repository_error)?,
                 has_description: row.try_get("has_description").map_err(repository_error)?,
                 label_ids: labels_by_card.remove(&card_id).unwrap_or_default(),
+                assignee_ids: assignees_by_card.remove(&card_id).unwrap_or_default(),
+                due_date: row.try_get("due_date").map_err(repository_error)?,
             };
             if let Some(index) = list_positions.get(&list_id) {
                 lists[*index].cards.push(card);
@@ -187,6 +227,7 @@ impl BoardRepo for PgBoardRepo {
         Ok(BoardView {
             board,
             role,
+            members,
             lists,
             labels,
         })
