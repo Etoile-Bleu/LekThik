@@ -25,6 +25,7 @@ interface BoardListProps {
   onDelete: (listId: string) => void;
   onAddCard: (listId: string, title: string) => Promise<unknown>;
   onOpenCard: (cardId: string) => void;
+  readOnly?: boolean;
 }
 
 export function ListFace({ list, count }: { list: BoardListData; count: number }) {
@@ -50,6 +51,7 @@ export function BoardList({
   onDelete,
   onAddCard,
   onOpenCard,
+  readOnly = false,
 }: BoardListProps) {
   const headingId = useId();
   const {
@@ -60,7 +62,11 @@ export function BoardList({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: list.id, data: { type: 'list' } });
+  } = useSortable({
+    id: list.id,
+    data: { type: 'list' },
+    disabled: readOnly,
+  });
 
   const { onKeyDown, pointer: pointerListeners } = splitDragListeners(listeners);
   const cardIds = list.cards.map((card) => card.id);
@@ -74,52 +80,57 @@ export function BoardList({
       data-fresh={freshIds.includes(list.id) || undefined}
       data-dragging={isDragging || undefined}
     >
-      <div className="board-list__header" {...pointerListeners}>
-        <button
-          type="button"
-          ref={setActivatorNodeRef}
-          className="board-list__grip"
-          aria-label={`Reorder list ${list.name}`}
-          onKeyDown={onKeyDown}
-          {...attributes}
-        >
-          <GripIcon size={16} />
-        </button>
+      <div className="board-list__header" {...(readOnly ? {} : pointerListeners)}>
+        {!readOnly && (
+          <button
+            type="button"
+            ref={setActivatorNodeRef}
+            className="board-list__grip"
+            aria-label={`Reorder list ${list.name}`}
+            onKeyDown={onKeyDown}
+            {...attributes}
+          >
+            <GripIcon size={16} />
+          </button>
+        )}
         <div className="board-list__title" id={headingId}>
           <InlineEdit
             as="h2"
             className="board-list__name"
             value={list.name}
             label="list name"
+            readOnly={readOnly}
             onCommit={(name) => onRename(list.id, name)}
           />
         </div>
         <span className="board-list__count" aria-label={`${list.cards.length} cards`}>
           {list.cards.length}
         </span>
-        <Menu
-          label={`Actions for list ${list.name}`}
-          items={[
-            {
-              label: 'Move left',
-              icon: <ArrowLeftIcon />,
-              disabled: index === 0,
-              onSelect: () => onMove(list.id, index - 1),
-            },
-            {
-              label: 'Move right',
-              icon: <ArrowRightIcon />,
-              disabled: index === total - 1,
-              onSelect: () => onMove(list.id, index + 1),
-            },
-            {
-              label: 'Delete list',
-              icon: <TrashIcon />,
-              tone: 'danger',
-              onSelect: () => onDelete(list.id),
-            },
-          ]}
-        />
+        {!readOnly && (
+          <Menu
+            label={`Actions for list ${list.name}`}
+            items={[
+              {
+                label: 'Move left',
+                icon: <ArrowLeftIcon />,
+                disabled: index === 0,
+                onSelect: () => onMove(list.id, index - 1),
+              },
+              {
+                label: 'Move right',
+                icon: <ArrowRightIcon />,
+                disabled: index === total - 1,
+                onSelect: () => onMove(list.id, index + 1),
+              },
+              {
+                label: 'Delete list',
+                icon: <TrashIcon />,
+                tone: 'danger',
+                onSelect: () => onDelete(list.id),
+              },
+            ]}
+          />
+        )}
       </div>
 
       <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
@@ -134,21 +145,24 @@ export function BoardList({
               fresh={freshIds.includes(card.id)}
               dimmed={!matchesFilter(card, filter)}
               onOpen={onOpenCard}
+              readOnly={readOnly}
             />
           ))}
         </ul>
       </SortableContext>
 
-      <div className="board-list__footer">
-        <Composer
-          triggerLabel="Add a card"
-          inputLabel={`Title of the new card in ${list.name}`}
-          placeholder="Enter a title for this card"
-          submitLabel="Add card"
-          multiline
-          onSubmit={(title) => onAddCard(list.id, title)}
-        />
-      </div>
+      {!readOnly && (
+        <div className="board-list__footer">
+          <Composer
+            triggerLabel="Add a card"
+            inputLabel={`Title of the new card in ${list.name}`}
+            placeholder="Enter a title for this card"
+            submitLabel="Add card"
+            multiline
+            onSubmit={(title) => onAddCard(list.id, title)}
+          />
+        </div>
+      )}
     </section>
   );
 }
