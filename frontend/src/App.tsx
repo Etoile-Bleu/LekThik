@@ -9,6 +9,7 @@ import { ForgotPasswordPage } from '@pages/ForgotPasswordPage';
 import { HomePage } from '@pages/HomePage';
 import { InvitationPage } from '@pages/InvitationPage';
 import { LoginPage } from '@pages/LoginPage';
+import { MyCardsPage } from '@pages/MyCardsPage';
 import { ResetPasswordPage } from '@pages/ResetPasswordPage';
 import { SettingsPage } from '@pages/SettingsPage';
 import { SignupPage } from '@pages/SignupPage';
@@ -39,6 +40,7 @@ export function App() {
           }
         >
           <Route path="/dashboard" element={<WorkspacesPage />} />
+          <Route path="/my-cards" element={<MyCardsPage />} />
           <Route path="/b/:boardId" element={<BoardPage />} />
           <Route path="/settings" element={<Navigate to="/settings/appearance" replace />} />
           <Route path="/settings/:section" element={<SettingsPage />} />

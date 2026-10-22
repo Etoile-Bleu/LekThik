@@ -59,7 +59,23 @@ export interface CardSummary {
 export interface BoardList {
   id: string;
   name: string;
+  /** Work in progress limit, warns when the list holds more cards. `null` for none. */
+  wip_limit: number | null;
   cards: CardSummary[];
+}
+
+/** A card assigned to the signed in person, with where it lives. */
+export interface AssignedCard {
+  id: string;
+  title: string;
+  /** Calendar day, `YYYY-MM-DD`. */
+  due_date: string | null;
+  list_id: string;
+  list_name: string;
+  board_id: string;
+  board_name: string;
+  workspace_id: string;
+  workspace_name: string;
 }
 
 export interface BoardMember {
@@ -200,6 +216,15 @@ export function createList(boardId: string, name: string): Promise<Identified> {
 
 export function renameList(id: string, name: string): Promise<Identified> {
   return send<Identified>(`/api/lists/${id}`, 'PATCH', { name });
+}
+
+export function setListWipLimit(id: string, limit: number | null): Promise<Identified> {
+  return send<Identified>(`/api/lists/${id}/wip-limit`, 'PUT', { limit });
+}
+
+export async function fetchMyCards(): Promise<AssignedCard[]> {
+  const response = await request('/api/users/me/cards');
+  return (await response.json()) as AssignedCard[];
 }
 
 export function moveList(id: string, index: number): Promise<void> {

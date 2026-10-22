@@ -1,0 +1,330 @@
+.board-table {
+  height: calc(100% - 1.25rem);
+  margin-inline: 1.25rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-paper-card);
+  animation: view-in var(--duration-base) var(--ease-out);
+}
+
+.board-table:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.board-table table {
+  width: 100%;
+  min-width: 46rem;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.board-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0;
+  border-bottom: 1px solid var(--color-border-strong);
+  background: color-mix(in srgb, var(--color-surface) 92%, var(--color-paper-card));
+  text-align: left;
+}
+
+.board-table__col-title {
+  width: 38%;
+  min-width: 16rem;
+}
+
+.board-table__col-list {
+  width: 15%;
+  min-width: 9.5rem;
+}
+
+.board-table__col-labels {
+  width: 20%;
+  min-width: 11rem;
+}
+
+.board-table__col-people {
+  width: 12%;
+  min-width: 7rem;
+}
+
+.board-table__col-due {
+  width: 15%;
+  min-width: 8rem;
+}
+
+.board-table__sort {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
+}
+
+.board-table__sort:hover {
+  background: color-mix(in srgb, var(--color-ink) 5%, transparent);
+  color: var(--color-ink);
+}
+
+.board-table__sort[data-active] {
+  color: var(--color-ink);
+}
+
+.board-table__sort:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -3px;
+}
+
+.board-table__glyph {
+  display: inline-flex;
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  transition:
+    opacity var(--duration-fast) ease,
+    transform var(--duration-base) var(--ease-out);
+}
+
+/* The glyph shows on hover and focus for unsorted columns, and always for the sorted one. */
+.board-table__sort:hover .board-table__glyph,
+.board-table__sort:focus-visible .board-table__glyph,
+.board-table__sort[data-active] .board-table__glyph {
+  opacity: 1;
+  color: var(--color-ink);
+}
+
+.board-table__sort[data-active] .board-table__glyph {
+  animation: glyph-pop var(--duration-base) var(--ease-out);
+}
+
+.board-table__row > * {
+  height: calc(var(--density-row) + 1rem);
+  padding: 0.35rem 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+  text-align: left;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.board-table__row:last-child > * {
+  border-bottom: none;
+}
+
+.board-table__row:hover > * {
+  background: color-mix(in srgb, var(--color-accent) 7%, var(--color-paper-card));
+}
+
+.board-table__row {
+  animation: row-in var(--duration-base) var(--ease-out) backwards;
+  animation-delay: calc(var(--row-index, 0) * 22ms);
+}
+
+.board-table__row[data-fresh] > * {
+  animation: row-flash 1.1s ease-out;
+}
+
+.board-table__open {
+  display: block;
+  max-width: 100%;
+  padding: 0.15rem 0.3rem;
+  margin: -0.15rem -0.3rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: left;
+  cursor: pointer;
+}
+
+.board-table__open:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.board-table__open:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.board-table__preview {
+  display: -webkit-box;
+  margin-top: 0.1rem;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+  font-weight: 400;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+
+.board-table__pill,
+.board-table__select {
+  display: inline-block;
+  max-width: 100%;
+  min-height: 28px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.board-table__pill {
+  padding: 0 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-table__select-wrap {
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+}
+
+.board-table__select {
+  appearance: none;
+  padding: 0 1.7rem 0 0.7rem;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
+}
+
+.board-table__select:hover {
+  border-color: var(--color-ink);
+  background: var(--color-paper-card);
+}
+
+.board-table__select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.board-table__select-arrow {
+  position: absolute;
+  top: 50%;
+  right: 0.6rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.board-table__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-table__more {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.board-table__dash {
+  color: var(--color-text-muted);
+}
+
+.board-table__none,
+.board-table__empty {
+  padding: 2.5rem 1.25rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.board-table__empty {
+  margin-inline: 1.25rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.board-table__empty-title {
+  margin-bottom: 0.25rem;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+@media (min-width: 900px) {
+  .board-table,
+  .board-table__empty {
+    margin-inline: 1.75rem;
+  }
+}
+
+/* Sorting moves rows to their new place instead of swapping them. */
+::view-transition-group(*) {
+  animation-duration: 260ms;
+  animation-timing-function: var(--ease-out);
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+
+@keyframes row-flash {
+  from {
+    background: color-mix(in srgb, var(--color-accent) 28%, var(--color-paper-card));
+  }
+}
+
+@keyframes glyph-pop {
+  from {
+    transform: scale(0.6);
+  }
+}
+
+@media (forced-colors: active) {
+  .board-table,
+  .board-table__pill,
+  .board-table__select {
+    border: 1px solid CanvasText;
+  }
+
+  .board-table__row:hover > * {
+    background: Highlight;
+    color: HighlightText;
+  }
+}

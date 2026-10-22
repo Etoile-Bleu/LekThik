@@ -6,6 +6,7 @@ import { ensureFont } from '@lib/appearance';
 import { DEFAULT_PREFERENCES } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 
+import { CardDialogSection } from '../components/settings/CardDialogSection';
 import {
   AppearanceSection,
   ColourSection,
@@ -16,6 +17,7 @@ import {
 import { SaveStatus } from '../components/settings/SaveStatus';
 import { SettingsPreview } from '../components/settings/SettingsPreview';
 import {
+  ColumnsIcon,
   EyeIcon,
   KeyboardIcon,
   PaletteIcon,
@@ -31,6 +33,13 @@ const SECTIONS = [
     blurb: 'Theme, density and what cards show.',
     icon: <PaletteIcon size={18} />,
     content: <AppearanceSection />,
+  },
+  {
+    id: 'card',
+    label: 'Card dialog',
+    blurb: 'Choose and order what a card shows.',
+    icon: <ColumnsIcon size={18} />,
+    content: <CardDialogSection />,
   },
   {
     id: 'reading',
@@ -87,13 +96,19 @@ export function SettingsPage() {
   }
 
   function resetAll() {
-    const { boards: _boards, card_display: _display, ...defaults } = DEFAULT_PREFERENCES;
+    const {
+      boards: _boards,
+      card_display: _display,
+      card_dialog: _dialog,
+      ...defaults
+    } = DEFAULT_PREFERENCES;
     void _boards;
     void _display;
+    void _dialog;
     update(defaults);
   }
 
-  const showsPreview = section.id !== 'help';
+  const showsPreview = section.id !== 'help' && section.id !== 'card';
 
   return (
     <div className="settings">

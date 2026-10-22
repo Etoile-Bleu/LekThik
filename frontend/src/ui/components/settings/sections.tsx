@@ -309,6 +309,28 @@ export function HelpSection() {
         </dl>
       </Help>
 
+      <Help title="See the same cards three ways">
+        <ul className="settings-list">
+          <li>
+            On a board, the <strong>Board</strong>, <strong>List</strong> and{' '}
+            <strong>Calendar</strong> buttons switch the view. Your choice is remembered for each
+            board.
+          </li>
+          <li>
+            In the <strong>List</strong> view, each column heading is a button that sorts. Press it
+            again to reverse, once more to go back to the board order.
+          </li>
+          <li>
+            In the <strong>Calendar</strong>, arrow keys move between days, <kbd>Page Up</kbd> and{' '}
+            <kbd>Page Down</kbd> change month, and <kbd>Enter</kbd> lists the cards of a day. Cards
+            without a date wait in a tray, each with a button to give it the chosen day.
+          </li>
+          <li>
+            <strong>My cards</strong>, in the sidebar, gathers everything assigned to you.
+          </li>
+        </ul>
+      </Help>
+
       <Help title="Move cards and lists without dragging">
         <ul className="settings-list">
           <li>

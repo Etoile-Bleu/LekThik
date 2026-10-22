@@ -147,6 +147,7 @@ mod tests {
             format!("boards/{id}/look"),
             format!("lists/{id}"),
             format!("lists/{id}/move"),
+            format!("lists/{id}/wip-limit"),
             format!("cards/{id}"),
             format!("cards/{id}/labels"),
             format!("cards/{id}/assignees"),

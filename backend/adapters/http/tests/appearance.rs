@@ -54,10 +54,16 @@ async fn preferences_default_then_persist_per_person() -> anyhow::Result<()> {
             "labels": true, "due_date": true, "assignees": false,
             "description_marker": true, "description_preview": true
         },
-        "boards": { board_id.clone(): { "card_display": {
-            "labels": false, "due_date": true, "assignees": true,
-            "description_marker": false, "description_preview": false
-        } } }
+        "card_dialog": { "order": ["assignees", "due_date", "labels", "list"], "hidden": [] },
+        "boards": { board_id.clone(): {
+            "card_display": {
+                "labels": false, "due_date": true, "assignees": true,
+                "description_marker": false, "description_preview": false
+            },
+            "view": "board",
+            "column_width": "default",
+            "collapsed_lists": []
+        } }
     });
     let (status, saved) = call(
         &app,
