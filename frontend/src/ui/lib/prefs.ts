@@ -15,10 +15,38 @@ export interface CardDisplay {
   description_preview: boolean;
 }
 
+/** How a board is shown: columns, a sortable table or a calendar of due dates. */
+export type BoardViewKind = 'board' | 'list' | 'calendar';
+export type ColumnWidth = 'narrow' | 'default' | 'wide';
+
+/** A property of the card dialog that can be moved or hidden. */
+export type CardProperty = 'assignees' | 'due_date' | 'labels' | 'list';
+
+export const CARD_PROPERTIES: CardProperty[] = ['assignees', 'due_date', 'labels', 'list'];
+
+/** Which properties the card dialog shows, and in what order. */
+export interface CardDialogLayout {
+  order: CardProperty[];
+  hidden: CardProperty[];
+}
+
 /** Settings that only make sense for one board, for one person. */
 export interface BoardPreferences {
   card_display: CardDisplay | null;
+  view: BoardViewKind;
+  column_width: ColumnWidth;
+  /** Lists folded into a slim rail on this board. */
+  collapsed_lists: string[];
 }
+
+export const DEFAULT_BOARD_PREFERENCES: BoardPreferences = {
+  card_display: null,
+  view: 'board',
+  column_width: 'default',
+  collapsed_lists: [],
+};
+
+export const DEFAULT_CARD_DIALOG: CardDialogLayout = { order: [...CARD_PROPERTIES], hidden: [] };
 
 export interface Preferences {
   theme: Theme;
@@ -37,6 +65,7 @@ export interface Preferences {
   /** Tell screen readers when teammates change the board. */
   announce_changes: boolean;
   card_display: CardDisplay;
+  card_dialog: CardDialogLayout;
   boards: Record<string, BoardPreferences>;
 }
 
@@ -62,6 +91,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   flat_backgrounds: false,
   announce_changes: false,
   card_display: DEFAULT_CARD_DISPLAY,
+  card_dialog: DEFAULT_CARD_DIALOG,
   boards: {},
 };
 
@@ -73,4 +103,42 @@ export function cardDisplayFor(preferences: Preferences, boardId: string | undef
 
 export function hasBoardDisplay(preferences: Preferences, boardId: string | undefined): boolean {
   return Boolean(boardId && preferences.boards[boardId]?.card_display);
+}
+
+/** What this person set for one board, filled in with the defaults. */
+export function boardPrefsFor(
+  preferences: Preferences,
+  boardId: string | undefined
+): BoardPreferences {
+  const own = boardId ? preferences.boards[boardId] : undefined;
+  return { ...DEFAULT_BOARD_PREFERENCES, ...own };
+}
+
+/** A board that only holds defaults needs no entry, which keeps the saved settings small. */
+export function isDefaultBoardPrefs(own: BoardPreferences): boolean {
+  return (
+    own.card_display === null &&
+    own.view === DEFAULT_BOARD_PREFERENCES.view &&
+    own.column_width === DEFAULT_BOARD_PREFERENCES.column_width &&
+    own.collapsed_lists.length === 0
+  );
+}
+
+/**
+ * The layout with every property accounted for exactly once, so a layout saved
+ * before a property existed, or edited by hand, still draws a complete dialog.
+ */
+export function normalizeDialogLayout(layout: CardDialogLayout | undefined): CardDialogLayout {
+  const seen = new Set<CardProperty>();
+  const order: CardProperty[] = [];
+  for (const property of [...(layout?.order ?? []), ...CARD_PROPERTIES]) {
+    if (CARD_PROPERTIES.includes(property) && !seen.has(property)) {
+      seen.add(property);
+      order.push(property);
+    }
+  }
+  const hidden = [...new Set(layout?.hidden ?? [])].filter((property) =>
+    CARD_PROPERTIES.includes(property)
+  );
+  return { order, hidden };
 }
