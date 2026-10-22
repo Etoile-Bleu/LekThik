@@ -1,0 +1,247 @@
+.my-cards {
+  max-width: 54rem;
+  margin-inline: auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.my-cards__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.my-cards__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.my-cards__subtitle {
+  min-height: 1.5em;
+  margin-top: 0.2rem;
+  color: var(--color-text-soft-on-light);
+}
+
+.my-cards__filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.my-cards__filter label {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.my-cards__filter select {
+  min-height: 40px;
+  min-width: 12rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+}
+
+.my-cards__filter select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.my-cards__group {
+  margin-bottom: 1.75rem;
+  animation: my-cards-in var(--duration-slow) var(--ease-out) backwards;
+  animation-delay: calc(var(--group-index, 0) * 55ms);
+}
+
+.my-cards__group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  color: var(--color-text-soft-on-light);
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.my-cards__group[data-group='overdue'] .my-cards__group-title {
+  color: var(--color-danger-ink);
+}
+
+.my-cards__count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-soft-on-light);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}
+
+.my-cards__group[data-group='overdue'] .my-cards__count {
+  background: var(--color-danger-tint);
+  color: var(--color-danger-ink);
+}
+
+.my-cards__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.my-cards__row {
+  display: grid;
+  grid-template-columns: 8.5rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) ease,
+    background-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) ease;
+}
+
+.my-cards__row:hover {
+  border-color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-paper-card));
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+.my-cards__row:active {
+  transform: translateY(0);
+}
+
+.my-cards__row:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.my-cards__nodate {
+  padding-left: 0.4rem;
+  color: var(--color-text-muted);
+}
+
+.my-cards__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.my-cards__card-title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.my-cards__where {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.my-cards__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.my-cards__skeleton span {
+  height: 3.5rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-border) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: my-cards-shimmer 1.4s linear infinite;
+}
+
+.my-cards__message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: 30rem;
+  color: var(--color-text-soft-on-light);
+}
+
+.my-cards__message--calm {
+  align-items: center;
+  max-width: none;
+  padding: 3rem 1.25rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+  text-align: center;
+  animation: my-cards-in var(--duration-slow) var(--ease-out);
+}
+
+.my-cards__message--calm svg {
+  color: var(--color-accent-text);
+}
+
+.my-cards__message-title {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+@media (max-width: 599px) {
+  .my-cards__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.35rem;
+  }
+}
+
+@keyframes my-cards-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes my-cards-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (forced-colors: active) {
+  .my-cards__row {
+    border-color: CanvasText;
+  }
+
+  .my-cards__row:hover {
+    border-color: Highlight;
+  }
+}
