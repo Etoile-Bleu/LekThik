@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use async_trait::async_trait;
 use domain::boards::{
-    BoardSummary, BoardTemplate, BoardsError, MAX_WORKSPACES_PER_USER, Title, Workspace,
+    BoardSummary, BoardTemplate, BoardsError, MAX_WORKSPACES_PER_USER, Role, Title, Workspace,
     WorkspaceRepo, WorkspaceWithBoards,
 };
 use sqlx::postgres::PgRow;
@@ -10,7 +10,7 @@ use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
 use crate::board_seed::insert_board;
-use crate::scope::repository_error;
+use crate::scope::{Kind, denial, repository_error};
 
 pub struct PgWorkspaceRepo {
     pool: PgPool,
@@ -22,10 +22,18 @@ impl PgWorkspaceRepo {
     }
 }
 
+pub(crate) fn parse_role(value: &str) -> Result<Role, BoardsError> {
+    Role::parse(value)
+        .ok_or_else(|| BoardsError::Repository(format!("unknown workspace role {value}")))
+}
+
 fn row_to_workspace(row: &PgRow) -> Result<Workspace, BoardsError> {
+    let role: String = row.try_get("role").map_err(repository_error)?;
+
     Ok(Workspace {
         id: row.try_get("id").map_err(repository_error)?,
         name: row.try_get("name").map_err(repository_error)?,
+        role: parse_role(&role)?,
     })
 }
 
@@ -33,14 +41,14 @@ fn row_to_workspace(row: &PgRow) -> Result<Workspace, BoardsError> {
 impl WorkspaceRepo for PgWorkspaceRepo {
     async fn create(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         name: Title,
         boards: Vec<&'static BoardTemplate>,
     ) -> Result<WorkspaceWithBoards, BoardsError> {
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
 
         let owner = sqlx::query("SELECT id FROM users WHERE id = $1 FOR UPDATE")
-            .bind(owner_id)
+            .bind(user_id)
             .fetch_optional(&mut *transaction)
             .await
             .map_err(repository_error)?;
@@ -50,7 +58,7 @@ impl WorkspaceRepo for PgWorkspaceRepo {
 
         let existing: i64 =
             sqlx::query_scalar("SELECT count(*) FROM workspaces WHERE owner_id = $1")
-                .bind(owner_id)
+                .bind(user_id)
                 .fetch_one(&mut *transaction)
                 .await
                 .map_err(repository_error)?;
@@ -59,15 +67,25 @@ impl WorkspaceRepo for PgWorkspaceRepo {
         }
 
         let row = sqlx::query(
-            "INSERT INTO workspaces (owner_id, name) VALUES ($1, $2) RETURNING id, name",
+            "INSERT INTO workspaces (owner_id, name) VALUES ($1, $2) \
+                RETURNING id, name, 'owner' AS role",
         )
-        .bind(owner_id)
+        .bind(user_id)
         .bind(name.as_str())
         .fetch_one(&mut *transaction)
         .await
         .map_err(repository_error)?;
 
         let workspace = row_to_workspace(&row)?;
+
+        sqlx::query(
+            "INSERT INTO workspace_members (workspace_id, user_id, role) VALUES ($1, $2, 'owner')",
+        )
+        .bind(workspace.id)
+        .bind(user_id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
 
         let mut created_boards = Vec::with_capacity(boards.len());
         for template in boards {
@@ -95,12 +113,14 @@ impl WorkspaceRepo for PgWorkspaceRepo {
 
     async fn list_with_boards(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
     ) -> Result<Vec<WorkspaceWithBoards>, BoardsError> {
         let workspace_rows = sqlx::query(
-            "SELECT id, name FROM workspaces WHERE owner_id = $1 ORDER BY created_at, id",
+            "SELECT w.id, w.name, m.role FROM workspaces w \
+                JOIN workspace_members m ON m.workspace_id = w.id \
+                WHERE m.user_id = $1 ORDER BY w.created_at, w.id",
         )
-        .bind(owner_id)
+        .bind(user_id)
         .fetch_all(&self.pool)
         .await
         .map_err(repository_error)?;
@@ -108,9 +128,11 @@ impl WorkspaceRepo for PgWorkspaceRepo {
         let board_rows = sqlx::query(concat!(
             "SELECT b.id, b.workspace_id, b.name FROM ",
             owned_board!(),
-            " WHERE w.owner_id = $1 ORDER BY b.created_at, b.id"
+            " WHERE ",
+            member_of!("$1"),
+            " ORDER BY b.created_at, b.id"
         ))
-        .bind(owner_id)
+        .bind(user_id)
         .fetch_all(&self.pool)
         .await
         .map_err(repository_error)?;
@@ -140,36 +162,36 @@ impl WorkspaceRepo for PgWorkspaceRepo {
         Ok(grouped)
     }
 
-    async fn rename(
-        &self,
-        owner_id: Uuid,
-        id: Uuid,
-        name: Title,
-    ) -> Result<Workspace, BoardsError> {
-        let row = sqlx::query(
-            "UPDATE workspaces SET name = $3 WHERE id = $2 AND owner_id = $1 RETURNING id, name",
-        )
-        .bind(owner_id)
+    async fn rename(&self, user_id: Uuid, id: Uuid, name: Title) -> Result<Workspace, BoardsError> {
+        let Some(row) = sqlx::query(concat!(
+            "UPDATE workspaces w SET name = $3 WHERE w.id = $2 AND ",
+            admin_of!("$1"),
+            " RETURNING w.id, w.name, \
+                (SELECT role FROM workspace_members WHERE workspace_id = w.id AND user_id = $1) AS role"
+        ))
+        .bind(user_id)
         .bind(id)
         .bind(name.as_str())
         .fetch_optional(&self.pool)
         .await
         .map_err(repository_error)?
-        .ok_or(BoardsError::NotFound)?;
+        else {
+            return Err(denial(&self.pool, Kind::Workspace, user_id, id).await);
+        };
 
         row_to_workspace(&row)
     }
 
-    async fn delete(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
+    async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
         let result = sqlx::query("DELETE FROM workspaces WHERE id = $2 AND owner_id = $1")
-            .bind(owner_id)
+            .bind(user_id)
             .bind(id)
             .execute(&self.pool)
             .await
             .map_err(repository_error)?;
 
         if result.rows_affected() == 0 {
-            return Err(BoardsError::NotFound);
+            return Err(denial(&self.pool, Kind::Workspace, user_id, id).await);
         }
 
         Ok(())
