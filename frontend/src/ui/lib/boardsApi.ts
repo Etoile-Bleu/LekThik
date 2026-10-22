@@ -1,4 +1,5 @@
 import { request } from './api';
+import type { BoardLook } from './boardLooks';
 
 export type LabelColor =
   'slate' | 'red' | 'orange' | 'amber' | 'green' | 'teal' | 'blue' | 'violet' | 'pink';
@@ -47,6 +48,8 @@ export interface CardSummary {
   list_id: string;
   title: string;
   has_description: boolean;
+  /** The first characters of the description, empty when there is none. */
+  description_preview: string;
   label_ids: string[];
   assignee_ids: string[];
   /** Calendar day, `YYYY-MM-DD`. */
@@ -67,6 +70,7 @@ export interface BoardMember {
 export interface BoardView {
   board: BoardSummary;
   role: Role;
+  look: BoardLook;
   members: BoardMember[];
   lists: BoardList[];
   labels: Label[];
@@ -172,6 +176,10 @@ export function createBoard(
     name,
     ...(templateId ? { template_id: templateId } : {}),
   });
+}
+
+export function setBoardLook(id: string, look: BoardLook): Promise<BoardLook> {
+  return send<BoardLook>(`/api/boards/${id}/look`, 'PUT', look);
 }
 
 export function fetchBoard(id: string): Promise<BoardView> {
