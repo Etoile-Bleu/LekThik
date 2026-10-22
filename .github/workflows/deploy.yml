@@ -1,0 +1,120 @@
+name: Deploy to VPS
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-to-vps
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  PUBLIC_URL: https://lekthik.weier-corp.fr
+
+jobs:
+  deploy:
+    name: Build main and deploy to the VPS
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    env:
+      DEPLOY_DIR: ${{ secrets.VPS_DEPLOY_DIR }}
+      TUNNEL_SERVICE_TOKEN_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+      TUNNEL_SERVICE_TOKEN_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build the backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          tags: lekthik-server:latest
+          load: true
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+
+      - name: Build the frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          target: production
+          build-args: VITE_API_URL=${{ env.PUBLIC_URL }}
+          tags: lekthik-frontend:latest
+          load: true
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+      - name: Install cloudflared
+        run: |
+          curl -fsSL -o cloudflared \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          sudo install -m 755 cloudflared /usr/local/bin/cloudflared
+
+      - name: Configure SSH over the Cloudflare Tunnel
+        env:
+          VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          VPS_SSH_HOST: ${{ secrets.VPS_SSH_HOST }}
+          VPS_SSH_USER: ${{ secrets.VPS_SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          install -m 600 /dev/null ~/.ssh/vps_deploy_key
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" > ~/.ssh/vps_deploy_key
+          cat > ~/.ssh/config <<EOF
+          Host vps
+            HostName ${VPS_SSH_HOST}
+            User ${VPS_SSH_USER}
+            IdentityFile ~/.ssh/vps_deploy_key
+            IdentitiesOnly yes
+            StrictHostKeyChecking accept-new
+            ServerAliveInterval 30
+            ProxyCommand cloudflared access ssh --hostname %h
+          EOF
+          chmod 600 ~/.ssh/config
+          ssh vps "test -f '$DEPLOY_DIR/.env'" || {
+            echo "::error::$DEPLOY_DIR/.env is missing on the VPS, create it once from .env.example"
+            exit 1
+          }
+
+      - name: Upload the compose file and the migrations
+        run: |
+          tar -czf - docker-compose.vps.yml backend/migrations backend/scripts/migrate.sh \
+            | ssh vps "mkdir -p '$DEPLOY_DIR' && tar -xzf - -C '$DEPLOY_DIR'"
+
+      - name: Ship the images to the VPS
+        run: |
+          docker save lekthik-server:latest lekthik-frontend:latest \
+            | gzip \
+            | ssh vps "gunzip | docker load"
+
+      - name: Start the new containers
+        run: |
+          ssh vps "cd '$DEPLOY_DIR' && docker compose -f docker-compose.vps.yml up -d --remove-orphans" || {
+            ssh vps "cd '$DEPLOY_DIR' && docker compose -f docker-compose.vps.yml logs --tail 100"
+            exit 1
+          }
+
+      - name: Wait for the public site
+        run: |
+          for i in $(seq 1 30); do
+            api=$(curl -s -o /dev/null -w '%{http_code}' "$PUBLIC_URL/api-docs/openapi.json" || true)
+            web=$(curl -s -o /dev/null -w '%{http_code}' "$PUBLIC_URL/" || true)
+            if [ "$api" = "200" ] && [ "$web" = "200" ]; then
+              echo "$PUBLIC_URL is up (api $api, web $web)"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::$PUBLIC_URL did not become healthy (api $api, web $web)"
+          ssh vps "cd '$DEPLOY_DIR' && docker compose -f docker-compose.vps.yml logs --tail 100"
+          exit 1
+
+      - name: Remove dangling images
+        run: ssh vps "docker image prune -f"

@@ -1,0 +1,73 @@
+name: lekthik
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: lekthik_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lekthik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Missing POSTGRES_PASSWORD in the .env of the deploy directory}
+      APP_DB_USER: ${POSTGRES_USER:-lekthik}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  migrate:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-lekthik}
+      POSTGRES_USER: ${POSTGRES_USER:-lekthik}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backend/migrations:/migrations:ro
+      - ./backend/scripts/migrate.sh:/migrate.sh:ro
+    entrypoint: ["bash", "/migrate.sh"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  server:
+    image: lekthik-server:latest
+    container_name: lekthik_server
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-lekthik}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-lekthik}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
+      JWT_SECRET: ${JWT_SECRET:?Missing JWT_SECRET in the .env of the deploy directory}
+      SMTP_RELAY: ${SMTP_RELAY:-smtp-relay.brevo.com}
+      SMTP_USERNAME: ${SMTP_USERNAME:?Missing SMTP_USERNAME in the .env of the deploy directory}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?Missing SMTP_PASSWORD in the .env of the deploy directory}
+      MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:?Missing MAIL_FROM_EMAIL in the .env of the deploy directory}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-LekThik}
+      APP_BASE_URL: ${APP_BASE_URL}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    networks:
+      - default
+      - suwo-net
+
+  frontend:
+    image: lekthik-frontend:latest
+    container_name: lekthik_frontend
+    depends_on:
+      - server
+    restart: unless-stopped
+    networks:
+      - default
+      - suwo-net
+
+networks:
+  suwo-net:
+    external: true
+    name: cloudflared_suwo-net
+
+volumes:
+  postgres_data:
