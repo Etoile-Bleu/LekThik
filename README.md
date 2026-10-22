@@ -36,3 +36,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the git workflow, commit conventions,
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+## Deployment
+
+The `Deploy to VPS` workflow (Actions tab, Run workflow) builds the `main` branch, ships the images to the server and restarts the stack at https://lekthik.weier-corp.fr. Anyone with write access to the repository can run it.
+
+It reads these secrets from the `production` environment, which only the `main` branch can use: `VPS_SSH_PRIVATE_KEY`, `VPS_SSH_HOST`, `VPS_SSH_USER`, `VPS_DEPLOY_DIR`, `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET`. The application secrets (database password, JWT secret, SMTP) stay in the `.env` file of the deploy directory on the server, created once from `.env.example`, and are never stored in GitHub.
