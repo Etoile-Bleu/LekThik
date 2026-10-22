@@ -8,6 +8,11 @@ use crate::dto::ErrorResponseDto;
 pub fn boards_error_response(error: BoardsError) -> Response {
     let (status, message) = match error {
         BoardsError::NotFound => (StatusCode::NOT_FOUND, "not found".to_string()),
+        BoardsError::Forbidden => (
+            StatusCode::FORBIDDEN,
+            "your role does not allow this".to_string(),
+        ),
+        BoardsError::Conflict(message) => (StatusCode::CONFLICT, message),
         BoardsError::LimitReached(what) => (
             StatusCode::CONFLICT,
             format!("you have reached the limit of {what}"),
@@ -34,6 +39,8 @@ mod tests {
         let cases = [
             (BoardsError::NotFound, StatusCode::NOT_FOUND),
             (BoardsError::LimitReached("cards"), StatusCode::CONFLICT),
+            (BoardsError::Forbidden, StatusCode::FORBIDDEN),
+            (BoardsError::Conflict("x".to_string()), StatusCode::CONFLICT),
             (
                 BoardsError::Invalid("bad".to_string()),
                 StatusCode::BAD_REQUEST,
