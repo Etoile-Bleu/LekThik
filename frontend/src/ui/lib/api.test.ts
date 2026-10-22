@@ -31,7 +31,7 @@ describe('api', () => {
   it('sends credentials and a JSON content type on every request', async () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(200, {}));
 
-    await registerUser('mathéo@example.com', 'test-fixture-password');
+    await registerUser('mathéo@example.com', 'test-fixture-password', 'matheo');
 
     expect(fetch).toHaveBeenCalledWith(
       expect.stringContaining('/api/users/register'),
@@ -42,6 +42,7 @@ describe('api', () => {
         body: JSON.stringify({
           email: 'mathéo@example.com',
           password: 'test-fixture-password',
+          username: 'matheo',
         }),
       })
     );
