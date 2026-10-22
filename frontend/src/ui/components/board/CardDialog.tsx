@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import { isCardList } from '@lib/blocks';
+import { toggleTask } from '@lib/richText';
 import { findCard } from '@lib/boardModel';
 import { type CardDetail, fetchCard, updateCard } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
@@ -15,12 +16,15 @@ import { Dialog } from '../ui/Dialog';
 import {
   CalendarIcon,
   ChevronDownIcon,
+  PencilIcon,
   SlidersIcon,
   TagIcon,
   TextLinesIcon,
   TrashIcon,
   UsersIcon,
 } from '../ui/Icons';
+import { RichEditor } from '../richtext/RichEditor';
+import { RichText } from '../richtext/RichText';
 import { InlineEdit } from '../ui/InlineEdit';
 import { AssigneePicker } from './AssigneePicker';
 import { DueDateField } from './DueDateField';
@@ -57,6 +61,7 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [targetListId, setTargetListId] = useState('');
   const [targetPosition, setTargetPosition] = useState(1);
+  const [editingDescription, setEditingDescription] = useState(false);
   const descriptionRef = useRef('');
   const detailRef = useRef<CardDetail | null>(null);
 
@@ -70,6 +75,7 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
     setDetail(null);
     detailRef.current = null;
     setSaveStatus('idle');
+    setEditingDescription(false);
     if (!cardId) {
       return undefined;
     }
@@ -296,34 +302,79 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
             </button>
           )}
 
-          <section className="card-dialog__description">
+          <section className="card-dialog__description" aria-labelledby="card-description-title">
             <div className="card-dialog__description-head">
-              <label htmlFor="card-description">Description</label>
+              <h3 id="card-description-title" className="card-dialog__description-title">
+                Description
+              </h3>
               <p className="card-dialog__status" role="status" aria-live="polite">
                 {saveStatus === 'saving' && 'Saving…'}
                 {saveStatus === 'saved' && 'Saved'}
               </p>
             </div>
-            <textarea
-              id="card-description"
-              value={description}
-              disabled={!detail}
-              readOnly={!editable}
-              placeholder={
-                !detail
-                  ? 'Loading…'
-                  : editable
-                    ? 'Add more detail about this card…'
-                    : 'No description.'
-              }
-              maxLength={10000}
-              onChange={(event) => {
-                setDescription(event.target.value);
-                descriptionRef.current = event.target.value;
-                setSaveStatus('idle');
-              }}
-              onBlur={() => void saveDescription()}
-            />
+
+            {!detail && <p className="card-dialog__none">Loading…</p>}
+
+            {detail && editingDescription && editable && (
+              <RichEditor
+                value={description}
+                onChange={(next) => {
+                  setDescription(next);
+                  descriptionRef.current = next;
+                  setSaveStatus('idle');
+                }}
+                onSave={() => {
+                  setEditingDescription(false);
+                  void saveDescription();
+                }}
+                onCancel={() => {
+                  setDescription(detail.description);
+                  descriptionRef.current = detail.description;
+                  setEditingDescription(false);
+                }}
+                onLeave={() => {
+                  setEditingDescription(false);
+                  void saveDescription();
+                }}
+                label="Description"
+                maxLength={10000}
+                placeholder="Add more detail about this card. Markdown, checklists, tables, formulas and diagrams work."
+              />
+            )}
+
+            {detail && !(editingDescription && editable) && (
+              <>
+                {description.trim() === '' ? (
+                  <p className="card-dialog__none">
+                    {editable ? 'No description yet.' : 'No description.'}
+                  </p>
+                ) : (
+                  <RichText
+                    text={description}
+                    onToggleTask={
+                      editable
+                        ? (index) => {
+                            const next = toggleTask(description, index);
+                            setDescription(next);
+                            descriptionRef.current = next;
+                            void saveDescription();
+                          }
+                        : undefined
+                    }
+                  />
+                )}
+                {editable && (
+                  <button
+                    type="button"
+                    className="card-dialog__edit"
+                    onClick={() => setEditingDescription(true)}
+                  >
+                    <PencilIcon size={14} />
+                    {description.trim() === '' ? 'Add a description' : 'Edit description'}
+                  </button>
+                )}
+              </>
+            )}
           </section>
 
           {(editable || onCustomize) && (
