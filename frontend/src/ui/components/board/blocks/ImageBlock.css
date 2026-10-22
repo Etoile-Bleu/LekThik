@@ -1,0 +1,114 @@
+.image-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.1rem 0.6rem 0.7rem;
+  animation: image-block-in var(--duration-slow) var(--ease-out);
+}
+
+.image-block--empty {
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1.6rem 1rem 1.8rem;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.image-block--empty svg {
+  color: var(--color-text-muted);
+}
+
+.image-block__title {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.image-block--loading {
+  min-height: 9rem;
+  margin: 0.2rem 0.6rem 0.8rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-border) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: image-block-shimmer 1.4s linear infinite;
+}
+
+.image-block__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  cursor: zoom-in;
+  transition:
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-base) ease;
+}
+
+.image-block__open:hover {
+  border-color: var(--color-ink);
+  box-shadow: var(--shadow-card);
+}
+
+.image-block__open:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.image-block__open img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 26rem;
+  object-fit: contain;
+}
+
+.image-block__caption {
+  color: var(--color-text-soft-on-light);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.image-block__large {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 1.25rem;
+}
+
+.image-block__large img {
+  display: block;
+  max-width: 100%;
+  max-height: 70vh;
+  margin-inline: auto;
+  border-radius: var(--radius-md);
+  object-fit: contain;
+}
+
+.image-block__large p {
+  color: var(--color-text-soft-on-light);
+  font-size: 0.9rem;
+}
+
+@keyframes image-block-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes image-block-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
