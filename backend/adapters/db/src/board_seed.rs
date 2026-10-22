@@ -12,8 +12,10 @@ pub(crate) async fn insert_board(
     name: &str,
     template: Option<&BoardTemplate>,
 ) -> Result<Board, BoardsError> {
+    // clock_timestamp, not now(): the boards of a workspace template are created in one
+    // transaction, and now() would give them all the same instant and so an arbitrary order.
     let row = sqlx::query(
-        "INSERT INTO boards (workspace_id, name) VALUES ($1, $2) \
+        "INSERT INTO boards (workspace_id, name, created_at) VALUES ($1, $2, clock_timestamp()) \
             RETURNING id, workspace_id, name",
     )
     .bind(workspace_id)
