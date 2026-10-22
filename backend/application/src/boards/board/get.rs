@@ -34,6 +34,7 @@ mod tests {
                 name: "Roadmap".to_string(),
             },
             role: domain::boards::Role::Owner,
+            look: domain::boards::BoardLook::default(),
             members: Vec::new(),
             lists: Vec::new(),
             labels: Vec::new(),

@@ -15,7 +15,7 @@
 .role-badge[data-role='owner'] {
   border-color: transparent;
   background: var(--color-ink);
-  color: var(--color-text-on-dark);
+  color: var(--color-on-ink);
 }
 
 .role-badge[data-role='admin'] {

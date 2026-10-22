@@ -1,0 +1,49 @@
+.settings-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(
+      28rem 14rem at 0% -10%,
+      color-mix(in oklab, var(--color-accent) 16%, transparent),
+      transparent 70%
+    ),
+    var(--color-canvas);
+}
+
+.settings-preview__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-preview__title {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.settings-preview__hint {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.settings-preview .board-list {
+  width: 100%;
+}
+
+.settings-preview .board-card {
+  cursor: default;
+}
+
+.settings-preview .board-card__open {
+  cursor: default;
+}

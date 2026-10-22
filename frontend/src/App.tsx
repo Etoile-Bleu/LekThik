@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import { ProtectedRoute } from '@components/ProtectedRoute';
 import { useAuthStore } from '@lib/authStore';
@@ -10,6 +10,7 @@ import { HomePage } from '@pages/HomePage';
 import { InvitationPage } from '@pages/InvitationPage';
 import { LoginPage } from '@pages/LoginPage';
 import { ResetPasswordPage } from '@pages/ResetPasswordPage';
+import { SettingsPage } from '@pages/SettingsPage';
 import { SignupPage } from '@pages/SignupPage';
 import { VerifyEmailPage } from '@pages/VerifyEmailPage';
 import { WorkspacesPage } from '@pages/WorkspacesPage';
@@ -39,6 +40,8 @@ export function App() {
         >
           <Route path="/dashboard" element={<WorkspacesPage />} />
           <Route path="/b/:boardId" element={<BoardPage />} />
+          <Route path="/settings" element={<Navigate to="/settings/appearance" replace />} />
+          <Route path="/settings/:section" element={<SettingsPage />} />
           <Route path="/invitations/:invitationId" element={<InvitationPage />} />
         </Route>
       </Routes>

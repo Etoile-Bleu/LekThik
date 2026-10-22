@@ -25,12 +25,12 @@
 }
 
 .inline-edit__button:hover {
-  background: rgba(18, 20, 28, 0.07);
+  background: color-mix(in srgb, var(--color-ink) 8%, transparent);
 }
 
 .inline-edit__input {
-  border-color: var(--color-accent);
+  border-color: var(--color-focus);
   background: var(--color-paper-card);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(20, 201, 160, 0.25);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 28%, transparent);
 }

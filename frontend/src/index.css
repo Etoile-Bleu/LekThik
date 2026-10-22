@@ -8,6 +8,8 @@
   --color-accent-tint: #eafbf6;
   --color-accent-ink: #0b2a22;
   --color-accent-text: #12703e;
+  /* Focus rings: 3:1 against the surfaces, unlike the brand teal. */
+  --color-focus: #0a806a;
   --color-text-on-light: #12141c;
   --color-text-soft-on-light: #4a5568;
   --color-text-on-dark: #f5f6f3;
@@ -28,6 +30,20 @@
   --color-danger-tint: #fbeae8;
   --color-danger-ink: #7a2e27;
   --color-scrim: rgba(18, 20, 28, 0.55);
+
+  /* Text on a surface painted with --color-ink, which flips in dark themes. */
+  --color-on-ink: #f5f6f3;
+  /* Navigation chrome stays dark in every theme. */
+  --chrome-bg: #12141c;
+  --chrome-border: #262a3a;
+
+  /* Density: spacing only, never type size. Overridden by html[data-density]. */
+  --density-card-y: 0.65rem;
+  --density-card-x: 0.75rem;
+  --density-gap: 0.5rem;
+  --density-list-pad: 0.5rem;
+  --density-row: 38px;
+  --list-width: 296px;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -92,7 +108,7 @@ body {
   background: var(--color-paper);
   color: var(--color-text-on-light);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 }
@@ -137,7 +153,7 @@ svg {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--color-focus);
   outline-offset: 2px;
 }
 

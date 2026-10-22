@@ -1,0 +1,227 @@
+/*
+ * Accessibility preferences. Each one is an attribute on <html>, set before
+ * the first paint (see index.html) and kept in sync by lib/appearance.ts:
+ *   data-cvd      standard | redgreen | blueyellow
+ *   data-shapes   on            (labels carry a shape as well as a colour)
+ *   data-font     standard | hyperlegible | lexend
+ *   data-spacing  normal | wide | wider
+ *   data-focus    strong
+ *   data-targets  large
+ *   data-flat     on
+ * Imported after themes.css so these win when both set the same token.
+ */
+
+/* ---------- Reading font ---------- */
+html[data-font='hyperlegible'] {
+  --font-body: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Atkinson Hyperlegible', 'Segoe UI', system-ui, sans-serif;
+}
+
+html[data-font='lexend'] {
+  --font-body: 'Lexend', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Lexend', 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ---------- Letter and word spacing (WCAG 1.4.12 asks to support 0.12em and 0.16em) ---------- */
+html[data-spacing='wide'] .shell {
+  letter-spacing: 0.06em;
+  word-spacing: 0.1em;
+  line-height: 1.7;
+}
+
+html[data-spacing='wider'] .shell {
+  letter-spacing: 0.12em;
+  word-spacing: 0.16em;
+  line-height: 1.8;
+}
+
+html[data-spacing='wide'] .shell :is(textarea, input, select, button),
+html[data-spacing='wider'] .shell :is(textarea, input, select, button) {
+  letter-spacing: inherit;
+  word-spacing: inherit;
+}
+
+/* ---------- Strong focus ring ---------- */
+html[data-focus='strong'] :focus-visible {
+  outline: 4px solid var(--color-focus) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 2px var(--color-paper-card, #ffffff) !important;
+}
+
+/* ---------- Large targets ---------- */
+html[data-targets='large'] {
+  --density-row: 48px;
+}
+
+html[data-targets='large']
+  .shell
+  :is(
+    .btn,
+    .icon-button,
+    .menu__item,
+    .filter-pill,
+    .filter-bar__toggle,
+    .due-field__chip,
+    .segmented__option,
+    .pick__face,
+    .assignee-picker__me,
+    .composer__trigger,
+    .sidebar__toggle,
+    .sidebar__add,
+    .sidebar__create,
+    .sidebar__board,
+    .sidebar__more,
+    .board-list__grip,
+    .invitations-button,
+    .card-dialog__link,
+    .display-menu__link
+  ) {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+html[data-targets='large'] .shell .look-swatch {
+  width: 44px;
+  height: 44px;
+}
+
+html[data-targets='large'] .shell .board-card__grip {
+  width: 44px;
+  height: 44px;
+}
+
+html[data-targets='large'] .shell .due-field__input,
+html[data-targets='large'] .shell .card-dialog__select {
+  min-height: 48px;
+}
+
+/* ---------- Flat backgrounds: the theme's own canvas, no tint ---------- */
+html[data-flat='on'] .board-page,
+html[data-theme='contrast'] .board-page {
+  background: var(--color-canvas);
+}
+
+/* ---------- Label shapes ---------- */
+.label-chip__shape {
+  display: none;
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  background: var(--chip-fg);
+}
+
+html[data-shapes='on'] .label-chip__shape {
+  display: inline-block;
+}
+
+.label-chip__shape[data-shape='ring'] {
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 38%, var(--chip-fg) 42%);
+}
+
+.label-chip__shape[data-shape='triangle'] {
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.label-chip__shape[data-shape='diamond'] {
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.label-chip__shape[data-shape='square'] {
+  border-radius: 1px;
+}
+
+.label-chip__shape[data-shape='circle'] {
+  border-radius: 50%;
+}
+
+.label-chip__shape[data-shape='hexagon'] {
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+}
+
+.label-chip__shape[data-shape='triangle-down'] {
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.label-chip__shape[data-shape='cross'] {
+  clip-path: polygon(
+    35% 0,
+    65% 0,
+    65% 35%,
+    100% 35%,
+    100% 65%,
+    65% 65%,
+    65% 100%,
+    35% 100%,
+    35% 65%,
+    0 65%,
+    0 35%,
+    35% 35%
+  );
+}
+
+.label-chip__shape[data-shape='pentagon'] {
+  clip-path: polygon(50% 0, 100% 38%, 82% 100%, 18% 100%, 0 38%);
+}
+
+/* ---------- Colour vision palettes ----------
+ * Label colours chosen so that each stays apart from the others under the
+ * simulated deficiency (checked by lib/colorVision.test.ts, which reads these
+ * lines). Backgrounds and text are derived from the dot, so contrast follows
+ * the theme. Shapes are always on in these modes as a second cue.
+ */
+html[data-cvd='redgreen'] .shell {
+  --label-slate-dot: #c8cdd8;
+  --label-red-dot: #d55e00;
+  --label-orange-dot: #e69f00;
+  --label-amber-dot: #f0e442;
+  --label-green-dot: #009e73;
+  --label-teal-dot: #56b4e9;
+  --label-blue-dot: #0072b2;
+  --label-violet-dot: #cc79a7;
+  --label-pink-dot: #34345f;
+}
+
+html[data-cvd='blueyellow'] .shell {
+  --label-slate-dot: #6b7585;
+  --label-red-dot: #d1242f;
+  --label-orange-dot: #e07b00;
+  --label-amber-dot: #b89b00;
+  --label-green-dot: #7fc241;
+  --label-teal-dot: #0e7c86;
+  --label-blue-dot: #2b4fd8;
+  --label-violet-dot: #7b3fbf;
+  --label-pink-dot: #f06ea9;
+}
+
+html:is([data-cvd='redgreen'], [data-cvd='blueyellow']) .shell {
+  --label-slate-bg: color-mix(in oklab, var(--label-slate-dot) 18%, var(--color-paper-card));
+  --label-slate-fg: color-mix(in oklab, var(--label-slate-dot) 38%, var(--color-ink));
+  --label-red-bg: color-mix(in oklab, var(--label-red-dot) 18%, var(--color-paper-card));
+  --label-red-fg: color-mix(in oklab, var(--label-red-dot) 38%, var(--color-ink));
+  --label-orange-bg: color-mix(in oklab, var(--label-orange-dot) 18%, var(--color-paper-card));
+  --label-orange-fg: color-mix(in oklab, var(--label-orange-dot) 38%, var(--color-ink));
+  --label-amber-bg: color-mix(in oklab, var(--label-amber-dot) 22%, var(--color-paper-card));
+  --label-amber-fg: color-mix(in oklab, var(--label-amber-dot) 38%, var(--color-ink));
+  --label-green-bg: color-mix(in oklab, var(--label-green-dot) 18%, var(--color-paper-card));
+  --label-green-fg: color-mix(in oklab, var(--label-green-dot) 38%, var(--color-ink));
+  --label-teal-bg: color-mix(in oklab, var(--label-teal-dot) 18%, var(--color-paper-card));
+  --label-teal-fg: color-mix(in oklab, var(--label-teal-dot) 38%, var(--color-ink));
+  --label-blue-bg: color-mix(in oklab, var(--label-blue-dot) 18%, var(--color-paper-card));
+  --label-blue-fg: color-mix(in oklab, var(--label-blue-dot) 38%, var(--color-ink));
+  --label-violet-bg: color-mix(in oklab, var(--label-violet-dot) 18%, var(--color-paper-card));
+  --label-violet-fg: color-mix(in oklab, var(--label-violet-dot) 38%, var(--color-ink));
+  --label-pink-bg: color-mix(in oklab, var(--label-pink-dot) 18%, var(--color-paper-card));
+  --label-pink-fg: color-mix(in oklab, var(--label-pink-dot) 38%, var(--color-ink));
+}
+
+html:is([data-cvd='redgreen'], [data-cvd='blueyellow']) .label-chip__shape {
+  display: inline-block;
+}
+
+@media (forced-colors: active) {
+  .label-chip__shape {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+}

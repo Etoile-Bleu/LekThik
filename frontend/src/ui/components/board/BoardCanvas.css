@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 1rem;
+  gap: calc(var(--density-gap) * 2);
   height: 100%;
   padding: 0.25rem 1.25rem 1.25rem;
   overflow-x: auto;
@@ -18,7 +18,7 @@
 
 .board-canvas__add {
   flex: 0 0 auto;
-  width: 296px;
+  width: var(--list-width);
   scroll-snap-align: start;
 }
 

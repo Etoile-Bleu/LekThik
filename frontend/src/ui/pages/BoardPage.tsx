@@ -2,12 +2,16 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { BoardMetaProvider } from '@hooks/useBoardMeta';
+import { useEffectiveTheme } from '@hooks/useEffectiveTheme';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { useToday } from '@hooks/useToday';
 import { useAuthStore } from '@lib/authStore';
 import { type CardFilter, EMPTY_FILTER, cardMatches } from '@lib/boardModel';
 import type { CardSummary } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
+import { lookStyle } from '@lib/boardLooks';
+import { cardDisplayFor } from '@lib/prefs';
+import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
@@ -15,6 +19,7 @@ import { BoardCanvas } from '../components/board/BoardCanvas';
 import { CardDialog } from '../components/board/CardDialog';
 import { FilterBar } from '../components/board/FilterBar';
 import { LabelsDialog } from '../components/board/LabelsDialog';
+import { DisplayMenu } from '../components/appearance/DisplayMenu';
 import { MembersDialog } from '../components/collab/MembersDialog';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { ArrowLeftIcon, TagIcon, TrashIcon, UsersIcon } from '../components/ui/Icons';
@@ -32,6 +37,9 @@ export function BoardPage() {
   const load = useBoardStore((state) => state.load);
   const reset = useBoardStore((state) => state.reset);
   const renameBoard = useBoardStore((state) => state.renameBoard);
+  const setLook = useBoardStore((state) => state.setLook);
+  const prefs = usePrefsStore((state) => state.prefs);
+  const theme = useEffectiveTheme();
   const deleteBoard = useBoardStore((state) => state.deleteBoard);
   const createList = useBoardStore((state) => state.createList);
   const renameList = useBoardStore((state) => state.renameList);
@@ -122,8 +130,13 @@ export function BoardPage() {
   const workspace = workspaces.find((candidate) => candidate.id === view.board.workspace_id);
 
   return (
-    <BoardMetaProvider members={view.members} meId={meId} today={today}>
-      <div className="board-page">
+    <BoardMetaProvider
+      members={view.members}
+      meId={meId}
+      today={today}
+      display={cardDisplayFor(prefs, view.board.id)}
+    >
+      <div className="board-page" style={lookStyle(view.look, theme)}>
         <header className="board-header">
           <div className="board-header__main">
             <Link className="board-header__back" to="/dashboard">
@@ -141,6 +154,12 @@ export function BoardPage() {
           </div>
           <div className="board-header__actions">
             {!editable && <span className="board-header__readonly">View only</span>}
+            <DisplayMenu
+              boardId={view.board.id}
+              look={view.look}
+              canStyle={editable}
+              onLookChange={(look) => void setLook(look)}
+            />
             <button
               type="button"
               className="btn btn--outline btn--sm"

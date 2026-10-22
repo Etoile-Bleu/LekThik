@@ -4,6 +4,7 @@ use uuid::Uuid;
 use super::error::BoardsError;
 use super::label::Label;
 use super::list::ListWithCards;
+use super::look::BoardLook;
 use super::role::Role;
 use super::templates::BoardTemplate;
 use super::text::Title;
@@ -33,6 +34,7 @@ pub struct BoardMember {
 pub struct BoardView {
     pub board: Board,
     pub role: Role,
+    pub look: BoardLook,
     pub members: Vec<BoardMember>,
     pub lists: Vec<ListWithCards>,
     pub labels: Vec<Label>,
@@ -51,4 +53,10 @@ pub trait BoardRepo: Send + Sync {
     async fn get_view(&self, user_id: Uuid, id: Uuid) -> Result<BoardView, BoardsError>;
     async fn rename(&self, user_id: Uuid, id: Uuid, name: Title) -> Result<Board, BoardsError>;
     async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
+    async fn set_look(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        look: BoardLook,
+    ) -> Result<BoardLook, BoardsError>;
 }

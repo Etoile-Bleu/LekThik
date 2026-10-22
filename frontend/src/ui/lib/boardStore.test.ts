@@ -28,6 +28,7 @@ function sampleView(): BoardView {
   return {
     board: { id: 'b1', workspace_id: 'w1', name: 'Roadmap' },
     role: 'owner',
+    look: { background: 'default', accent: 'teal' },
     members: [
       { user_id: 'u-me', username: 'amir' },
       { user_id: 'u-wen', username: 'wen' },
@@ -42,6 +43,7 @@ function sampleView(): BoardView {
             list_id: 'todo',
             title: 'A',
             has_description: false,
+            description_preview: '',
             label_ids: ['urgent'],
             assignee_ids: [],
             due_date: null,
@@ -51,6 +53,7 @@ function sampleView(): BoardView {
             list_id: 'todo',
             title: 'B',
             has_description: false,
+            description_preview: '',
             label_ids: [],
             assignee_ids: [],
             due_date: null,
@@ -124,6 +127,7 @@ describe('useBoardStore', () => {
       list_id: 'done',
       title: 'C',
       has_description: false,
+      description_preview: '',
       label_ids: [],
       assignee_ids: [],
       due_date: null,

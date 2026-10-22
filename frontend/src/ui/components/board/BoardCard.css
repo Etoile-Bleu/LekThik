@@ -38,9 +38,9 @@
 .board-card__open {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--density-gap);
   width: 100%;
-  padding: 0.65rem 2rem 0.65rem 0.75rem;
+  padding: var(--density-card-y) 2rem var(--density-card-y) var(--density-card-x);
   border: none;
   border-radius: inherit;
   background: transparent;
@@ -142,4 +142,16 @@
 
 .board-card__foot > .assignees {
   margin-left: auto;
+}
+
+.board-card__preview {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }

@@ -1,0 +1,115 @@
+.settings-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 1.25rem 0 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-block__title {
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.98rem;
+  font-weight: 600;
+}
+
+.settings-block__hint {
+  margin-bottom: 0.35rem;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+.settings-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin: 0.6rem 0 0.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  list-style: none;
+}
+
+/* ---- keyboard and help ---- */
+.settings-help {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-help__lead {
+  padding: 0.4rem 0 1.1rem;
+  color: var(--color-text-soft-on-light);
+  font-size: 1rem;
+}
+
+.settings-help p,
+.settings-help li,
+.settings-help dd {
+  color: var(--color-text-soft-on-light);
+  font-size: 0.93rem;
+  line-height: 1.65;
+}
+
+.settings-help strong {
+  color: var(--color-ink);
+}
+
+.settings-help a {
+  color: var(--color-ink);
+  text-underline-offset: 3px;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.settings-keys {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.settings-keys > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  gap: 0.9rem;
+  align-items: baseline;
+}
+
+.settings-keys dt {
+  color: var(--color-ink);
+}
+
+.settings-keys dd {
+  margin: 0;
+}
+
+.settings-help kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 0.05em 0.45em;
+  border: 1px solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  text-align: center;
+}
+
+@media (max-width: 519px) {
+  .settings-keys > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.1rem;
+  }
+}

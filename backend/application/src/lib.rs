@@ -1,4 +1,5 @@
 mod boards;
+mod preferences;
 mod user;
 
 pub use boards::{
@@ -6,9 +7,10 @@ pub use boards::{
     DeleteBoard, DeleteCard, DeleteLabel, DeleteList, DeleteWorkspace, GetBoard, GetCard,
     GetMyInvitation, InviteMember, ListMembers, ListMyInvitations, ListWorkspaces, MembersOverview,
     MoveCard, MoveList, RemoveMember, RenameBoard, RenameList, RenameWorkspace,
-    RespondToInvitation, RevokeInvitation, SetCardAssignees, SetCardLabels, UpdateCard,
-    UpdateLabel,
+    RespondToInvitation, RevokeInvitation, SetBoardLook, SetCardAssignees, SetCardLabels,
+    UpdateCard, UpdateLabel,
 };
+pub use preferences::{GetPreferences, SavePreferences};
 pub use user::{
     GetCurrentUser, GetCurrentUserError, IssueVerificationCode, IssueVerificationCodeError,
     LoginUser, LoginUserError, RegisterUser, RegisterUserError, RegisteredUser,

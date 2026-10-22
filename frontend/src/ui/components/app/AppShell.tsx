@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { useMediaQuery } from '@hooks/useMediaQuery';
+import { applyAppearance, pickAppearance, watchSystemSettings } from '@lib/appearance';
 import { useInvitationStore } from '@lib/invitationStore';
+import { usePrefsStore } from '@lib/prefsStore';
 import { startRealtime } from '@lib/realtime';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
@@ -10,6 +12,7 @@ import { InvitationsButton } from '../collab/InvitationsButton';
 import { LiveIndicator } from '../collab/LiveIndicator';
 import { MenuIcon } from '../ui/Icons';
 import { Dialog } from '../ui/Dialog';
+import { LiveAnnouncer } from '../ui/LiveAnnouncer';
 import { Toaster } from '../ui/Toaster';
 import { Sidebar } from './Sidebar';
 import { UserMenu } from './UserMenu';
@@ -20,13 +23,22 @@ export function AppShell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const loadWorkspaces = useWorkspaceStore((state) => state.load);
   const loadInvitations = useInvitationStore((state) => state.load);
+  const loadPrefs = usePrefsStore((state) => state.load);
   const location = useLocation();
 
   useEffect(() => {
     void loadWorkspaces();
     void loadInvitations();
+    void loadPrefs();
     return startRealtime();
-  }, [loadWorkspaces, loadInvitations]);
+  }, [loadWorkspaces, loadInvitations, loadPrefs]);
+
+  // "System" follows the device, so re-apply when the device changes its mind.
+  useEffect(
+    () =>
+      watchSystemSettings(() => applyAppearance(pickAppearance(usePrefsStore.getState().prefs))),
+    []
+  );
 
   useEffect(() => {
     setDrawerOpen(false);
@@ -81,6 +93,7 @@ export function AppShell() {
         </Dialog>
       )}
 
+      <LiveAnnouncer />
       <Toaster />
     </div>
   );

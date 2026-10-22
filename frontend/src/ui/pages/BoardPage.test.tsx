@@ -85,6 +85,7 @@ describe('BoardPage', () => {
       list_id: 'done',
       title: 'Ship it',
       has_description: false,
+      description_preview: '',
       label_ids: [],
       assignee_ids: [],
       due_date: null,
