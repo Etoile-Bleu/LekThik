@@ -3,7 +3,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends pkg-config libs
 RUN cargo install cargo-watch
 WORKDIR /app
 EXPOSE 8080
-CMD ["cargo", "watch", "-x", "run -p server"]
+CMD ["cargo", "watch", "--poll", "-x", "run -p server"]
 
 FROM rust:1-slim-bookworm AS builder
 RUN apt-get update && apt-get install -y --no-install-recommends pkg-config libssl-dev curl && rm -rf /var/lib/apt/lists/*

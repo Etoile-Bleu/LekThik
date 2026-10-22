@@ -87,3 +87,35 @@ async fn logout_clears_the_session_so_me_is_rejected_afterwards() -> anyhow::Res
 
     Ok(())
 }
+
+#[tokio::test]
+async fn reloading_the_app_many_times_never_hits_the_login_rate_limit() -> anyhow::Result<()> {
+    let (app, pool, _container) = spawn_app().await?;
+    let register_response = app
+        .clone()
+        .oneshot(register_request(
+            "reload@example.com",
+            "reload-user",
+            "a-strong-password",
+        )?)
+        .await?;
+    assert_eq!(register_response.status(), StatusCode::CREATED);
+    common::mark_email_verified(&pool, "reload@example.com").await?;
+
+    let login_response = app
+        .clone()
+        .oneshot(login_request("reload@example.com", "a-strong-password")?)
+        .await?;
+    let cookie = session_cookie_from(&login_response).expect("login should set a session cookie");
+
+    for attempt in 0..40 {
+        let response = app.clone().oneshot(me_request(Some(&cookie))?).await?;
+        assert_eq!(
+            response.status(),
+            StatusCode::OK,
+            "session check {attempt} must not be throttled like a login attempt"
+        );
+    }
+
+    Ok(())
+}

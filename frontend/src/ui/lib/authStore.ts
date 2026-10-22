@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
-import { type CurrentUser, getCurrentUser } from '@lib/api';
+import { ApiError, type CurrentUser, getCurrentUser } from '@lib/api';
 
-type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
+export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated' | 'unreachable';
 
 interface AuthState {
   user: CurrentUser | null;
@@ -12,7 +12,7 @@ interface AuthState {
   checkSession: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   status: 'idle',
   setUser: (user) => set({ user, status: 'authenticated' }),
@@ -22,8 +22,12 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const user = await getCurrentUser();
       set({ user, status: 'authenticated' });
-    } catch {
-      set({ user: null, status: 'unauthenticated' });
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        set({ user: null, status: 'unauthenticated' });
+        return;
+      }
+      set({ status: get().user ? 'authenticated' : 'unreachable' });
     }
   },
 }));

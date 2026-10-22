@@ -1,0 +1,36 @@
+.board-canvas {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  height: 100%;
+  padding: 0.25rem 1.25rem 1.25rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 1.25rem;
+}
+
+.board-canvas > .board-list {
+  max-height: 100%;
+}
+
+.board-canvas__add {
+  flex: 0 0 auto;
+  width: 296px;
+  scroll-snap-align: start;
+}
+
+@media (min-width: 900px) {
+  .board-canvas {
+    padding-inline: 1.75rem;
+    scroll-snap-type: none;
+  }
+}
+
+@media (max-width: 599px) {
+  .board-canvas__add {
+    width: min(86vw, 330px);
+  }
+}

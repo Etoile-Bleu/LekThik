@@ -1,7 +1,7 @@
 # LekThik frontend
 
-React homepage for LekThik, built with Vite, TypeScript, and plain CSS (design tokens as CSS
-custom properties, no utility framework).
+React app for LekThik (homepage, accounts, workspaces, boards), built with Vite, TypeScript, and
+plain CSS (design tokens as CSS custom properties, no utility framework).
 
 ## Development
 
@@ -34,9 +34,20 @@ src/
   main.tsx          Entry point
   index.css         Design tokens and global styles
   ui/
-    pages/          Route-level pages
-    components/     Reusable components, each with a co-located CSS file
+    pages/          Route-level pages (homepage, auth, workspaces, board)
+    components/     Components, each with a co-located CSS file:
+      ui/           Accessible primitives (dialog, menu, inline edit, composer, toasts)
+      app/          Application shell, sidebar and user menu
+      board/        Lists, cards, drag and drop canvas, card and label dialogs
+      templates/    Template picker with live previews
+    lib/            API client, zustand stores and pure board logic
+    hooks/          Small shared hooks
+    styles/         Shared button and form styles
 ```
+
+Drag and drop uses `@dnd-kit` with mouse, touch and keyboard sensors, screen reader announcements,
+and a menu based alternative to dragging. Motion is limited to transforms and opacity and is
+disabled by `prefers-reduced-motion`.
 
 Path aliases (`@`, `@components`, `@pages`, `@lib`, `@hooks`, `@types`) are configured in
 `vite.config.ts` and `tsconfig.json`.

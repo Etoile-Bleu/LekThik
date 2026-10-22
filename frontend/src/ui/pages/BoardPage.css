@@ -1,0 +1,126 @@
+.board-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.board-header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem 0.75rem;
+}
+
+.board-header__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.board-header__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 28px;
+  color: var(--color-text-soft-on-light);
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.board-header__back span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-header__back:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+}
+
+.board-header__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.board-header__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.board-page__canvas {
+  flex: 1;
+  min-height: 0;
+}
+
+.board-page--message {
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.75rem;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 3rem 1.25rem;
+}
+
+.board-page--message h1 {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.board-page--message p {
+  color: var(--color-text-soft-on-light);
+}
+
+.board-page__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.board-page__skeleton-title {
+  width: 220px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: #dfe2d8;
+}
+
+.board-page__skeleton-lists {
+  display: flex;
+  gap: 1rem;
+  overflow: hidden;
+}
+
+.board-page__skeleton-lists div {
+  flex: 0 0 296px;
+  height: 280px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(90deg, #e3e5dc 25%, #eef0e8 50%, #e3e5dc 75%);
+  background-size: 200% 100%;
+  animation: board-shimmer 1.4s linear infinite;
+}
+
+@media (min-width: 900px) {
+  .board-header {
+    padding-inline: 1.75rem;
+  }
+}
+
+@keyframes board-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}

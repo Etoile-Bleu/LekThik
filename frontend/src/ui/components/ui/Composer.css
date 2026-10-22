@@ -1,0 +1,74 @@
+.composer__trigger {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.75rem;
+  border: 1px dashed transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
+}
+
+.composer__trigger:hover {
+  background: rgba(18, 20, 28, 0.06);
+  color: var(--color-ink);
+}
+
+.composer__trigger--column {
+  min-height: 48px;
+  border-color: var(--color-border-strong);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.composer__trigger--column:hover {
+  border-color: var(--color-ink);
+  background: var(--color-paper-card);
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.composer--column {
+  padding: 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.composer__field {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  resize: none;
+}
+
+.composer__field:focus-visible {
+  border-color: var(--color-accent);
+  outline-offset: 0;
+}
+
+.composer__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
