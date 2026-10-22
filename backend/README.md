@@ -113,6 +113,8 @@ emails) so a client can draw avatars without another request.
 | `PATCH /api/cards/{id}` with `due_date` | Set a day, send `null` to clear it, leave it out to keep it |
 | `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
 | `GET /api/users/me/cards` | Cards assigned to me across workspaces, soonest due first |
+| `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note or counter block |
+| `PUT /api/blocks/{id}/config` | Change the settings of a block, the kind must match |
 | `PUT /api/lists/{id}/wip-limit` | Set a list's work in progress limit (1 to 99), or `null` to remove it |
 
 ### Preferences and board look
@@ -134,6 +136,16 @@ A list can carry a work in progress limit from 1 to 99 (`PUT /api/lists/{id}/wip
 above, `null` removes it). It is shared with the board, returned in the board view, and only warns:
 adding or moving cards past it still works. The field must be present, so an empty body can never
 clear a limit by accident.
+
+A board holds panels in one row, and a panel is either a list of cards or a block that shows
+something about them: `calendar`, `agenda`, `note` or `counter`. Blocks live in the `lists` table with a
+`kind` and a JSON `config`, so moving, renaming, deleting, permissions, the 50 panel limit and live
+updates are the ones lists already have. `POST /api/boards/{id}/blocks` adds one and
+`PUT /api/blocks/{id}/config` changes its settings (writers and above). Settings are checked per kind
+(`domain/src/boards/block.rs`): unknown fields and values are refused, a note holds at most 5000
+characters without control characters, a counter measuring the share done must name a list of the same
+board, and a block never changes kind. Cards can only be added to, or moved into, lists. Every list in
+the board view carries its `kind` and `config`.
 
 `GET /api/users/me/cards` lists every card assigned to the signed in person in the workspaces they
 still belong to, soonest due date first and undated cards last, with the list, board and workspace
