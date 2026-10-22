@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { type ReactNode, useId } from 'react';
 
 import { type CardFilter, isFiltering } from '@lib/boardModel';
 import type { Label } from '@lib/boardsApi';
@@ -13,6 +13,8 @@ interface FilterBarProps {
   onChange: (filter: CardFilter) => void;
   matchCount: number;
   totalCount: number;
+  /** The view switcher, kept with the filters because both shape what the board shows. */
+  leading?: ReactNode;
 }
 
 interface PillProps {
@@ -32,7 +34,14 @@ function Pill({ pressed, onToggle, children }: PillProps) {
   );
 }
 
-export function FilterBar({ labels, filter, onChange, matchCount, totalCount }: FilterBarProps) {
+export function FilterBar({
+  labels,
+  filter,
+  onChange,
+  matchCount,
+  totalCount,
+  leading,
+}: FilterBarProps) {
   const labelsHeading = useId();
 
   function toggleLabel(labelId: string) {
@@ -45,55 +54,59 @@ export function FilterBar({ labels, filter, onChange, matchCount, totalCount }: 
   }
 
   return (
-    <div className="filter-bar" role="group" aria-label="Filter cards">
-      <span className="filter-bar__title">Filter</span>
-      <div className="filter-bar__pills">
-        <Pill pressed={filter.mine} onToggle={() => onChange({ ...filter, mine: !filter.mine })}>
-          My cards
-        </Pill>
-        <Pill
-          pressed={filter.overdue}
-          onToggle={() => onChange({ ...filter, overdue: !filter.overdue })}
-        >
-          Overdue
-        </Pill>
-      </div>
-      {labels.length > 0 && (
-        <>
-          <span className="filter-bar__divider" aria-hidden="true" />
-          <ul className="filter-bar__list" aria-labelledby={labelsHeading}>
-            <li id={labelsHeading} className="sr-only">
-              Labels
-            </li>
-            {labels.map((label) => (
-              <li key={label.id}>
-                <button
-                  type="button"
-                  className="filter-bar__toggle"
-                  aria-pressed={filter.labelIds.includes(label.id)}
-                  onClick={() => toggleLabel(label.id)}
-                >
-                  <LabelChip name={label.name} color={label.color} priority={label.priority} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      {isFiltering(filter) && (
-        <div className="filter-bar__summary">
-          <span role="status" aria-live="polite">
-            {matchCount} of {totalCount} cards match
-          </span>
-          <button
-            type="button"
-            className="btn btn--ghost btn--sm"
-            onClick={() => onChange({ labelIds: [], mine: false, overdue: false })}
+    <div className="filter-bar">
+      {leading}
+      {leading && <span className="filter-bar__divider" aria-hidden="true" />}
+      <div className="filter-bar__group" role="group" aria-label="Filter cards">
+        <span className="filter-bar__title">Filter</span>
+        <div className="filter-bar__pills">
+          <Pill pressed={filter.mine} onToggle={() => onChange({ ...filter, mine: !filter.mine })}>
+            My cards
+          </Pill>
+          <Pill
+            pressed={filter.overdue}
+            onToggle={() => onChange({ ...filter, overdue: !filter.overdue })}
           >
-            Clear
-          </button>
+            Overdue
+          </Pill>
         </div>
-      )}
+        {labels.length > 0 && (
+          <>
+            <span className="filter-bar__divider" aria-hidden="true" />
+            <ul className="filter-bar__list" aria-labelledby={labelsHeading}>
+              <li id={labelsHeading} className="sr-only">
+                Labels
+              </li>
+              {labels.map((label) => (
+                <li key={label.id}>
+                  <button
+                    type="button"
+                    className="filter-bar__toggle"
+                    aria-pressed={filter.labelIds.includes(label.id)}
+                    onClick={() => toggleLabel(label.id)}
+                  >
+                    <LabelChip name={label.name} color={label.color} priority={label.priority} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {isFiltering(filter) && (
+          <div className="filter-bar__summary">
+            <span role="status" aria-live="polite">
+              {matchCount} of {totalCount} cards match
+            </span>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={() => onChange({ labelIds: [], mine: false, overdue: false })}
+            >
+              Clear
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
