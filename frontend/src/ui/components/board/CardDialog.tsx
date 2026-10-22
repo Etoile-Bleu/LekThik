@@ -1,15 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 import { findCard } from '@lib/boardModel';
 import { type CardDetail, fetchCard, updateCard } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { notifyError } from '@lib/toastStore';
 
+import { type CardProperty, normalizeDialogLayout } from '@lib/prefs';
+import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit } from '@lib/roles';
 
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Dialog } from '../ui/Dialog';
-import { CalendarIcon, TagIcon, TextLinesIcon, TrashIcon, UsersIcon } from '../ui/Icons';
+import {
+  CalendarIcon,
+  ChevronDownIcon,
+  SlidersIcon,
+  TagIcon,
+  TextLinesIcon,
+  TrashIcon,
+  UsersIcon,
+} from '../ui/Icons';
 import { InlineEdit } from '../ui/InlineEdit';
 import { AssigneePicker } from './AssigneePicker';
 import { DueDateField } from './DueDateField';
@@ -22,11 +32,15 @@ interface CardDialogProps {
   cardId: string | null;
   onClose: () => void;
   onManageLabels: () => void;
+  /** Opens the settings where the properties are ordered and hidden. */
+  onCustomize?: () => void;
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved';
 
-export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps) {
+export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: CardDialogProps) {
+  const cardDialog = usePrefsStore((state) => state.prefs.card_dialog);
+  const [showHidden, setShowHidden] = useState(false);
   const view = useBoardStore((state) => state.view);
   const renameCard = useBoardStore((state) => state.renameCard);
   const moveCard = useBoardStore((state) => state.moveCard);
@@ -130,6 +144,114 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
     void setCardLabels(summary.id, next);
   }
 
+  const layout = normalizeDialogLayout(cardDialog);
+  const visibleProperties = layout.order.filter((property) => !layout.hidden.includes(property));
+  const hiddenProperties = layout.order.filter((property) => layout.hidden.includes(property));
+  const shown = showHidden ? [...visibleProperties, ...hiddenProperties] : visibleProperties;
+
+  const renderProperty = (property: CardProperty, position: number) => {
+    switch (property) {
+      case 'assignees':
+        return (
+          <PropertyRow index={position} icon={<UsersIcon size={16} />} label="Assignees">
+            <AssigneePicker
+              members={view.members}
+              assigneeIds={summary.assignee_ids}
+              editable={editable}
+              onChange={(userIds) => void setCardAssignees(summary.id, userIds)}
+            />
+          </PropertyRow>
+        );
+      case 'due_date':
+        return (
+          <PropertyRow index={position} icon={<CalendarIcon size={16} />} label="Due date">
+            <DueDateField
+              value={summary.due_date}
+              editable={editable}
+              onChange={(day) => void setCardDueDate(summary.id, day)}
+            />
+          </PropertyRow>
+        );
+      case 'labels':
+        return (
+          <PropertyRow index={position} icon={<TagIcon size={16} />} label="Labels">
+            {view.labels.length === 0 && <span className="card-dialog__none">No labels yet</span>}
+            <ul className="card-dialog__label-list">
+              {view.labels.map((label) => (
+                <li key={label.id}>
+                  <Pick
+                    bare
+                    checked={summary.label_ids.includes(label.id)}
+                    disabled={!editable}
+                    onChange={(checked) => toggleLabel(label.id, checked)}
+                  >
+                    <LabelChip name={label.name} color={label.color} priority={label.priority} />
+                  </Pick>
+                </li>
+              ))}
+            </ul>
+            {editable && (
+              <button type="button" className="card-dialog__link" onClick={onManageLabels}>
+                Manage labels
+              </button>
+            )}
+          </PropertyRow>
+        );
+      case 'list':
+        return (
+          <PropertyRow index={position} icon={<TextLinesIcon size={16} />} label="List">
+            {editable ? (
+              <>
+                <select
+                  className="card-dialog__select"
+                  aria-label="List"
+                  value={targetListId}
+                  onChange={(event) => {
+                    setTargetListId(event.target.value);
+                    const target = view.lists.find((list) => list.id === event.target.value);
+                    setTargetPosition(
+                      (target?.cards.length ?? 0) + (event.target.value === currentList.id ? 0 : 1)
+                    );
+                  }}
+                >
+                  {view.lists.map((list) => (
+                    <option key={list.id} value={list.id}>
+                      {list.name}
+                    </option>
+                  ))}
+                </select>
+                <label className="card-dialog__position">
+                  <span>Position</span>
+                  <select
+                    className="card-dialog__select card-dialog__select--short"
+                    aria-label="Position"
+                    value={targetPosition}
+                    onChange={(event) => setTargetPosition(Number(event.target.value))}
+                  >
+                    {Array.from({ length: Math.max(positionCount, 1) }, (_, index) => (
+                      <option key={index} value={index + 1}>
+                        {index + 1}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className="btn btn--outline btn--sm"
+                  disabled={!hasMoved}
+                  onClick={() => void moveCard(summary.id, targetListId, targetPosition - 1)}
+                >
+                  Move card
+                </button>
+              </>
+            ) : (
+              <span>{currentList.name}</span>
+            )}
+          </PropertyRow>
+        );
+    }
+  };
+
   return (
     <>
       <Dialog
@@ -154,97 +276,24 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
           </header>
 
           <div className="card-dialog__props">
-            <PropertyRow index={0} icon={<UsersIcon size={16} />} label="Assignees">
-              <AssigneePicker
-                members={view.members}
-                assigneeIds={summary.assignee_ids}
-                editable={editable}
-                onChange={(userIds) => void setCardAssignees(summary.id, userIds)}
-              />
-            </PropertyRow>
-
-            <PropertyRow index={1} icon={<CalendarIcon size={16} />} label="Due date">
-              <DueDateField
-                value={summary.due_date}
-                editable={editable}
-                onChange={(day) => void setCardDueDate(summary.id, day)}
-              />
-            </PropertyRow>
-
-            <PropertyRow index={2} icon={<TagIcon size={16} />} label="Labels">
-              {view.labels.length === 0 && <span className="card-dialog__none">No labels yet</span>}
-              <ul className="card-dialog__label-list">
-                {view.labels.map((label) => (
-                  <li key={label.id}>
-                    <Pick
-                      bare
-                      checked={summary.label_ids.includes(label.id)}
-                      disabled={!editable}
-                      onChange={(checked) => toggleLabel(label.id, checked)}
-                    >
-                      <LabelChip name={label.name} color={label.color} priority={label.priority} />
-                    </Pick>
-                  </li>
-                ))}
-              </ul>
-              {editable && (
-                <button type="button" className="card-dialog__link" onClick={onManageLabels}>
-                  Manage labels
-                </button>
-              )}
-            </PropertyRow>
-
-            <PropertyRow index={3} icon={<TextLinesIcon size={16} />} label="List">
-              {editable ? (
-                <>
-                  <select
-                    className="card-dialog__select"
-                    aria-label="List"
-                    value={targetListId}
-                    onChange={(event) => {
-                      setTargetListId(event.target.value);
-                      const target = view.lists.find((list) => list.id === event.target.value);
-                      setTargetPosition(
-                        (target?.cards.length ?? 0) +
-                          (event.target.value === currentList.id ? 0 : 1)
-                      );
-                    }}
-                  >
-                    {view.lists.map((list) => (
-                      <option key={list.id} value={list.id}>
-                        {list.name}
-                      </option>
-                    ))}
-                  </select>
-                  <label className="card-dialog__position">
-                    <span>Position</span>
-                    <select
-                      className="card-dialog__select card-dialog__select--short"
-                      aria-label="Position"
-                      value={targetPosition}
-                      onChange={(event) => setTargetPosition(Number(event.target.value))}
-                    >
-                      {Array.from({ length: Math.max(positionCount, 1) }, (_, index) => (
-                        <option key={index} value={index + 1}>
-                          {index + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <button
-                    type="button"
-                    className="btn btn--outline btn--sm"
-                    disabled={!hasMoved}
-                    onClick={() => void moveCard(summary.id, targetListId, targetPosition - 1)}
-                  >
-                    Move card
-                  </button>
-                </>
-              ) : (
-                <span>{currentList.name}</span>
-              )}
-            </PropertyRow>
+            {shown.map((property, position) => (
+              <Fragment key={property}>{renderProperty(property, position)}</Fragment>
+            ))}
           </div>
+
+          {hiddenProperties.length > 0 && (
+            <button
+              type="button"
+              className="card-dialog__more"
+              aria-expanded={showHidden}
+              onClick={() => setShowHidden((current) => !current)}
+            >
+              <ChevronDownIcon size={14} />
+              {showHidden
+                ? 'Hide the other properties'
+                : `${hiddenProperties.length} hidden propert${hiddenProperties.length === 1 ? 'y' : 'ies'}`}
+            </button>
+          )}
 
           <section className="card-dialog__description">
             <div className="card-dialog__description-head">
@@ -276,15 +325,29 @@ export function CardDialog({ cardId, onClose, onManageLabels }: CardDialogProps)
             />
           </section>
 
-          {editable && (
+          {(editable || onCustomize) && (
             <footer className="card-dialog__footer">
-              <button
-                type="button"
-                className="btn btn--ghost btn--sm card-dialog__delete"
-                onClick={() => setConfirmingDelete(true)}
-              >
-                <TrashIcon /> Delete card
-              </button>
+              {editable && (
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm card-dialog__delete"
+                  onClick={() => setConfirmingDelete(true)}
+                >
+                  <TrashIcon /> Delete card
+                </button>
+              )}
+              {onCustomize && (
+                <button
+                  type="button"
+                  className="btn btn--ghost btn--sm card-dialog__customize"
+                  onClick={() => {
+                    requestClose();
+                    onCustomize();
+                  }}
+                >
+                  <SlidersIcon size={15} /> Customise this layout
+                </button>
+              )}
             </footer>
           )}
         </div>
