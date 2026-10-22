@@ -5,11 +5,14 @@
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
-use adapters_db::{PgUserRepo, PgVerificationCodeRepo};
+use adapters_db::{
+    PgBoardRepo, PgCardRepo, PgLabelRepo, PgListRepo, PgUserRepo, PgVerificationCodeRepo,
+    PgWorkspaceRepo,
+};
 use async_trait::async_trait;
 use axum::body::Body;
 use axum::extract::ConnectInfo;
-use axum::http::{Request, header};
+use axum::http::{Request, StatusCode, header};
 use domain::{EmailMessage, Mailer, MailerError};
 use secrecy::SecretString;
 use serde_json::json;
@@ -21,6 +24,7 @@ use sqlx::postgres::PgPoolOptions;
 use testcontainers_modules::postgres::Postgres;
 use testcontainers_modules::testcontainers::runners::AsyncRunner;
 use testcontainers_modules::testcontainers::{ContainerAsync, ImageExt};
+use tower::ServiceExt;
 
 #[derive(Default)]
 pub struct RecordingMailer {
@@ -102,6 +106,12 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
     .execute(&pool)
     .await?;
 
+    sqlx::raw_sql(include_str!(
+        "../../../../migrations/005_create_workspaces_and_boards.sql"
+    ))
+    .execute(&pool)
+    .await?;
+
     let mailer = Arc::new(RecordingMailer::default());
 
     let state = AppState {
@@ -111,6 +121,11 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
         token_issuer: Arc::new(JwtTokenIssuer::new(SecretString::from(
             "test-secret".to_string(),
         ))),
+        workspace_repo: Arc::new(PgWorkspaceRepo::new(pool.clone())),
+        board_repo: Arc::new(PgBoardRepo::new(pool.clone())),
+        list_repo: Arc::new(PgListRepo::new(pool.clone())),
+        card_repo: Arc::new(PgCardRepo::new(pool.clone())),
+        label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
     };
 
     Ok((router::build(state), pool, container, mailer))
@@ -200,4 +215,122 @@ pub fn session_cookie_from(response: &axum::response::Response) -> Option<String
         .split(';')
         .next()
         .map(str::to_string)
+}
+
+pub async fn signed_in_cookie(
+    app: &axum::Router,
+    pool: &PgPool,
+    email: &str,
+    username: &str,
+) -> anyhow::Result<String> {
+    let registered = app
+        .clone()
+        .oneshot(register_request(email, username, "a-strong-password")?)
+        .await?;
+    anyhow::ensure!(
+        registered.status() == StatusCode::CREATED,
+        "registration failed"
+    );
+
+    mark_email_verified(pool, email).await?;
+
+    let login = app
+        .clone()
+        .oneshot(login_request(email, "a-strong-password")?)
+        .await?;
+    anyhow::ensure!(login.status() == StatusCode::NO_CONTENT, "login failed");
+
+    session_cookie_from(&login).ok_or_else(|| anyhow::anyhow!("login set no session cookie"))
+}
+
+pub async fn call(
+    app: &axum::Router,
+    method: &str,
+    uri: &str,
+    cookie: Option<&str>,
+    body: Option<serde_json::Value>,
+) -> anyhow::Result<(StatusCode, serde_json::Value)> {
+    let mut builder = Request::builder().method(method).uri(uri);
+
+    if let Some(cookie) = cookie {
+        builder = builder.header(header::COOKIE, cookie);
+    }
+
+    let request = match body {
+        Some(body) => builder
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(Body::from(body.to_string()))?,
+        None => builder.body(Body::empty())?,
+    };
+
+    let response = app.clone().oneshot(with_connect_info(request)).await?;
+    let status = response.status();
+    let bytes = axum::body::to_bytes(response.into_body(), usize::MAX).await?;
+    let value = if bytes.is_empty() {
+        serde_json::Value::Null
+    } else {
+        serde_json::from_slice(&bytes).unwrap_or(serde_json::Value::Null)
+    };
+
+    Ok((status, value))
+}
+
+pub fn id_of(value: &serde_json::Value) -> anyhow::Result<String> {
+    value["id"]
+        .as_str()
+        .map(str::to_string)
+        .ok_or_else(|| anyhow::anyhow!("response has no id: {value}"))
+}
+
+pub async fn create_workspace_board_list(
+    app: &axum::Router,
+    cookie: &str,
+) -> anyhow::Result<(String, String, String)> {
+    let (_, workspace) = call(
+        app,
+        "POST",
+        "/api/workspaces",
+        Some(cookie),
+        Some(json!({ "name": "Team" })),
+    )
+    .await?;
+    let workspace_id = id_of(&workspace)?;
+
+    let (_, board) = call(
+        app,
+        "POST",
+        &format!("/api/workspaces/{workspace_id}/boards"),
+        Some(cookie),
+        Some(json!({ "name": "Roadmap" })),
+    )
+    .await?;
+    let board_id = id_of(&board)?;
+
+    let (_, list) = call(
+        app,
+        "POST",
+        &format!("/api/boards/{board_id}/lists"),
+        Some(cookie),
+        Some(json!({ "name": "To do" })),
+    )
+    .await?;
+    let list_id = id_of(&list)?;
+
+    Ok((workspace_id, board_id, list_id))
+}
+
+pub async fn board_view(
+    app: &axum::Router,
+    cookie: &str,
+    board_id: &str,
+) -> anyhow::Result<serde_json::Value> {
+    let (_, view) = call(
+        app,
+        "GET",
+        &format!("/api/boards/{board_id}"),
+        Some(cookie),
+        None,
+    )
+    .await?;
+    Ok(view)
 }
