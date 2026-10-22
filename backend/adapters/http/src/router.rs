@@ -2,6 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use axum::Router;
+use axum::extract::DefaultBodyLimit;
 use axum::http::{HeaderValue, Method, header};
 use axum::middleware;
 use tower_http::cors::CorsLayer;
@@ -12,6 +13,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use crate::handlers::*;
 use crate::rate_limit::{RateLimiter, rate_limit};
+use crate::security_headers::with_api_security_headers;
 use crate::state::AppState;
 
 #[derive(OpenApi)]
@@ -20,12 +22,48 @@ use crate::state::AppState;
     tags(
         (name = "users", description = "Email/password registration and profile"),
         (name = "auth", description = "Login, logout, email verification and password reset"),
+        (name = "workspaces", description = "Workspaces owned by the signed in user"),
+        (name = "boards", description = "Boards inside a workspace"),
+        (name = "lists", description = "Lists inside a board"),
+        (name = "cards", description = "Cards inside a list"),
+        (name = "labels", description = "Colored priority labels of a board"),
+        (name = "templates", description = "Ready made workspaces and boards to start from"),
     )
 )]
 struct ApiDoc;
 
 const AUTH_RATE_LIMIT_MAX_REQUESTS: u32 = 10;
 const AUTH_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
+const BOARDS_RATE_LIMIT_MAX_REQUESTS: u32 = 600;
+const BOARDS_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
+const BOARDS_BODY_LIMIT_BYTES: usize = 64 * 1024;
+
+fn boards_router() -> OpenApiRouter<AppState> {
+    let rate_limiter = Arc::new(RateLimiter::new(
+        BOARDS_RATE_LIMIT_MAX_REQUESTS,
+        Duration::from_secs(BOARDS_RATE_LIMIT_WINDOW_SECONDS),
+    ));
+
+    OpenApiRouter::<AppState>::new()
+        .routes(routes!(list_templates))
+        .routes(routes!(get_current_user))
+        .routes(routes!(logout))
+        .routes(routes!(list_workspaces, create_workspace))
+        .routes(routes!(rename_workspace, delete_workspace))
+        .routes(routes!(create_board))
+        .routes(routes!(get_board, rename_board, delete_board))
+        .routes(routes!(create_list))
+        .routes(routes!(create_label))
+        .routes(routes!(rename_list, delete_list))
+        .routes(routes!(move_list))
+        .routes(routes!(create_card))
+        .routes(routes!(get_card, update_card, delete_card))
+        .routes(routes!(move_card))
+        .routes(routes!(set_card_labels))
+        .routes(routes!(update_label, delete_label))
+        .layer(DefaultBodyLimit::max(BOARDS_BODY_LIMIT_BYTES))
+        .layer(middleware::from_fn_with_state(rate_limiter, rate_limit))
+}
 
 pub fn build(state: AppState) -> Router {
     let rate_limiter = Arc::new(RateLimiter::new(
@@ -36,16 +74,16 @@ pub fn build(state: AppState) -> Router {
     let auth_router = OpenApiRouter::<AppState>::new()
         .routes(routes!(register_user))
         .routes(routes!(login_user))
-        .routes(routes!(logout))
         .routes(routes!(verify_email))
         .routes(routes!(resend_verification))
         .routes(routes!(forgot_password))
         .routes(routes!(reset_password))
-        .routes(routes!(get_current_user))
         .layer(middleware::from_fn_with_state(rate_limiter, rate_limit));
 
+    let api_router = with_api_security_headers(auth_router.merge(boards_router()));
+
     let (router, api) = OpenApiRouter::<AppState>::with_openapi(ApiDoc::openapi())
-        .nest("/api", auth_router)
+        .nest("/api", api_router)
         .with_state(state)
         .split_for_parts();
 
@@ -75,7 +113,13 @@ fn cors_layer() -> CorsLayer {
     // than falling back to a wildcard.
     CorsLayer::new()
         .allow_origin(origins)
-        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::DELETE])
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::PATCH,
+            Method::DELETE,
+        ])
         .allow_headers([header::CONTENT_TYPE])
         .allow_credentials(true)
 }

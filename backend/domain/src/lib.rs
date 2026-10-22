@@ -1,3 +1,4 @@
+pub mod boards;
 mod mailer;
 mod session;
 mod user;

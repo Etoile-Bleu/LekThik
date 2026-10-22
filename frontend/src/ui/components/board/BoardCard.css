@@ -1,0 +1,133 @@
+.board-card {
+  position: relative;
+  list-style: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  box-shadow: var(--shadow-card);
+  touch-action: manipulation;
+  transition:
+    border-color var(--duration-fast) ease,
+    box-shadow var(--duration-fast) ease,
+    opacity var(--duration-base) ease;
+}
+
+.board-card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.board-card[data-fresh] {
+  animation: card-in var(--duration-base) var(--ease-out);
+}
+
+.board-card[data-dimmed] {
+  opacity: 0.38;
+}
+
+.board-card[data-dragging] {
+  border-style: dashed;
+  border-color: var(--color-accent);
+  background: var(--color-accent-tint);
+  box-shadow: none;
+}
+
+.board-card[data-dragging] > * {
+  opacity: 0;
+}
+
+.board-card__open {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.65rem 2rem 0.65rem 0.75rem;
+  border: none;
+  border-radius: inherit;
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.94rem;
+  line-height: 1.4;
+  text-align: left;
+  cursor: pointer;
+}
+
+.board-card__title {
+  overflow-wrap: anywhere;
+}
+
+.board-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.board-card__description-flag {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+}
+
+.board-card__grip {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: grab;
+  opacity: 0;
+  transition:
+    opacity var(--duration-fast) ease,
+    background-color var(--duration-fast) ease;
+}
+
+.board-card:hover .board-card__grip,
+.board-card__grip:focus-visible,
+.board-card:focus-within .board-card__grip {
+  opacity: 1;
+}
+
+.board-card__grip:hover {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+@media (pointer: coarse) {
+  .board-card__grip {
+    display: none;
+  }
+
+  .board-card__open {
+    padding-right: 0.75rem;
+  }
+}
+
+.board-card-overlay {
+  list-style: none;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  box-shadow: var(--shadow-lifted);
+  cursor: grabbing;
+  transform: rotate(1.6deg) scale(1.02);
+}
+
+.board-card-overlay .board-card__open {
+  cursor: grabbing;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.985);
+  }
+}
