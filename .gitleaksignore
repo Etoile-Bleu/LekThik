@@ -1,0 +1,2 @@
+# The key under which the appearance settings are cached in localStorage. It is a name, not a secret.
+5db2006230f029aceccdb4116dbb419f57010797:frontend/src/ui/lib/appearance.ts:generic-api-key:34
