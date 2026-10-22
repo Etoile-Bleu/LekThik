@@ -9,6 +9,8 @@ use super::board::BoardSummaryDto;
 pub struct WorkspaceResponseDto {
     pub id: Uuid,
     pub name: String,
+    /// Role of the signed in user: owner, admin, writer or reader.
+    pub role: String,
 }
 
 impl From<Workspace> for WorkspaceResponseDto {
@@ -16,6 +18,7 @@ impl From<Workspace> for WorkspaceResponseDto {
         Self {
             id: workspace.id,
             name: workspace.name,
+            role: workspace.role.as_str().to_string(),
         }
     }
 }
@@ -24,6 +27,7 @@ impl From<Workspace> for WorkspaceResponseDto {
 pub struct WorkspaceWithBoardsDto {
     pub id: Uuid,
     pub name: String,
+    pub role: String,
     pub boards: Vec<BoardSummaryDto>,
 }
 
@@ -32,6 +36,7 @@ impl From<WorkspaceWithBoards> for WorkspaceWithBoardsDto {
         Self {
             id: entry.workspace.id,
             name: entry.workspace.name,
+            role: entry.workspace.role.as_str().to_string(),
             boards: entry.boards.into_iter().map(Into::into).collect(),
         }
     }
