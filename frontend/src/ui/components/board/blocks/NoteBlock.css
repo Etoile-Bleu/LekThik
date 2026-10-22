@@ -6,38 +6,9 @@
   animation: note-in var(--duration-base) var(--ease-out);
 }
 
-.note-block__paragraph {
-  color: var(--color-ink);
-  font-size: 0.94rem;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-  /* Single line breaks the writer typed are kept. */
-  white-space: pre-wrap;
-}
-
 .note-block__empty {
   color: var(--color-text-muted);
   font-size: 0.9rem;
-}
-
-.note-block__link {
-  display: inline;
-  color: var(--color-accent-text);
-  font-weight: 500;
-  text-decoration: underline;
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 3px;
-}
-
-.note-block__link:hover {
-  text-decoration-thickness: 2.5px;
-}
-
-.note-block__link:focus-visible,
-.note-block__edit:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 2px;
-  border-radius: 3px;
 }
 
 .note-block__edit {
@@ -66,45 +37,6 @@
 
 .note-block__edit:active {
   transform: scale(0.96);
-}
-
-.note-block textarea {
-  width: 100%;
-  min-height: 7.5rem;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--color-paper-card);
-  color: var(--color-ink);
-  font-family: var(--font-body);
-  font-size: 0.94rem;
-  line-height: 1.5;
-  resize: vertical;
-}
-
-.note-block textarea:focus-visible {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 1px;
-}
-
-.note-block__help {
-  color: var(--color-text-muted);
-  font-size: 0.8rem;
-}
-
-.note-block kbd {
-  padding: 0 0.3rem;
-  border: 1px solid var(--color-border-strong);
-  border-radius: 4px;
-  background: var(--color-surface);
-  font-family: var(--font-mono);
-  font-size: 0.74rem;
-}
-
-.note-block__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.4rem;
 }
 
 @keyframes note-in {
