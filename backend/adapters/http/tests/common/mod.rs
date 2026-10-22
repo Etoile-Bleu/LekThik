@@ -168,6 +168,16 @@ pub fn json_post(uri: &str, body: serde_json::Value) -> anyhow::Result<Request<B
     ))
 }
 
+pub fn register_request_without_username(
+    email: &str,
+    password: &str,
+) -> anyhow::Result<Request<Body>> {
+    json_post(
+        "/api/users/register",
+        json!({ "email": email, "password": password }),
+    )
+}
+
 pub fn register_request(
     email: &str,
     username: &str,
