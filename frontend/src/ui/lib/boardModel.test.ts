@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  EMPTY_FILTER,
+  cardMatches,
   findCard,
   highestPriority,
   matchesFilter,
@@ -12,7 +14,15 @@ import {
 import type { BoardList, CardSummary, Label } from './boardsApi';
 
 function card(id: string, listId: string, labelIds: string[] = []): CardSummary {
-  return { id, list_id: listId, title: id, has_description: false, label_ids: labelIds };
+  return {
+    id,
+    list_id: listId,
+    title: id,
+    has_description: false,
+    label_ids: labelIds,
+    assignee_ids: [],
+    due_date: null,
+  };
 }
 
 function board(): BoardList[] {
@@ -106,5 +116,40 @@ describe('priority helpers', () => {
   it('matches cards that carry at least one selected label', () => {
     expect(matchesFilter(card('x', 'todo', ['l1']), ['l1', 'l2'])).toBe(true);
     expect(matchesFilter(card('x', 'todo', ['l3']), ['l1', 'l2'])).toBe(false);
+  });
+});
+
+describe('cardMatches', () => {
+  const ctx = { meId: 'u-me', today: '2026-10-22' };
+  const base = card('a', 'todo', []);
+
+  it('matches everything when nothing is selected', () => {
+    expect(cardMatches(base, EMPTY_FILTER, ctx)).toBe(true);
+  });
+
+  it('keeps only my cards when asked', () => {
+    const mine = { ...base, assignee_ids: ['u-me', 'u-wen'] };
+    const filter = { ...EMPTY_FILTER, mine: true };
+
+    expect(cardMatches(mine, filter, ctx)).toBe(true);
+    expect(cardMatches(base, filter, ctx)).toBe(false);
+    expect(cardMatches(mine, filter, { ...ctx, meId: undefined })).toBe(false);
+  });
+
+  it('keeps only overdue cards, and a card due today is not overdue yet', () => {
+    const filter = { ...EMPTY_FILTER, overdue: true };
+
+    expect(cardMatches({ ...base, due_date: '2026-10-21' }, filter, ctx)).toBe(true);
+    expect(cardMatches({ ...base, due_date: '2026-10-22' }, filter, ctx)).toBe(false);
+    expect(cardMatches(base, filter, ctx)).toBe(false);
+  });
+
+  it('combines the filters with AND, and labels with OR', () => {
+    const filter = { labelIds: ['x', 'y'], mine: true, overdue: false };
+    const both = { ...base, label_ids: ['y'], assignee_ids: ['u-me'] };
+
+    expect(cardMatches(both, filter, ctx)).toBe(true);
+    expect(cardMatches({ ...both, label_ids: ['z'] }, filter, ctx)).toBe(false);
+    expect(cardMatches({ ...both, assignee_ids: [] }, filter, ctx)).toBe(false);
   });
 });
