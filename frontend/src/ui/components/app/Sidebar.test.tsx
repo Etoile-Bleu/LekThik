@@ -57,7 +57,12 @@ describe('Sidebar', () => {
   });
 
   it('creates a workspace and goes to the overview', async () => {
-    vi.mocked(api.createWorkspace).mockResolvedValueOnce({ id: 'w3', name: 'Ops', boards: [] });
+    vi.mocked(api.createWorkspace).mockResolvedValueOnce({
+      id: 'w3',
+      name: 'Ops',
+      role: 'owner',
+      boards: [],
+    });
     renderSidebar();
 
     fireEvent.click(screen.getByRole('button', { name: 'New workspace' }));
