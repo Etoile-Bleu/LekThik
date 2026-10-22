@@ -19,6 +19,7 @@ function card(id: string, listId: string, labelIds: string[] = []): CardSummary 
     list_id: listId,
     title: id,
     has_description: false,
+    description_preview: '',
     label_ids: labelIds,
     assignee_ids: [],
     due_date: null,
