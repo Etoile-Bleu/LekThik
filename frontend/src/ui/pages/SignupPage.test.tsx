@@ -11,19 +11,15 @@ import { registerUser } from '@lib/api';
 
 import { SignupPage } from './SignupPage';
 
-function fillForm(
-  overrides: Partial<Record<'email' | 'username' | 'password' | 'confirm', string>> = {}
-) {
+function fillForm(overrides: Partial<Record<'email' | 'password' | 'confirm', string>> = {}) {
   const values = {
     email: 'matheo@example.com',
-    username: 'matheo',
     password: 'a-strong-password',
     confirm: 'a-strong-password',
     ...overrides,
   };
 
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: values.email } });
-  fireEvent.change(screen.getByLabelText('Username'), { target: { value: values.username } });
   fireEvent.change(screen.getByLabelText('Password'), { target: { value: values.password } });
   fireEvent.change(screen.getByLabelText('Confirm password'), {
     target: { value: values.confirm },
@@ -49,6 +45,16 @@ describe('SignupPage', () => {
     expect(registerUser).not.toHaveBeenCalled();
   });
 
+  it('does not ask for a username', () => {
+    render(
+      <MemoryRouter>
+        <SignupPage />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByLabelText('Username')).not.toBeInTheDocument();
+  });
+
   it('registers the account and sends the user to verify their email', async () => {
     vi.mocked(registerUser).mockResolvedValueOnce(undefined);
 
@@ -64,7 +70,7 @@ describe('SignupPage', () => {
     fillForm();
     fireEvent.click(screen.getByRole('button', { name: 'Create account' }));
 
-    expect(registerUser).toHaveBeenCalledWith('matheo@example.com', 'matheo', 'a-strong-password');
+    expect(registerUser).toHaveBeenCalledWith('matheo@example.com', 'a-strong-password');
     expect(await screen.findByText('verify email page')).toBeInTheDocument();
   });
 });
