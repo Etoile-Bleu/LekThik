@@ -1,0 +1,113 @@
+.board-list {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  width: 296px;
+  max-height: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  scroll-snap-align: start;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.board-list[data-fresh] {
+  animation: list-in var(--duration-slow) var(--ease-out);
+}
+
+.board-list[data-dragging] {
+  opacity: 0.45;
+  border-style: dashed;
+  border-color: var(--color-accent);
+}
+
+.board-list__header {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.5rem 0.4rem 0.35rem 0.25rem;
+  touch-action: manipulation;
+}
+
+.board-list__grip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: grab;
+}
+
+.board-list__grip:hover {
+  background: rgba(18, 20, 28, 0.08);
+  color: var(--color-ink);
+}
+
+.board-list__title {
+  flex: 1;
+  min-width: 0;
+}
+
+.board-list__name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.board-list__count {
+  flex-shrink: 0;
+  min-width: 24px;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: rgba(18, 20, 28, 0.07);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: center;
+}
+
+.board-list__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-height: 12px;
+  margin: 0;
+  padding: 0.2rem 0.5rem 0.2rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.board-list__footer {
+  padding: 0.35rem 0.5rem 0.5rem;
+}
+
+.board-list--overlay {
+  width: 296px;
+  border-color: var(--color-border-strong);
+  box-shadow: var(--shadow-lifted);
+  cursor: grabbing;
+  transform: rotate(1.2deg);
+}
+
+@media (max-width: 599px) {
+  .board-list {
+    width: min(86vw, 330px);
+  }
+}
+
+@keyframes list-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
