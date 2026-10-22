@@ -34,3 +34,11 @@
     width: min(86vw, 330px);
   }
 }
+
+.board-canvas__empty {
+  align-self: flex-start;
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+}
