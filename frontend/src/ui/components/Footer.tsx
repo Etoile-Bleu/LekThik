@@ -7,7 +7,7 @@ export function Footer() {
     <footer className="footer">
       <div className="container footer__inner">
         <div className="footer__brand">
-          <span className="footer__mark" aria-hidden="true" />
+          <img className="footer__mark" src="/logo-icon-dark.svg" alt="" width="24" height="24" />
           <span>LekThik</span>
         </div>
 

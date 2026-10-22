@@ -39,25 +39,9 @@
 }
 
 .shell__mark {
-  position: relative;
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: var(--color-ink-soft);
-  box-shadow: inset 0 0 0 1px #3a3f52;
-}
-
-.shell__mark::after {
-  content: '';
-  position: absolute;
-  top: 4px;
-  left: 6px;
-  width: 4px;
-  height: 12px;
-  border-radius: 1px;
-  background: var(--color-accent);
-  box-shadow: 4px 4px 0 var(--color-accent);
+  width: 26px;
+  height: 26px;
 }
 
 .shell__spacer {

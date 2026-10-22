@@ -50,7 +50,7 @@ export function AppShell() {
           </button>
         )}
         <Link className="shell__brand" to="/dashboard">
-          <span className="shell__mark" aria-hidden="true" />
+          <img className="shell__mark" src="/logo-icon-dark.svg" alt="" width="26" height="26" />
           LekThik
         </Link>
         <div className="shell__spacer" />
