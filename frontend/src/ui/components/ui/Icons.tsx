@@ -242,3 +242,123 @@ export function KeyboardIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function ColumnsIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="3.5" width="4" height="13" rx="1.2" />
+      <rect x="8" y="3.5" width="4" height="8.5" rx="1.2" />
+      <rect x="13" y="3.5" width="4" height="11" rx="1.2" />
+    </Base>
+  );
+}
+
+export function TableIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="4" width="14" height="12" rx="2" />
+      <path d="M3 8.5h14M3 12.5h14M8 8.5V16" />
+    </Base>
+  );
+}
+
+export function ChevronsLeftIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m10.5 5-5 5 5 5M16 5l-5 5 5 5" />
+    </Base>
+  );
+}
+
+export function ChevronsRightIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m9.5 5 5 5-5 5M4 5l5 5-5 5" />
+    </Base>
+  );
+}
+
+export function ChevronLeftIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m12 5-5 5 5 5" />
+    </Base>
+  );
+}
+
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m8 5 5 5-5 5" />
+    </Base>
+  );
+}
+
+export function ArrowUpIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 16V4.5M5 9.5l5-5 5 5" />
+    </Base>
+  );
+}
+
+export function ArrowDownIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 4v11.5M5 10.5l5 5 5-5" />
+    </Base>
+  );
+}
+
+/** Two small chevrons: the column can be sorted, and is not yet. */
+export function SortIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m6.5 8.5 3.5-3.5 3.5 3.5M6.5 11.5l3.5 3.5 3.5-3.5" />
+    </Base>
+  );
+}
+
+/** A filled triangle for the column being sorted, so the state is a shape and not only a colour. */
+export function SortAscendingIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 5.5 15 13H5l5-7.5Z" fill="currentColor" />
+    </Base>
+  );
+}
+
+export function SortDescendingIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 14.5 5 7h10l-5 7.5Z" fill="currentColor" />
+    </Base>
+  );
+}
+
+export function CheckCircleIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10" cy="10" r="7.25" />
+      <path d="m6.8 10.2 2.2 2.2 4.2-4.6" />
+    </Base>
+  );
+}
+
+export function UndoIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M6.5 4.5 3.5 7.5l3 3M4 7.5h7.5a4.5 4.5 0 0 1 0 9H8" />
+    </Base>
+  );
+}
+
+export function GaugeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M3.5 14a6.5 6.5 0 1 1 13 0" />
+      <path d="m10 14 3-4.2" />
+      <path d="M10 14h.01" />
+    </Base>
+  );
+}
