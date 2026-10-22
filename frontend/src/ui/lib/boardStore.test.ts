@@ -27,6 +27,7 @@ import { useToastStore } from './toastStore';
 function sampleView(): BoardView {
   return {
     board: { id: 'b1', workspace_id: 'w1', name: 'Roadmap' },
+    role: 'owner',
     lists: [
       {
         id: 'todo',
