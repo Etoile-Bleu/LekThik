@@ -1,7 +1,10 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use adapters_db::{PgUserRepo, PgVerificationCodeRepo};
+use adapters_db::{
+    PgBoardRepo, PgCardRepo, PgLabelRepo, PgListRepo, PgUserRepo, PgVerificationCodeRepo,
+    PgWorkspaceRepo,
+};
 use adapters_mail::{BrevoMailer, MailSender};
 use secrecy::SecretString;
 use server::jwt::JwtTokenIssuer;
@@ -29,9 +32,14 @@ async fn main() -> anyhow::Result<()> {
 
     let state = AppState {
         user_repo: Arc::new(PgUserRepo::new(pool.clone())),
-        verification_code_repo: Arc::new(PgVerificationCodeRepo::new(pool)),
+        verification_code_repo: Arc::new(PgVerificationCodeRepo::new(pool.clone())),
         mailer: Arc::new(mailer),
         token_issuer: Arc::new(JwtTokenIssuer::new(jwt_secret)),
+        workspace_repo: Arc::new(PgWorkspaceRepo::new(pool.clone())),
+        board_repo: Arc::new(PgBoardRepo::new(pool.clone())),
+        list_repo: Arc::new(PgListRepo::new(pool.clone())),
+        card_repo: Arc::new(PgCardRepo::new(pool.clone())),
+        label_repo: Arc::new(PgLabelRepo::new(pool)),
     };
 
     let app = router::build(state);
