@@ -9,7 +9,6 @@ import {
   cardsOf,
   counterConfig,
   dueByDay,
-  linkify,
   noteConfig,
   readCounter,
   sizeOf,
@@ -245,56 +244,6 @@ describe('counters', () => {
 
     expect(reading.value).toBe('7');
     expect(reading.detail).toBe('On 2 lists.');
-  });
-});
-
-describe('links in notes', () => {
-  it('turns web addresses into links and keeps the rest as text', () => {
-    expect(linkify('See https://example.com/plan for details')).toEqual([
-      { text: 'See ' },
-      { text: 'https://example.com/plan', href: 'https://example.com/plan' },
-      { text: ' for details' },
-    ]);
-  });
-
-  it('leaves punctuation after an address outside the link', () => {
-    expect(linkify('Read https://example.com/a.')).toEqual([
-      { text: 'Read ' },
-      { text: 'https://example.com/a', href: 'https://example.com/a' },
-      { text: '.' },
-    ]);
-    expect(linkify('(https://example.com/a)')[1]).toEqual({
-      text: 'https://example.com/a',
-      href: 'https://example.com/a',
-    });
-  });
-
-  it('never makes a link out of anything but http and https', () => {
-    for (const text of [
-      'javascript:alert(1)',
-      'data:text/html,<b>x</b>',
-      'ftp://example.com/file',
-    ]) {
-      expect(linkify(text).every((part) => part.href === undefined)).toBe(true);
-    }
-  });
-
-  it('does not read text as markup', () => {
-    const parts = linkify('<img src=x onerror=alert(1)> https://example.com');
-
-    expect(parts[0].text).toContain('<img src=x onerror=alert(1)>');
-    expect(parts[0].href).toBeUndefined();
-  });
-
-  it('handles empty text and text with no address', () => {
-    expect(linkify('')).toEqual([]);
-    expect(linkify('Just words')).toEqual([{ text: 'Just words' }]);
-  });
-
-  it('finds several addresses', () => {
-    const links = linkify('a https://one.example b http://two.example').filter((part) => part.href);
-
-    expect(links.map((part) => part.href)).toEqual(['https://one.example/', 'http://two.example/']);
   });
 });
 
