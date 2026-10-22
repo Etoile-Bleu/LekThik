@@ -56,11 +56,47 @@ export interface CardSummary {
   due_date: string | null;
 }
 
+export type PanelKind = 'list' | 'calendar' | 'agenda' | 'note' | 'counter';
+export type BlockSize = 'normal' | 'wide';
+export type AgendaRange = 'today' | 'week';
+export type CounterMetric = 'overdue' | 'done_percent' | 'days_left' | 'total_cards';
+
+export interface CalendarConfig {
+  size: BlockSize;
+}
+export interface AgendaConfig {
+  size: BlockSize;
+  range: AgendaRange;
+  /** Only the cards assigned to whoever is looking. */
+  mine_only: boolean;
+}
+export interface NoteConfig {
+  size: BlockSize;
+  text: string;
+}
+export interface CounterConfig {
+  size: BlockSize;
+  metric: CounterMetric;
+  /** Names the number, for instance "Days to launch". */
+  label: string;
+  done_list_id: string | null;
+  /** `YYYY-MM-DD`, for the days left. */
+  date: string | null;
+}
+export type PanelConfig =
+  Record<string, unknown> | CalendarConfig | AgendaConfig | NoteConfig | CounterConfig;
+
+/**
+ * One panel of a board: a list of cards, or a block that shows something else.
+ * Only a list holds cards, a block always has an empty `cards`.
+ */
 export interface BoardList {
   id: string;
   name: string;
   /** Work in progress limit, warns when the list holds more cards. `null` for none. */
   wip_limit: number | null;
+  kind: PanelKind;
+  config: PanelConfig;
   cards: CardSummary[];
 }
 
@@ -225,6 +261,23 @@ export function setListWipLimit(id: string, limit: number | null): Promise<Ident
 export async function fetchMyCards(): Promise<AssignedCard[]> {
   const response = await request('/api/users/me/cards');
   return (await response.json()) as AssignedCard[];
+}
+
+export function createBlock(
+  boardId: string,
+  kind: Exclude<PanelKind, 'list'>,
+  name: string,
+  config: PanelConfig
+): Promise<BoardList> {
+  return send<BoardList>(`/api/boards/${boardId}/blocks`, 'POST', { kind, name, config });
+}
+
+export function setBlockConfig(
+  id: string,
+  kind: Exclude<PanelKind, 'list'>,
+  config: PanelConfig
+): Promise<BoardList> {
+  return send<BoardList>(`/api/blocks/${id}/config`, 'PUT', { kind, config });
 }
 
 export function moveList(id: string, index: number): Promise<void> {
