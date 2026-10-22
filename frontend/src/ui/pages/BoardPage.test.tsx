@@ -16,6 +16,8 @@ vi.mock('@lib/boardsApi', async (importOriginal) => {
     moveList: vi.fn(),
     deleteList: vi.fn(),
     setListWipLimit: vi.fn(),
+    createBlock: vi.fn(),
+    setBlockConfig: vi.fn(),
     createCard: vi.fn(),
     fetchCard: vi.fn(),
     updateCard: vi.fn(),
@@ -339,6 +341,150 @@ describe('BoardPage', () => {
       expect(
         await screen.findByRole('dialog', { name: 'Card Write the spec' })
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('blocks', () => {
+    function withBlock(kind: 'note' | 'calendar', config: Record<string, unknown>) {
+      const view = sampleBoardView();
+      view.lists.push({
+        id: 'blk',
+        name: kind === 'note' ? 'Rules' : 'Plan',
+        wip_limit: null,
+        kind,
+        config,
+        cards: [],
+      });
+      vi.mocked(api.fetchBoard).mockResolvedValue(view);
+    }
+
+    it('adds a block from the picker and shows it in the row', async () => {
+      vi.mocked(api.createBlock).mockResolvedValue({
+        id: 'blk',
+        name: 'Calendar',
+        wip_limit: null,
+        kind: 'calendar',
+        config: { size: 'normal' },
+        cards: [],
+      });
+      renderBoard();
+      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+
+      fireEvent.click(screen.getByRole('button', { name: /Add a block/ }));
+      const picker = await screen.findByRole('dialog', { name: 'Add a block' });
+      fireEvent.click(within(picker).getByRole('button', { name: /^Calendar/ }));
+
+      await waitFor(() =>
+        expect(api.createBlock).toHaveBeenCalledWith('b1', 'calendar', 'Calendar', {
+          size: 'normal',
+        })
+      );
+      expect(
+        await screen.findByRole('heading', { level: 2, name: /Calendar/ })
+      ).toBeInTheDocument();
+      expect(screen.getByRole('grid')).toBeInTheDocument();
+    });
+
+    it('opens the settings of a new counter, which needs to be pointed at something', async () => {
+      vi.mocked(api.createBlock).mockResolvedValue({
+        id: 'cnt',
+        name: 'Counter',
+        wip_limit: null,
+        kind: 'counter',
+        config: { size: 'normal', metric: 'overdue', label: '', done_list_id: null, date: null },
+        cards: [],
+      });
+      renderBoard();
+      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+
+      fireEvent.click(screen.getByRole('button', { name: /Add a block/ }));
+      fireEvent.click(
+        within(await screen.findByRole('dialog', { name: 'Add a block' })).getByRole('button', {
+          name: /^Counter/,
+        })
+      );
+
+      expect(await screen.findByRole('dialog', { name: 'Counter settings' })).toBeInTheDocument();
+    });
+
+    it('saves a note written in a block', async () => {
+      vi.mocked(api.setBlockConfig).mockResolvedValue({
+        id: 'blk',
+        name: 'Rules',
+        wip_limit: null,
+        kind: 'note',
+        config: { size: 'normal', text: 'Be kind' },
+        cards: [],
+      });
+      withBlock('note', { size: 'normal', text: '' });
+      renderBoard();
+      await screen.findByRole('heading', { level: 2, name: /Rules/ });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Write a note' }));
+      fireEvent.change(screen.getByLabelText('Note text'), { target: { value: 'Be kind' } });
+      fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+      await waitFor(() =>
+        expect(api.setBlockConfig).toHaveBeenCalledWith('blk', 'note', {
+          size: 'normal',
+          text: 'Be kind',
+        })
+      );
+      expect(screen.getByText('Be kind')).toBeInTheDocument();
+    });
+
+    it('lets readers see a block but not change it', async () => {
+      withBlock('note', { size: 'normal', text: 'House rules' });
+      const view = sampleBoardView();
+      view.role = 'reader';
+      view.lists.push({
+        id: 'blk',
+        name: 'Rules',
+        wip_limit: null,
+        kind: 'note',
+        config: { size: 'normal', text: 'House rules' },
+        cards: [],
+      });
+      vi.mocked(api.fetchBoard).mockResolvedValue(view);
+      renderBoard();
+
+      expect(await screen.findByText('House rules')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Edit note' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Add a block/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Actions for block/ })).not.toBeInTheDocument();
+    });
+
+    it('words the deletion of a block differently from a list', async () => {
+      withBlock('calendar', { size: 'normal' });
+      renderBoard();
+      await screen.findByRole('heading', { level: 2, name: /Plan/ });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Actions for block Plan' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /Delete block/ }));
+
+      const confirm = await screen.findByRole('dialog', { name: 'Delete this block?' });
+      expect(confirm).toHaveTextContent('The cards on this board are not affected.');
+    });
+
+    it('offers only lists, not blocks, when moving a card from its dialog', async () => {
+      withBlock('calendar', { size: 'normal' });
+      vi.mocked(api.fetchCard).mockResolvedValue({
+        id: 'c1',
+        list_id: 'todo',
+        title: 'Write the spec',
+        description: '',
+        label_ids: [],
+        assignee_ids: [],
+        due_date: null,
+      });
+      renderBoard('/b/b1?card=c1');
+
+      const select = await screen.findByRole('combobox', { name: 'List' });
+      expect(
+        within(select)
+          .getAllByRole('option')
+          .map((o) => o.textContent)
+      ).toEqual(['To do', 'Done']);
     });
   });
 });
