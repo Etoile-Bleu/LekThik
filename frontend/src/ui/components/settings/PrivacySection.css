@@ -1,0 +1,46 @@
+.privacy__lead {
+  padding: 0.4rem 0 1.1rem;
+  color: var(--color-text-soft-on-light);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.privacy__block {
+  padding: 1.1rem 0 0.4rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.privacy__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.5rem 0 0.3rem;
+  padding-left: 1.2rem;
+}
+
+.privacy__list li,
+.privacy__hint {
+  color: var(--color-text-soft-on-light);
+  font-size: 0.93rem;
+  line-height: 1.6;
+}
+
+.privacy__hint {
+  margin: 0.4rem 0 0.6rem;
+}
+
+.privacy__hint a {
+  color: var(--color-accent-text);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.privacy__providers {
+  display: flex;
+  flex-direction: column;
+}
+
+.privacy__withdraw {
+  margin: 0.5rem 0 0.4rem;
+}
