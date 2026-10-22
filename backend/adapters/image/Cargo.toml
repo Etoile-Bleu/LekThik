@@ -1,0 +1,16 @@
+[package]
+name = "adapters-image"
+version = "0.1.0"
+edition.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+domain = { path = "../../domain" }
+async-trait = { workspace = true }
+image = { workspace = true }
+tokio = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }
