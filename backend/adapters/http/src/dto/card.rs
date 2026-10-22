@@ -1,4 +1,4 @@
-use domain::boards::{Card, CardSummary};
+use domain::boards::{AssignedCard, Card, CardSummary};
 use serde::{Deserialize, Deserializer, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -28,6 +28,37 @@ impl From<CardSummary> for CardSummaryDto {
             label_ids: card.label_ids,
             assignee_ids: card.assignee_ids,
             due_date: card.due_date,
+        }
+    }
+}
+
+/// A card assigned to the signed in user, with the board it lives on.
+#[derive(Serialize, ToSchema)]
+pub struct AssignedCardDto {
+    pub id: Uuid,
+    pub title: String,
+    /// Calendar day, `YYYY-MM-DD`.
+    pub due_date: Option<String>,
+    pub list_id: Uuid,
+    pub list_name: String,
+    pub board_id: Uuid,
+    pub board_name: String,
+    pub workspace_id: Uuid,
+    pub workspace_name: String,
+}
+
+impl From<AssignedCard> for AssignedCardDto {
+    fn from(card: AssignedCard) -> Self {
+        Self {
+            id: card.id,
+            title: card.title,
+            due_date: card.due_date,
+            list_id: card.list_id,
+            list_name: card.list_name,
+            board_id: card.board_id,
+            board_name: card.board_name,
+            workspace_id: card.workspace_id,
+            workspace_name: card.workspace_name,
         }
     }
 }
