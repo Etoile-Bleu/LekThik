@@ -7,7 +7,7 @@ use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
 use crate::ordering::{insert_at, renumber_cards};
-use crate::scope::repository_error;
+use crate::scope::{Kind, denial, repository_error};
 
 pub struct PgCardRepo {
     pool: PgPool,
@@ -43,7 +43,7 @@ impl PgCardRepo {
 impl CardRepo for PgCardRepo {
     async fn create(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         list_id: Uuid,
         title: Title,
     ) -> Result<CardSummary, BoardsError> {
@@ -52,15 +52,17 @@ impl CardRepo for PgCardRepo {
         let locked = sqlx::query(concat!(
             "SELECT l.id FROM ",
             owned_list!(),
-            " WHERE l.id = $1 AND w.owner_id = $2 FOR UPDATE OF b"
+            " WHERE l.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
         ))
         .bind(list_id)
-        .bind(owner_id)
+        .bind(user_id)
         .fetch_optional(&mut *transaction)
         .await
         .map_err(repository_error)?;
         if locked.is_none() {
-            return Err(BoardsError::NotFound);
+            return Err(denial(&self.pool, Kind::List, user_id, list_id).await);
         }
 
         let existing: i64 = sqlx::query_scalar("SELECT count(*) FROM cards WHERE list_id = $1")
@@ -94,14 +96,15 @@ impl CardRepo for PgCardRepo {
         })
     }
 
-    async fn get(&self, owner_id: Uuid, id: Uuid) -> Result<Card, BoardsError> {
+    async fn get(&self, user_id: Uuid, id: Uuid) -> Result<Card, BoardsError> {
         let row = sqlx::query(concat!(
             "SELECT c.id, c.list_id, c.title, c.description FROM ",
             owned_card!(),
-            " WHERE c.id = $1 AND w.owner_id = $2"
+            " WHERE c.id = $1 AND ",
+            member_of!("$2")
         ))
         .bind(id)
-        .bind(owner_id)
+        .bind(user_id)
         .fetch_optional(&self.pool)
         .await
         .map_err(repository_error)?
@@ -112,52 +115,59 @@ impl CardRepo for PgCardRepo {
 
     async fn update(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         update: CardUpdate,
     ) -> Result<Card, BoardsError> {
-        let row = sqlx::query(
+        let Some(row) = sqlx::query(concat!(
             "UPDATE cards c SET \
                 title = COALESCE($3, c.title), \
                 description = COALESCE($4, c.description), \
                 updated_at = now() \
                 FROM lists l, boards b, workspaces w \
                 WHERE c.id = $2 AND l.id = c.list_id AND b.id = l.board_id \
-                    AND w.id = b.workspace_id AND w.owner_id = $1 \
-                RETURNING c.id, c.list_id, c.title, c.description",
-        )
-        .bind(owner_id)
+                    AND w.id = b.workspace_id AND ",
+            writer_of!("$1"),
+            " RETURNING c.id, c.list_id, c.title, c.description"
+        ))
+        .bind(user_id)
         .bind(id)
         .bind(update.title.as_ref().map(Title::as_str))
         .bind(update.description.as_ref().map(Description::as_str))
         .fetch_optional(&self.pool)
         .await
         .map_err(repository_error)?
-        .ok_or(BoardsError::NotFound)?;
+        else {
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
+        };
 
         self.card_from_row(&row).await
     }
 
     async fn move_to(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         list_id: Uuid,
         index: usize,
     ) -> Result<(), BoardsError> {
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
 
-        let source = sqlx::query(concat!(
+        let Some(source) = sqlx::query(concat!(
             "SELECT l.id AS list_id, b.id AS board_id FROM ",
             owned_card!(),
-            " WHERE c.id = $1 AND w.owner_id = $2 FOR UPDATE OF b"
+            " WHERE c.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
         ))
         .bind(id)
-        .bind(owner_id)
+        .bind(user_id)
         .fetch_optional(&mut *transaction)
         .await
         .map_err(repository_error)?
-        .ok_or(BoardsError::NotFound)?;
+        else {
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
+        };
         let source_list_id: Uuid = source.try_get("list_id").map_err(repository_error)?;
         let board_id: Uuid = source.try_get("board_id").map_err(repository_error)?;
 
@@ -199,20 +209,21 @@ impl CardRepo for PgCardRepo {
         Ok(())
     }
 
-    async fn delete(&self, owner_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
-        let result = sqlx::query(
+    async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError> {
+        let result = sqlx::query(concat!(
             "DELETE FROM cards c USING lists l, boards b, workspaces w \
                 WHERE c.id = $2 AND l.id = c.list_id AND b.id = l.board_id \
-                    AND w.id = b.workspace_id AND w.owner_id = $1",
-        )
-        .bind(owner_id)
+                    AND w.id = b.workspace_id AND ",
+            writer_of!("$1")
+        ))
+        .bind(user_id)
         .bind(id)
         .execute(&self.pool)
         .await
         .map_err(repository_error)?;
 
         if result.rows_affected() == 0 {
-            return Err(BoardsError::NotFound);
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
         }
 
         Ok(())
@@ -220,23 +231,27 @@ impl CardRepo for PgCardRepo {
 
     async fn set_labels(
         &self,
-        owner_id: Uuid,
+        user_id: Uuid,
         id: Uuid,
         label_ids: Vec<Uuid>,
     ) -> Result<Vec<Uuid>, BoardsError> {
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
 
-        let board_id: Uuid = sqlx::query_scalar(concat!(
+        let Some(board_id) = sqlx::query_scalar::<_, Uuid>(concat!(
             "SELECT b.id FROM ",
             owned_card!(),
-            " WHERE c.id = $1 AND w.owner_id = $2 FOR UPDATE OF b"
+            " WHERE c.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
         ))
         .bind(id)
-        .bind(owner_id)
+        .bind(user_id)
         .fetch_optional(&mut *transaction)
         .await
         .map_err(repository_error)?
-        .ok_or(BoardsError::NotFound)?;
+        else {
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
+        };
 
         if !label_ids.is_empty() {
             let found: i64 = sqlx::query_scalar(
