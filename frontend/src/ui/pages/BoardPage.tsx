@@ -1,15 +1,19 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import { BoardMetaProvider } from '@hooks/useBoardMeta';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
-import { matchesFilter } from '@lib/boardModel';
+import { useToday } from '@hooks/useToday';
+import { useAuthStore } from '@lib/authStore';
+import { type CardFilter, EMPTY_FILTER, cardMatches } from '@lib/boardModel';
+import type { CardSummary } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { canEdit, canManage } from '@lib/roles';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
 import { BoardCanvas } from '../components/board/BoardCanvas';
 import { CardDialog } from '../components/board/CardDialog';
-import { LabelFilterBar } from '../components/board/LabelFilterBar';
+import { FilterBar } from '../components/board/FilterBar';
 import { LabelsDialog } from '../components/board/LabelsDialog';
 import { MembersDialog } from '../components/collab/MembersDialog';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
@@ -40,14 +44,16 @@ export function BoardPage() {
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
-  const [filter, setFilter] = useState<string[]>([]);
+  const [filter, setFilter] = useState<CardFilter>(EMPTY_FILTER);
+  const meId = useAuthStore((state) => state.user?.id);
+  const today = useToday();
   const [deletingBoard, setDeletingBoard] = useState(false);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
 
   useDocumentTitle(view?.board.name ?? 'Board');
 
   useEffect(() => {
-    setFilter([]);
+    setFilter(EMPTY_FILTER);
     setOpenCardId(null);
     void load(boardId);
     return () => reset();
@@ -58,13 +64,18 @@ export function BoardPage() {
     [workspaces, view?.board.workspace_id]
   );
 
+  const matches = useCallback(
+    (card: CardSummary) => cardMatches(card, filter, { meId, today }),
+    [filter, meId, today]
+  );
+
   const counts = useMemo(() => {
     const cards = view?.lists.flatMap((list) => list.cards) ?? [];
     return {
       total: cards.length,
-      matching: cards.filter((card) => matchesFilter(card, filter)).length,
+      matching: cards.filter(matches).length,
     };
-  }, [view, filter]);
+  }, [view, matches]);
 
   if (status === 'notfound') {
     return (
@@ -110,131 +121,126 @@ export function BoardPage() {
   const editable = canEdit(view.role);
   const workspace = workspaces.find((candidate) => candidate.id === view.board.workspace_id);
 
-  function toggleFilter(labelId: string) {
-    setFilter((current) =>
-      current.includes(labelId) ? current.filter((id) => id !== labelId) : [...current, labelId]
-    );
-  }
-
   return (
-    <div className="board-page">
-      <header className="board-header">
-        <div className="board-header__main">
-          <Link className="board-header__back" to="/dashboard">
-            <ArrowLeftIcon size={16} />
-            <span>{workspaceName ?? 'Workspaces'}</span>
-          </Link>
-          <InlineEdit
-            as="h1"
-            className="board-header__title"
-            value={view.board.name}
-            label="board name"
-            readOnly={!editable}
-            onCommit={(name) => void renameBoard(name)}
-          />
-        </div>
-        <div className="board-header__actions">
-          {!editable && <span className="board-header__readonly">View only</span>}
-          <button
-            type="button"
-            className="btn btn--outline btn--sm"
-            onClick={() => setMembersOpen(true)}
-          >
-            <UsersIcon /> Members
-          </button>
-          {editable && (
+    <BoardMetaProvider members={view.members} meId={meId} today={today}>
+      <div className="board-page">
+        <header className="board-header">
+          <div className="board-header__main">
+            <Link className="board-header__back" to="/dashboard">
+              <ArrowLeftIcon size={16} />
+              <span>{workspaceName ?? 'Workspaces'}</span>
+            </Link>
+            <InlineEdit
+              as="h1"
+              className="board-header__title"
+              value={view.board.name}
+              label="board name"
+              readOnly={!editable}
+              onCommit={(name) => void renameBoard(name)}
+            />
+          </div>
+          <div className="board-header__actions">
+            {!editable && <span className="board-header__readonly">View only</span>}
             <button
               type="button"
               className="btn btn--outline btn--sm"
-              onClick={() => setLabelsOpen(true)}
+              onClick={() => setMembersOpen(true)}
             >
-              <TagIcon /> Labels
+              <UsersIcon /> Members
             </button>
-          )}
-          {canManage(view.role) && (
-            <Menu
-              label={`Actions for board ${view.board.name}`}
-              items={[
-                {
-                  label: 'Delete board',
-                  icon: <TrashIcon />,
-                  tone: 'danger',
-                  onSelect: () => setDeletingBoard(true),
-                },
-              ]}
-            />
-          )}
-        </div>
-      </header>
+            {editable && (
+              <button
+                type="button"
+                className="btn btn--outline btn--sm"
+                onClick={() => setLabelsOpen(true)}
+              >
+                <TagIcon /> Labels
+              </button>
+            )}
+            {canManage(view.role) && (
+              <Menu
+                label={`Actions for board ${view.board.name}`}
+                items={[
+                  {
+                    label: 'Delete board',
+                    icon: <TrashIcon />,
+                    tone: 'danger',
+                    onSelect: () => setDeletingBoard(true),
+                  },
+                ]}
+              />
+            )}
+          </div>
+        </header>
 
-      <LabelFilterBar
-        labels={view.labels}
-        selected={filter}
-        onToggle={toggleFilter}
-        onClear={() => setFilter([])}
-        matchCount={counts.matching}
-        totalCount={counts.total}
-      />
-
-      <div className="board-page__canvas">
-        <BoardCanvas
-          lists={view.lists}
+        <FilterBar
           labels={view.labels}
           filter={filter}
-          freshIds={freshIds}
-          onRenameList={(listId, name) => void renameList(listId, name)}
-          onMoveList={(listId, index) => void moveList(listId, index)}
-          onDeleteList={(listId) => setDeletingListId(listId)}
-          onAddList={createList}
-          onAddCard={createCard}
-          onMoveCard={(cardId, listId, index) => void moveCard(cardId, listId, index)}
-          onOpenCard={setOpenCardId}
-          readOnly={!editable}
+          onChange={setFilter}
+          matchCount={counts.matching}
+          totalCount={counts.total}
+        />
+
+        <div className="board-page__canvas">
+          <BoardCanvas
+            lists={view.lists}
+            labels={view.labels}
+            matches={matches}
+            freshIds={freshIds}
+            onRenameList={(listId, name) => void renameList(listId, name)}
+            onMoveList={(listId, index) => void moveList(listId, index)}
+            onDeleteList={(listId) => setDeletingListId(listId)}
+            onAddList={createList}
+            onAddCard={createCard}
+            onMoveCard={(cardId, listId, index) => void moveCard(cardId, listId, index)}
+            onOpenCard={setOpenCardId}
+            readOnly={!editable}
+          />
+        </div>
+
+        <CardDialog
+          cardId={openCardId}
+          onClose={() => setOpenCardId(null)}
+          onManageLabels={() => setLabelsOpen(true)}
+        />
+        <LabelsDialog open={labelsOpen && editable} onClose={() => setLabelsOpen(false)} />
+        <MembersDialog
+          workspace={membersOpen ? (workspace ?? null) : null}
+          onClose={() => setMembersOpen(false)}
+        />
+
+        <ConfirmDialog
+          open={deletingBoard}
+          title="Delete this board?"
+          message={`“${view.board.name}” and all of its lists and cards will be removed for good.`}
+          confirmLabel="Delete board"
+          onCancel={() => setDeletingBoard(false)}
+          onConfirm={async () => {
+            setDeletingBoard(false);
+            if (await deleteBoard()) {
+              navigate('/dashboard');
+            }
+          }}
+        />
+
+        <ConfirmDialog
+          open={deletingList !== undefined}
+          title="Delete this list?"
+          message={
+            deletingList
+              ? `“${deletingList.name}” and its ${deletingList.cards.length} card${deletingList.cards.length === 1 ? '' : 's'} will be removed for good.`
+              : ''
+          }
+          confirmLabel="Delete list"
+          onCancel={() => setDeletingListId(null)}
+          onConfirm={() => {
+            if (deletingListId) {
+              void deleteList(deletingListId);
+            }
+            setDeletingListId(null);
+          }}
         />
       </div>
-
-      <CardDialog
-        cardId={openCardId}
-        onClose={() => setOpenCardId(null)}
-        onManageLabels={() => setLabelsOpen(true)}
-      />
-      <LabelsDialog open={labelsOpen && editable} onClose={() => setLabelsOpen(false)} />
-      <MembersDialog
-        workspace={membersOpen ? (workspace ?? null) : null}
-        onClose={() => setMembersOpen(false)}
-      />
-
-      <ConfirmDialog
-        open={deletingBoard}
-        title="Delete this board?"
-        message={`“${view.board.name}” and all of its lists and cards will be removed for good.`}
-        confirmLabel="Delete board"
-        onCancel={() => setDeletingBoard(false)}
-        onConfirm={async () => {
-          setDeletingBoard(false);
-          if (await deleteBoard()) {
-            navigate('/dashboard');
-          }
-        }}
-      />
-
-      <ConfirmDialog
-        open={deletingList !== undefined}
-        title="Delete this list?"
-        message={
-          deletingList
-            ? `“${deletingList.name}” and its ${deletingList.cards.length} card${deletingList.cards.length === 1 ? '' : 's'} will be removed for good.`
-            : ''
-        }
-        confirmLabel="Delete list"
-        onCancel={() => setDeletingListId(null)}
-        onConfirm={() => {
-          if (deletingListId) {
-            void deleteList(deletingListId);
-          }
-          setDeletingListId(null);
-        }}
-      />
-    </div>
+    </BoardMetaProvider>
   );
 }
