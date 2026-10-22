@@ -13,6 +13,7 @@ export function sampleBoardView(): BoardView {
       {
         id: 'todo',
         name: 'To do',
+        wip_limit: null,
         cards: [
           {
             id: 'c1',
@@ -36,7 +37,7 @@ export function sampleBoardView(): BoardView {
           },
         ],
       },
-      { id: 'done', name: 'Done', cards: [] },
+      { id: 'done', name: 'Done', wip_limit: null, cards: [] },
     ],
     labels: [
       { id: 'urgent', board_id: 'b1', name: 'Urgent', color: 'red', priority: 'urgent' },
