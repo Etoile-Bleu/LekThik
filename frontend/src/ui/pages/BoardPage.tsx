@@ -4,14 +4,16 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
 import { matchesFilter } from '@lib/boardModel';
 import { useBoardStore } from '@lib/boardStore';
+import { canEdit, canManage } from '@lib/roles';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
 import { BoardCanvas } from '../components/board/BoardCanvas';
 import { CardDialog } from '../components/board/CardDialog';
 import { LabelFilterBar } from '../components/board/LabelFilterBar';
 import { LabelsDialog } from '../components/board/LabelsDialog';
+import { MembersDialog } from '../components/collab/MembersDialog';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { ArrowLeftIcon, TagIcon, TrashIcon } from '../components/ui/Icons';
+import { ArrowLeftIcon, TagIcon, TrashIcon, UsersIcon } from '../components/ui/Icons';
 import { InlineEdit } from '../components/ui/InlineEdit';
 import { Menu } from '../components/ui/Menu';
 import './BoardPage.css';
@@ -37,6 +39,7 @@ export function BoardPage() {
 
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const [membersOpen, setMembersOpen] = useState(false);
   const [filter, setFilter] = useState<string[]>([]);
   const [deletingBoard, setDeletingBoard] = useState(false);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
@@ -67,7 +70,7 @@ export function BoardPage() {
     return (
       <div className="board-page board-page--message">
         <h1>This board is not available</h1>
-        <p>It may have been deleted, or it belongs to someone else.</p>
+        <p>It may have been deleted, or you may no longer have access to it.</p>
         <Link className="btn btn--primary" to="/dashboard">
           Back to your workspaces
         </Link>
@@ -104,6 +107,8 @@ export function BoardPage() {
   }
 
   const deletingList = view.lists.find((list) => list.id === deletingListId);
+  const editable = canEdit(view.role);
+  const workspace = workspaces.find((candidate) => candidate.id === view.board.workspace_id);
 
   function toggleFilter(labelId: string) {
     setFilter((current) =>
@@ -124,28 +129,41 @@ export function BoardPage() {
             className="board-header__title"
             value={view.board.name}
             label="board name"
+            readOnly={!editable}
             onCommit={(name) => void renameBoard(name)}
           />
         </div>
         <div className="board-header__actions">
+          {!editable && <span className="board-header__readonly">View only</span>}
           <button
             type="button"
             className="btn btn--outline btn--sm"
-            onClick={() => setLabelsOpen(true)}
+            onClick={() => setMembersOpen(true)}
           >
-            <TagIcon /> Labels
+            <UsersIcon /> Members
           </button>
-          <Menu
-            label={`Actions for board ${view.board.name}`}
-            items={[
-              {
-                label: 'Delete board',
-                icon: <TrashIcon />,
-                tone: 'danger',
-                onSelect: () => setDeletingBoard(true),
-              },
-            ]}
-          />
+          {editable && (
+            <button
+              type="button"
+              className="btn btn--outline btn--sm"
+              onClick={() => setLabelsOpen(true)}
+            >
+              <TagIcon /> Labels
+            </button>
+          )}
+          {canManage(view.role) && (
+            <Menu
+              label={`Actions for board ${view.board.name}`}
+              items={[
+                {
+                  label: 'Delete board',
+                  icon: <TrashIcon />,
+                  tone: 'danger',
+                  onSelect: () => setDeletingBoard(true),
+                },
+              ]}
+            />
+          )}
         </div>
       </header>
 
@@ -171,6 +189,7 @@ export function BoardPage() {
           onAddCard={createCard}
           onMoveCard={(cardId, listId, index) => void moveCard(cardId, listId, index)}
           onOpenCard={setOpenCardId}
+          readOnly={!editable}
         />
       </div>
 
@@ -179,7 +198,11 @@ export function BoardPage() {
         onClose={() => setOpenCardId(null)}
         onManageLabels={() => setLabelsOpen(true)}
       />
-      <LabelsDialog open={labelsOpen} onClose={() => setLabelsOpen(false)} />
+      <LabelsDialog open={labelsOpen && editable} onClose={() => setLabelsOpen(false)} />
+      <MembersDialog
+        workspace={membersOpen ? (workspace ?? null) : null}
+        onClose={() => setMembersOpen(false)}
+      />
 
       <ConfirmDialog
         open={deletingBoard}
