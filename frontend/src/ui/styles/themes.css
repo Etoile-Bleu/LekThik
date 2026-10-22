@@ -1,0 +1,256 @@
+/*
+ * Appearance. The app shell reads four attributes on <html>, set before the
+ * first paint by an inline script and kept in sync by lib/appearance.ts:
+ *   data-theme    light | dark | contrast   (already resolved from "system")
+ *   data-density  compact | comfortable | spacious
+ *   data-text     normal | large | larger
+ *   data-motion   system | reduce
+ * Themes only recolour the signed in app (.shell). The landing page and the
+ * sign in pages keep their own look.
+ */
+
+html {
+  font-size: calc(100% * var(--text-scale, 1));
+}
+
+html[data-text='large'] {
+  --text-scale: 1.1;
+}
+
+html[data-text='larger'] {
+  --text-scale: 1.25;
+}
+
+html[data-text='largest'] {
+  --text-scale: 1.5;
+}
+
+/* Density changes spacing and nothing else. Targets never drop below 32px. */
+html[data-density='compact'] {
+  --density-card-y: 0.4rem;
+  --density-card-x: 0.65rem;
+  --density-gap: 0.3rem;
+  --density-list-pad: 0.35rem;
+  --density-row: 32px;
+  --list-width: 268px;
+}
+
+html[data-density='spacious'] {
+  --density-card-y: 0.95rem;
+  --density-card-x: 1rem;
+  --density-gap: 0.8rem;
+  --density-list-pad: 0.7rem;
+  --density-row: 44px;
+  --list-width: 324px;
+}
+
+html[data-theme='light'] .shell {
+  color-scheme: light;
+}
+
+/* ---------- Dark ---------- */
+html[data-theme='dark'] .shell {
+  color-scheme: dark;
+
+  --color-ink: #eceee8;
+  --color-on-ink: #0f1116;
+  --color-paper: #0f1116;
+  --color-paper-card: #181b24;
+  --color-canvas: #0b0d12;
+  --color-surface: #1d212c;
+  --color-border: #2c3140;
+  --color-border-strong: #404759;
+  --color-text-on-light: #eceee8;
+  --color-text-soft-on-light: #b6bdcb;
+  --color-text-muted: #9ea7b9;
+
+  --color-accent: #2fe0b8;
+  --color-accent-tint: #10302a;
+  --color-accent-ink: #04201a;
+  --color-accent-text: #55e8c6;
+  --color-focus: #55e8c6;
+
+  --color-danger: #ef857a;
+  --color-danger-tint: #3a1e1c;
+  --color-danger-ink: #ffb9b0;
+
+  --color-scrim: rgba(0, 0, 0, 0.66);
+  --shadow-card: 0 1px 0 rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.5);
+  --shadow-lifted: 0 18px 36px -10px rgba(0, 0, 0, 0.7), 0 3px 8px rgba(0, 0, 0, 0.5);
+  --shadow-popover: 0 14px 34px -8px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(0, 0, 0, 0.5);
+
+  --label-slate-bg: #272b36;
+  --label-slate-fg: #c4cad8;
+  --label-slate-dot: #8e97ab;
+  --label-red-bg: #3f2220;
+  --label-red-fg: #ffb4ab;
+  --label-red-dot: #ef857a;
+  --label-orange-bg: #402b18;
+  --label-orange-fg: #ffc28a;
+  --label-orange-dot: #f0954d;
+  --label-amber-bg: #3b3115;
+  --label-amber-fg: #f5d878;
+  --label-amber-dot: #e3b835;
+  --label-green-bg: #1b3524;
+  --label-green-fg: #95e0ae;
+  --label-green-dot: #4fc27c;
+  --label-teal-bg: #12332e;
+  --label-teal-fg: #7aebd2;
+  --label-teal-dot: #2fe0b8;
+  --label-blue-bg: #1d2f4d;
+  --label-blue-fg: #a9c8fb;
+  --label-blue-dot: #6b9cf0;
+  --label-violet-bg: #2d2650;
+  --label-violet-fg: #c9bcf7;
+  --label-violet-dot: #9a82ee;
+  --label-pink-bg: #43212f;
+  --label-pink-fg: #f9b4d0;
+  --label-pink-dot: #ec6fa6;
+}
+
+/* ---------- High contrast ---------- */
+html[data-theme='contrast'] .shell {
+  color-scheme: dark;
+
+  --color-ink: #ffffff;
+  --color-on-ink: #000000;
+  --color-paper: #000000;
+  --color-paper-card: #000000;
+  --color-canvas: #000000;
+  --color-surface: #0d0d0d;
+  --color-border: #9a9a9a;
+  --color-border-strong: #ffffff;
+  --color-text-on-light: #ffffff;
+  --color-text-soft-on-light: #f0f0f0;
+  --color-text-muted: #d6d6d6;
+
+  --color-accent: #ffd60a;
+  --color-accent-tint: #241f00;
+  --color-accent-ink: #000000;
+  --color-accent-text: #ffd60a;
+  --color-focus: #ffd60a;
+
+  --color-danger: #ff7b70;
+  --color-danger-tint: #2b0d0b;
+  --color-danger-ink: #ffb8b0;
+
+  --color-scrim: rgba(0, 0, 0, 0.8);
+  --shadow-card: none;
+  --shadow-lifted: 0 0 0 2px #ffffff;
+  --shadow-popover: 0 0 0 1px #ffffff;
+
+  --label-slate-bg: #000000;
+  --label-slate-fg: #e6e6e6;
+  --label-slate-dot: #cfcfcf;
+  --label-red-bg: #000000;
+  --label-red-fg: #ff9a90;
+  --label-red-dot: #ff9a90;
+  --label-orange-bg: #000000;
+  --label-orange-fg: #ffb870;
+  --label-orange-dot: #ffb870;
+  --label-amber-bg: #000000;
+  --label-amber-fg: #ffe066;
+  --label-amber-dot: #ffe066;
+  --label-green-bg: #000000;
+  --label-green-fg: #8ff0a8;
+  --label-green-dot: #8ff0a8;
+  --label-teal-bg: #000000;
+  --label-teal-fg: #7ef2d9;
+  --label-teal-dot: #7ef2d9;
+  --label-blue-bg: #000000;
+  --label-blue-fg: #9fc4ff;
+  --label-blue-dot: #9fc4ff;
+  --label-violet-bg: #000000;
+  --label-violet-fg: #c7b8ff;
+  --label-violet-dot: #c7b8ff;
+  --label-pink-bg: #000000;
+  --label-pink-fg: #ffa6cc;
+  --label-pink-dot: #ffa6cc;
+}
+
+html[data-theme='contrast'] .shell :focus-visible {
+  outline-width: 3px;
+}
+
+html[data-theme='contrast'] .shell .label-chip {
+  border-color: var(--chip-fg);
+}
+
+html[data-theme='contrast'] .shell .board-card,
+html[data-theme='contrast'] .shell .board-list,
+html[data-theme='contrast'] .shell .menu,
+html[data-theme='contrast'] .shell .popover,
+html[data-theme='contrast'] .shell .dialog__panel {
+  border-color: #ffffff;
+}
+
+/* Someone whose system asks for more contrast gets firmer borders in light and dark too. */
+@media (prefers-contrast: more) {
+  html[data-theme='light'] .shell {
+    --color-border: #7d8596;
+    --color-border-strong: #4a5265;
+    --color-text-muted: #424a5c;
+  }
+
+  html[data-theme='dark'] .shell {
+    --color-border: #7a8399;
+    --color-border-strong: #a3abbd;
+    --color-text-muted: #c3cad9;
+  }
+}
+
+/* A short cross fade when the theme changes, never on first load. */
+html.theme-fade,
+html.theme-fade *,
+html.theme-fade *::before,
+html.theme-fade *::after {
+  transition:
+    background-color 260ms ease,
+    color 260ms ease,
+    border-color 260ms ease,
+    fill 260ms ease,
+    stroke 260ms ease !important;
+}
+
+/* ---------- Motion ---------- */
+html[data-motion='reduce'] *,
+html[data-motion='reduce'] *::before,
+html[data-motion='reduce'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ---------- Windows contrast themes and other forced colours ---------- */
+/* The system paints backgrounds, so state must never rest on a fill alone. */
+@media (forced-colors: active) {
+  .shell .board-card,
+  .shell .board-list,
+  .shell .pick__face,
+  .shell .filter-pill,
+  .shell .due-field__chip,
+  .shell .due-badge,
+  .shell .label-chip,
+  .shell .segmented,
+  .shell .switch-row__track {
+    border: 1px solid CanvasText;
+  }
+
+  .shell [aria-pressed='true'],
+  .shell [aria-checked='true'],
+  .shell [aria-current='page'],
+  .shell .pick[data-checked] .pick__face,
+  .shell .segmented__option[aria-checked='true'] {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .shell .segmented__thumb {
+    display: none;
+  }
+
+  .shell :focus-visible {
+    outline: 3px solid Highlight;
+  }
+}
