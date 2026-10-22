@@ -3,7 +3,7 @@ use std::sync::Arc;
 use domain::boards::{
     BoardRepo, CardRepo, InvitationRepo, LabelRepo, ListRepo, Locator, MemberRepo, WorkspaceRepo,
 };
-use domain::{Mailer, TokenIssuer, UserRepo, VerificationCodeRepo};
+use domain::{Mailer, PreferencesRepo, TokenIssuer, UserRepo, VerificationCodeRepo};
 
 use crate::events::EventHub;
 
@@ -21,6 +21,7 @@ pub struct AppState {
     pub card_repo: Arc<dyn CardRepo>,
     pub label_repo: Arc<dyn LabelRepo>,
     pub member_repo: Arc<dyn MemberRepo>,
+    pub preferences_repo: Arc<dyn PreferencesRepo>,
     pub invitation_repo: Arc<dyn InvitationRepo>,
     pub locator: Arc<dyn Locator>,
     pub events: EventHub,
