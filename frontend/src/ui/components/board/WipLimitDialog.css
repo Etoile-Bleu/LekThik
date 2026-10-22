@@ -1,0 +1,54 @@
+.wip-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.wip-dialog__title {
+  padding-right: 2.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.wip-dialog__lead {
+  color: var(--color-text-soft-on-light);
+}
+
+.wip-dialog__input {
+  max-width: 9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.wip-dialog__hint {
+  margin-top: 0.4rem;
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+.wip-dialog__error {
+  margin-top: 0.4rem;
+  color: var(--color-danger-ink);
+  font-size: 0.88rem;
+  font-weight: 500;
+  animation: wip-error-in var(--duration-base) var(--ease-out);
+}
+
+.wip-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* The rare, destructive-ish action sits away from the primary one. */
+.wip-dialog__remove {
+  margin-right: auto;
+}
+
+@keyframes wip-error-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
