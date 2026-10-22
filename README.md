@@ -1,4 +1,9 @@
-# LekThik
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-full-dark.svg">
+    <img src="docs/assets/logo-full.svg" width="420" alt="LekThik">
+  </picture>
+</p>
 
 A collaborative task management tool inspired by Trello (boards, lists, cards), built to be tested in a multi-site deployment with [ZamSync](https://github.com/Etoile-Bleu/ZamSync), an offline-first replication engine.
 
