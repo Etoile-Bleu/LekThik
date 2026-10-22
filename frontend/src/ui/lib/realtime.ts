@@ -5,6 +5,7 @@ import { API_URL, CLIENT_ID, whenWritesSettle } from './api';
 import { useBoardStore } from './boardStore';
 import { useInvitationStore } from './invitationStore';
 import { useMembersStore } from './membersStore';
+import { myCardsAreWatched, useMyCardsStore } from './myCardsStore';
 import { usePrefsStore } from './prefsStore';
 import { useWorkspaceStore } from './workspaceStore';
 
@@ -43,6 +44,7 @@ function refreshAll() {
   void useInvitationStore.getState().load();
   void useMembersStore.getState().refresh();
   void useBoardStore.getState().refresh();
+  if (myCardsAreWatched()) void useMyCardsStore.getState().refresh();
 }
 
 /**
@@ -60,6 +62,7 @@ export function startRealtime(): () => void {
 
   const source = new EventSource(`${API_URL}/api/events`, { withCredentials: true });
   let boardTimer: number | undefined;
+  let myCardsTimer: number | undefined;
   let hasConnected = false;
 
   const ownEcho = (payload: ChangePayload | null) => payload?.origin === CLIENT_ID;
@@ -81,6 +84,15 @@ export function startRealtime(): () => void {
     }, REFRESH_DELAY_MS);
   };
 
+  // The my cards page follows any board the person belongs to, so it listens to all of them.
+  const scheduleMyCardsRefresh = () => {
+    if (!myCardsAreWatched()) return;
+    window.clearTimeout(myCardsTimer);
+    myCardsTimer = window.setTimeout(() => {
+      void whenWritesSettle().then(() => useMyCardsStore.getState().refresh());
+    }, REFRESH_DELAY_MS);
+  };
+
   source.addEventListener('ready', () => {
     live.set('live');
     if (hasConnected) {
@@ -93,6 +105,7 @@ export function startRealtime(): () => void {
 
   source.addEventListener('board', (event) => {
     const payload = parse(event);
+    scheduleMyCardsRefresh();
     if (ownEcho(payload)) return;
     const current = useBoardStore.getState().view?.board.id;
     if (payload?.board_id && payload.board_id === current) {
@@ -102,6 +115,7 @@ export function startRealtime(): () => void {
   });
 
   source.addEventListener('workspace', (event) => {
+    scheduleMyCardsRefresh();
     if (ownEcho(parse(event))) return;
     void useWorkspaceStore.getState().load();
     scheduleBoardRefresh();
@@ -113,6 +127,7 @@ export function startRealtime(): () => void {
 
   source.addEventListener('members', (event) => {
     const payload = parse(event);
+    scheduleMyCardsRefresh();
     void useMembersStore.getState().refresh();
     // Own actions already reloaded what they changed.
     if (!ownEcho(payload)) {
@@ -126,6 +141,10 @@ export function startRealtime(): () => void {
     void useInvitationStore.getState().load();
   });
 
+  // The stream can survive a dropped connection that fetches did not, so catch up when the
+  // network comes back instead of waiting for the next event.
+  window.addEventListener('online', refreshAll);
+
   source.onerror = () => {
     // EventSource reconnects by itself; show it while it does.
     live.set(source.readyState === EventSource.CLOSED ? 'off' : 'reconnecting');
@@ -133,6 +152,8 @@ export function startRealtime(): () => void {
 
   return () => {
     window.clearTimeout(boardTimer);
+    window.clearTimeout(myCardsTimer);
+    window.removeEventListener('online', refreshAll);
     source.close();
     live.set('off');
   };
