@@ -109,6 +109,17 @@ sync with the live stream.
   with switches, a preview follows, and each change is announced. Hidden properties stay one click
   away in the dialog.
 
+Blocks. A board's row can hold blocks next to its lists, added from "Add a block" in a picker that
+shows a drawing of each. A block is a panel with a kind, so it moves, folds, renames and deletes like a
+list, and it draws on the cards of the board, so it follows the live stream with no request of its own.
+Calendar is a small month with a dot on days that have cards due and the day's cards below. Agenda lists
+what is due today or over seven days, late cards first, optionally only mine. Note is plain text: it is
+never read as markup, and only http and https addresses become links, opened in a new tab without
+handing over the page (`lib/blocks.ts`, `linkify`). Counter shows one number (late cards, share done,
+days left, total) with an icon and words besides colour, and counts up unless motion is reduced. Blocks
+are regions named by their title, unique by default ("Note", "Note 2"), and a card can be dropped on a
+list but never on a block.
+
 Path aliases (`@`, `@components`, `@pages`, `@lib`, `@hooks`, `@types`) are configured in
 `vite.config.ts` and `tsconfig.json`.
 
