@@ -9,6 +9,7 @@ vi.mock('@lib/boardsApi', async (importOriginal) => {
 vi.mock('@hooks/useToday', () => ({ useToday: () => '2026-10-22' }));
 
 import * as api from '@lib/boardsApi';
+import { resetMyCards } from '@lib/myCardsStore';
 
 import { MyCardsPage } from './MyCardsPage';
 
@@ -37,6 +38,7 @@ function renderPage() {
 describe('MyCardsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetMyCards();
   });
 
   it('groups the cards by urgency with overdue first', async () => {
