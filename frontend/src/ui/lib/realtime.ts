@@ -1,9 +1,11 @@
 import { create } from 'zustand';
 
+import { announce } from './announcer';
 import { API_URL, CLIENT_ID, whenWritesSettle } from './api';
 import { useBoardStore } from './boardStore';
 import { useInvitationStore } from './invitationStore';
 import { useMembersStore } from './membersStore';
+import { usePrefsStore } from './prefsStore';
 import { useWorkspaceStore } from './workspaceStore';
 
 export type LiveStatus = 'off' | 'connecting' | 'live' | 'reconnecting';
@@ -62,6 +64,16 @@ export function startRealtime(): () => void {
 
   const ownEcho = (payload: ChangePayload | null) => payload?.origin === CLIENT_ID;
 
+  // Screen reader users opt in, and bursts of edits become one announcement.
+  let lastAnnounced = 0;
+  const tell = (message: string) => {
+    const now = Date.now();
+    if (usePrefsStore.getState().prefs.announce_changes && now - lastAnnounced > 4000) {
+      lastAnnounced = now;
+      announce(message);
+    }
+  };
+
   const scheduleBoardRefresh = () => {
     window.clearTimeout(boardTimer);
     boardTimer = window.setTimeout(() => {
@@ -85,6 +97,7 @@ export function startRealtime(): () => void {
     const current = useBoardStore.getState().view?.board.id;
     if (payload?.board_id && payload.board_id === current) {
       scheduleBoardRefresh();
+      tell('A teammate changed this board.');
     }
   });
 
@@ -103,6 +116,7 @@ export function startRealtime(): () => void {
     void useMembersStore.getState().refresh();
     // Own actions already reloaded what they changed.
     if (!ownEcho(payload)) {
+      tell('The people in this workspace changed.');
       void useWorkspaceStore.getState().load();
       scheduleBoardRefresh();
     }
