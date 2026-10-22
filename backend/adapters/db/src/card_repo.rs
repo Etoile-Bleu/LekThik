@@ -105,6 +105,7 @@ impl CardRepo for PgCardRepo {
             list_id: row.try_get("list_id").map_err(repository_error)?,
             title: row.try_get("title").map_err(repository_error)?,
             has_description: false,
+            description_preview: String::new(),
             label_ids: Vec::new(),
             assignee_ids: Vec::new(),
             due_date: None,
