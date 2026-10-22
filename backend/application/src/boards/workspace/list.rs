@@ -12,8 +12,8 @@ impl ListWorkspaces {
         Self { repo }
     }
 
-    pub async fn execute(&self, owner_id: Uuid) -> Result<Vec<WorkspaceWithBoards>, BoardsError> {
-        self.repo.list_with_boards(owner_id).await
+    pub async fn execute(&self, user_id: Uuid) -> Result<Vec<WorkspaceWithBoards>, BoardsError> {
+        self.repo.list_with_boards(user_id).await
     }
 }
 
@@ -25,10 +25,11 @@ mod tests {
 
     #[tokio::test]
     async fn lists_only_what_the_repository_returns_for_the_owner() {
-        let owner_id = Uuid::new_v4();
+        let user_id = Uuid::new_v4();
         let workspace = Workspace {
             id: Uuid::new_v4(),
             name: "Team".to_string(),
+            role: domain::boards::Role::Owner,
         };
         let expected = WorkspaceWithBoards {
             workspace: workspace.clone(),
@@ -39,10 +40,10 @@ mod tests {
         let returned = expected.clone();
         repo.expect_list_with_boards()
             .times(1)
-            .withf(move |owner| *owner == owner_id)
+            .withf(move |owner| *owner == user_id)
             .returning(move |_| Ok(vec![returned.clone()]));
 
-        let result = ListWorkspaces::new(Arc::new(repo)).execute(owner_id).await;
+        let result = ListWorkspaces::new(Arc::new(repo)).execute(user_id).await;
 
         assert_eq!(result, Ok(vec![expected]));
     }
