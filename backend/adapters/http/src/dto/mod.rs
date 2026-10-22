@@ -18,8 +18,8 @@ pub use card::{
 pub use common::ErrorResponseDto;
 pub use label::{CreateLabelRequestDto, LabelDto, UpdateLabelRequestDto};
 pub use list::{
-    CreateBlockRequestDto, ListResponseDto, ListWithCardsDto, MoveListRequestDto,
-    SetBlockConfigRequestDto, WipLimitRequestDto,
+    BlockImageResponseDto, CreateBlockRequestDto, ListResponseDto, ListWithCardsDto,
+    MoveListRequestDto, SetBlockConfigRequestDto, WipLimitRequestDto,
 };
 pub use members::{
     ChangeRoleRequestDto, InvitationDto, InviteMemberRequestDto, MemberDto, MembersResponseDto,
