@@ -25,6 +25,7 @@ import { useMemo, useRef, useState } from 'react';
 
 import { findCard, moveCard } from '@lib/boardModel';
 import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boardsApi';
+import type { ColumnWidth } from '@lib/prefs';
 
 import { Composer } from '../ui/Composer';
 import { CardFace } from './BoardCard';
@@ -36,6 +37,10 @@ interface BoardCanvasProps {
   labels: Label[];
   matches: (card: CardSummary) => boolean;
   freshIds: string[];
+  columnWidth: ColumnWidth;
+  collapsedIds: string[];
+  onToggleCollapsed: (listId: string) => void;
+  onEditLimit: (listId: string) => void;
   onRenameList: (listId: string, name: string) => void;
   onMoveList: (listId: string, index: number) => void;
   onDeleteList: (listId: string) => void;
@@ -56,6 +61,10 @@ export function BoardCanvas({
   labels,
   matches,
   freshIds,
+  columnWidth,
+  collapsedIds,
+  onToggleCollapsed,
+  onEditLimit,
   onRenameList,
   onMoveList,
   onDeleteList,
@@ -266,7 +275,7 @@ export function BoardCanvas({
       onDragEnd={handleDragEnd}
       onDragCancel={clearDrag}
     >
-      <div className="board-canvas">
+      <div className="board-canvas" data-width={columnWidth}>
         <SortableContext
           items={lists.map((list) => list.id)}
           strategy={horizontalListSortingStrategy}
@@ -280,6 +289,9 @@ export function BoardCanvas({
               labelsById={labelsById}
               matches={matches}
               freshIds={freshIds}
+              collapsed={collapsedIds.includes(list.id)}
+              onToggleCollapsed={onToggleCollapsed}
+              onEditLimit={onEditLimit}
               onRename={onRenameList}
               onMove={onMoveList}
               onDelete={onDeleteList}
