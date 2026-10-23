@@ -64,14 +64,12 @@ const BLOCK_KINDS: Array<Exclude<PanelKind, 'list'>> = [
 
 const VIEW_NAMES: Record<BoardViewKind, string> = {
   board: 'Board',
-  canvas: 'Canvas',
   list: 'List',
   calendar: 'Calendar',
 };
 
 const VIEW_ICONS: Record<BoardViewKind, JSX.Element> = {
-  board: <ColumnsIcon size={16} />,
-  canvas: <LayoutIcon size={16} />,
+  board: <LayoutIcon size={16} />,
   list: <TableIcon size={16} />,
   calendar: <CalendarIcon size={16} />,
 };
@@ -123,11 +121,12 @@ export function boardCommands(context: BoardCommandContext): Command[] {
   }
 
   commands.push(
-    ...(['board', 'canvas', 'list', 'calendar'] as const)
+    ...(['board', 'list', 'calendar'] as const)
       .filter((kind) => kind !== context.currentView)
       .map<Command>((kind) => ({
         id: `view:${kind}`,
-        title: `Show as ${VIEW_NAMES[kind].toLowerCase()}`,
+        title:
+          kind === 'board' ? 'Show the board layout' : `Show as ${VIEW_NAMES[kind].toLowerCase()}`,
         group: 'View',
         keywords: ['view', 'switch', VIEW_NAMES[kind]],
         icon: VIEW_ICONS[kind],
@@ -229,9 +228,9 @@ export function boardCommands(context: BoardCommandContext): Command[] {
       id: 'board:fit',
       title: 'Fit the layout',
       group: 'This board',
-      keywords: ['arrange', 'organise', 'organize', 'tidy', 'auto layout', 'canvas'],
+      keywords: ['arrange', 'organise', 'organize', 'tidy', 'auto layout'],
       icon: <FitIcon size={16} />,
-      suggested: context.currentView === 'canvas',
+      suggested: context.currentView === 'board',
       run: context.fit,
     },
     {
@@ -380,12 +379,12 @@ export function boardCommands(context: BoardCommandContext): Command[] {
     });
   }
 
-  if (context.currentView === 'canvas' && panels.length > 0) {
+  if (context.currentView === 'board' && panels.length > 0) {
     commands.push({
       id: 'panel:position',
       title: 'Position and size…',
       group: 'This board',
-      keywords: ['move', 'resize', 'place', 'canvas', 'layout'],
+      keywords: ['move', 'resize', 'place', 'layout'],
       icon: <LayoutIcon size={16} />,
       steps: [{ kind: 'choose', prompt: 'Which list or block?', choices: panelChoices }],
       finish: ([panelId]) => context.openPosition(panelId),

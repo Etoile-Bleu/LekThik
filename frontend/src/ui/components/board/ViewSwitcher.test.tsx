@@ -4,13 +4,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { ViewSwitcher } from './ViewSwitcher';
 
 describe('ViewSwitcher', () => {
-  it('offers the four views as one radio group with the current one checked', () => {
+  it('offers the three views as one radio group with the current one checked', () => {
     render(<ViewSwitcher value="list" onChange={vi.fn()} />);
 
     expect(screen.getByRole('radiogroup', { name: 'Board view' })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: 'List' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Board' })).not.toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Canvas' })).not.toBeChecked();
     expect(screen.getByRole('radio', { name: 'Calendar' })).not.toBeChecked();
   });
 
@@ -29,7 +28,7 @@ describe('ViewSwitcher', () => {
 
     fireEvent.keyDown(screen.getByRole('radio', { name: 'Board' }), { key: 'ArrowRight' });
 
-    expect(onChange).toHaveBeenCalledWith('canvas');
+    expect(onChange).toHaveBeenCalledWith('list');
   });
 
   it('keeps only the current view in the tab order', () => {

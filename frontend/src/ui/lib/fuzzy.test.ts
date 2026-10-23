@@ -40,6 +40,12 @@ describe('fuzzyMatch', () => {
     expect(whole?.score ?? 0).toBeGreaterThan(spread?.score ?? 0);
   });
 
+  it('does not match letters scattered across a long title', () => {
+    expect(fuzzyMatch('due', 'Broadcast with sound direction')).toBeNull();
+    expect(fuzzyMatch('due', 'Set a due date')).not.toBeNull();
+    expect(fuzzyMatch('bcast', 'Broadcast with sound direction')).not.toBeNull();
+  });
+
   it('reports where each letter was found', () => {
     expect(fuzzyMatch('ac', 'Add a card')?.indexes).toEqual([0, 6]);
   });

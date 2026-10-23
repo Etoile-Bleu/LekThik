@@ -13,11 +13,7 @@ import { usePrefsStore } from '@lib/prefsStore';
 
 import { DisplayMenu } from './DisplayMenu';
 
-function setup(
-  canStyle = true,
-  onLookChange = vi.fn(),
-  view: 'board' | 'list' | 'calendar' = 'board'
-) {
+function setup(canStyle = true, onLookChange = vi.fn()) {
   render(
     <MemoryRouter initialEntries={['/b/b1']}>
       <Routes>
@@ -27,8 +23,6 @@ function setup(
             <DisplayMenu
               boardId="b1"
               look={DEFAULT_LOOK}
-              view={view}
-              listIds={['l1', 'l2']}
               canStyle={canStyle}
               onLookChange={onLookChange}
             />
@@ -103,34 +97,5 @@ describe('DisplayMenu', () => {
     fireEvent.click(within(panel).getByRole('button', { name: /All settings/ }));
 
     expect(screen.getByText('settings page')).toBeInTheDocument();
-  });
-
-  it('sets how wide the columns are, for this board only', () => {
-    const { panel } = setup();
-
-    fireEvent.click(within(panel).getByRole('radio', { name: 'Wide' }));
-
-    const { prefs } = usePrefsStore.getState();
-    expect(prefs.boards.b1.column_width).toBe('wide');
-  });
-
-  it('folds and opens every list at once', () => {
-    const { panel } = setup();
-    const expandAll = within(panel).getByRole('button', { name: 'Expand all' });
-    expect(expandAll).toBeDisabled();
-
-    fireEvent.click(within(panel).getByRole('button', { name: 'Collapse all' }));
-    expect(usePrefsStore.getState().prefs.boards.b1.collapsed_lists).toEqual(['l1', 'l2']);
-    expect(within(panel).getByRole('button', { name: 'Collapse all' })).toBeDisabled();
-
-    fireEvent.click(within(panel).getByRole('button', { name: 'Expand all' }));
-    expect(usePrefsStore.getState().prefs.boards).toEqual({});
-  });
-
-  it('only talks about columns while the board is shown as columns', () => {
-    const { panel } = setup(true, vi.fn(), 'list');
-
-    expect(within(panel).queryByRole('radio', { name: 'Wide' })).not.toBeInTheDocument();
-    expect(within(panel).queryByRole('button', { name: 'Collapse all' })).not.toBeInTheDocument();
   });
 });
