@@ -1,9 +1,10 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { memo } from 'react';
+import { type MouseEvent, memo } from 'react';
 
 import type { CardSummary, Label } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
+import { useSelectionStore } from '@lib/selectionStore';
 
 import { GripIcon, TextLinesIcon } from '../ui/Icons';
 import { useBoardMeta } from '@hooks/useBoardMeta';
@@ -85,6 +86,18 @@ function BoardCardComponent({
   });
 
   const { onKeyDown, pointer: pointerListeners } = splitDragListeners(listeners);
+  const selected = useSelectionStore((state) => state.cards.includes(card.id));
+  const toggleCard = useSelectionStore((state) => state.toggleCard);
+
+  // Shift or Ctrl with a click picks the card instead of opening it, and X does the same from the keyboard.
+  function handleClick(event: MouseEvent) {
+    if (event.shiftKey || event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      toggleCard(card.id);
+      return;
+    }
+    onOpen(card.id);
+  }
 
   return (
     <li
@@ -94,14 +107,28 @@ function BoardCardComponent({
       data-fresh={fresh || undefined}
       data-dimmed={dimmed || undefined}
       data-dragging={isDragging || undefined}
+      data-card-id={card.id}
+      data-selected={selected || undefined}
     >
       <button
         type="button"
         className="board-card__open"
-        onClick={() => onOpen(card.id)}
+        onClick={handleClick}
+        onKeyDown={(event) => {
+          if (
+            event.key.toLowerCase() === 'x' &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey
+          ) {
+            event.preventDefault();
+            toggleCard(card.id);
+          }
+        }}
         {...(readOnly ? {} : pointerListeners)}
       >
         <CardFace card={card} labels={labels} />
+        {selected && <span className="sr-only">Selected</span>}
       </button>
       {!readOnly && (
         <button
