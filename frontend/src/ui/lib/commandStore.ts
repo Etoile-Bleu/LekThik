@@ -201,7 +201,10 @@ export function rankCommands(commands: Command[], query: string, recent: string[
     let best = title ? { score: title.score + 20, indexes: title.indexes } : null;
     for (const keyword of command.keywords ?? []) {
       const found = fuzzyMatch(text, keyword);
-      if (found && (!best || found.score > best.score)) best = { score: found.score, indexes: [] };
+      // A keyword is a hint, so it never outranks a match in the title itself.
+      if (found && (!best || found.score - 25 > best.score)) {
+        best = { score: found.score - 25, indexes: [] };
+      }
     }
     if (!best) {
       const withHint = command.hint ? fuzzyMatch(text, `${command.title} ${command.hint}`) : null;
