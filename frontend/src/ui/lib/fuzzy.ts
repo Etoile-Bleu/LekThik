@@ -52,6 +52,9 @@ export function fuzzyMatch(query: string, text: string): FuzzyMatch | null {
     indexes.push(found);
     cursor = found + 1;
   }
+  // Letters scattered across a long title are noise, not a match, so the span has to stay tight.
+  const span = indexes[indexes.length - 1] - indexes[0] + 1;
+  if (span > indexes.length * 3 + 4) return null;
   return { score: Math.max(1, score - Math.floor(hay.length / 8)), indexes };
 }
 
