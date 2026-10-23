@@ -98,3 +98,17 @@
   font-size: 0.78rem;
   font-weight: 400;
 }
+
+/* The row sits under a slim strip with the tools that decide what a press on the background does. */
+.board-row {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.board-row > .board-canvas {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
