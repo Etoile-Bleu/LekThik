@@ -16,14 +16,20 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
 import { useMemo, useRef, useState } from 'react';
 
 import { findCard, moveCard } from '@lib/boardModel';
 import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boardsApi';
 import type { Layout } from '@lib/grid';
+import type { ColumnWidth } from '@lib/prefs';
 
 import { Composer } from '../ui/Composer';
+import { PlusIcon } from '../ui/Icons';
 import { CardFace } from './BoardCard';
 import { BoardBlock } from './BoardBlock';
 import { BoardGrid } from './BoardGrid';
@@ -35,6 +41,9 @@ interface BoardCanvasProps {
   labels: Label[];
   matches: (card: CardSummary) => boolean;
   freshIds: string[];
+  columnWidth: ColumnWidth;
+  collapsedIds: string[];
+  onToggleCollapsed: (listId: string) => void;
   onEditLimit: (listId: string) => void;
   onBlockSettings: (blockId: string) => void;
   onSaveNote: (blockId: string, text: string) => void;
@@ -47,12 +56,11 @@ interface BoardCanvasProps {
   onMoveCard: (cardId: string, listId: string, index: number) => void;
   onOpenCard: (cardId: string) => void;
   readOnly?: boolean;
+  /** Shows the panels as tiles of the free layout instead of one row. */
+  freeLayout?: boolean;
   onLayout?: (layout: Layout) => void;
   onPositionPanel?: (panelId: string) => void;
 }
-
-/** On the free layout a tile is sized, not folded, so nothing ever asks to fold. */
-const NEVER_FOLDED = () => undefined;
 
 type ActiveItem = { type: 'card' | 'list'; id: string };
 
@@ -64,6 +72,9 @@ export function BoardCanvas({
   labels,
   matches,
   freshIds,
+  columnWidth,
+  collapsedIds,
+  onToggleCollapsed,
   onEditLimit,
   onBlockSettings,
   onSaveNote,
@@ -76,6 +87,7 @@ export function BoardCanvas({
   onMoveCard,
   onOpenCard,
   readOnly = false,
+  freeLayout = false,
   onLayout,
   onPositionPanel,
 }: BoardCanvasProps) {
@@ -287,70 +299,141 @@ export function BoardCanvas({
       onDragEnd={handleDragEnd}
       onDragCancel={clearDrag}
     >
-      <SortableContext items={lists.map((list) => list.id)}>
-        <BoardGrid
-          panels={lists}
-          freshIds={freshIds}
-          editable={!readOnly}
-          onLayout={(layout) => onLayout?.(layout)}
-          onPosition={(panelId) => onPositionPanel?.(panelId)}
-          onAddBlock={onAddBlock}
-          addList={
-            <div className="canvas__add-list">
+      {freeLayout ? (
+        <SortableContext items={lists.map((list) => list.id)}>
+          <BoardGrid
+            panels={lists}
+            freshIds={freshIds}
+            editable={!readOnly}
+            onLayout={(layout) => onLayout?.(layout)}
+            onPosition={(panelId) => onPositionPanel?.(panelId)}
+            onAddBlock={onAddBlock}
+            addList={
+              <div className="canvas__add-list">
+                <Composer
+                  variant="column"
+                  triggerLabel="Add a list"
+                  inputLabel="Name of the new list"
+                  placeholder="Enter a list name"
+                  submitLabel="Add list"
+                  onSubmit={onAddList}
+                />
+              </div>
+            }
+            renderPanel={(panel, tile) =>
+              panel.kind !== 'list' ? (
+                <BoardBlock
+                  block={panel}
+                  panels={lists}
+                  index={0}
+                  total={lists.length}
+                  freshIds={freshIds}
+                  collapsed={false}
+                  onToggleCollapsed={onToggleCollapsed}
+                  onRename={onRenameList}
+                  onMove={onMoveList}
+                  onDelete={onDeleteList}
+                  onSettings={onBlockSettings}
+                  onSaveNote={onSaveNote}
+                  onOpenCard={onOpenCard}
+                  readOnly={readOnly}
+                  tile={tile}
+                  inGrid
+                />
+              ) : (
+                <BoardList
+                  list={panel}
+                  index={0}
+                  total={lists.length}
+                  labelsById={labelsById}
+                  matches={matches}
+                  freshIds={freshIds}
+                  collapsed={false}
+                  onToggleCollapsed={onToggleCollapsed}
+                  onEditLimit={onEditLimit}
+                  onRename={onRenameList}
+                  onMove={onMoveList}
+                  onDelete={onDeleteList}
+                  onAddCard={onAddCard}
+                  onOpenCard={onOpenCard}
+                  readOnly={readOnly}
+                  tile={tile}
+                  inGrid
+                />
+              )
+            }
+          />
+        </SortableContext>
+      ) : (
+        <div className="board-canvas" data-width={columnWidth}>
+          <SortableContext
+            items={lists.map((list) => list.id)}
+            strategy={horizontalListSortingStrategy}
+          >
+            {lists.map((list, index) =>
+              list.kind !== 'list' ? (
+                <BoardBlock
+                  key={list.id}
+                  block={list}
+                  panels={lists}
+                  index={index}
+                  total={lists.length}
+                  freshIds={freshIds}
+                  collapsed={collapsedIds.includes(list.id)}
+                  onToggleCollapsed={onToggleCollapsed}
+                  onRename={onRenameList}
+                  onMove={onMoveList}
+                  onDelete={onDeleteList}
+                  onSettings={onBlockSettings}
+                  onSaveNote={onSaveNote}
+                  onOpenCard={onOpenCard}
+                  readOnly={readOnly}
+                />
+              ) : (
+                <BoardList
+                  key={list.id}
+                  list={list}
+                  index={index}
+                  total={lists.length}
+                  labelsById={labelsById}
+                  matches={matches}
+                  freshIds={freshIds}
+                  collapsed={collapsedIds.includes(list.id)}
+                  onToggleCollapsed={onToggleCollapsed}
+                  onEditLimit={onEditLimit}
+                  onRename={onRenameList}
+                  onMove={onMoveList}
+                  onDelete={onDeleteList}
+                  onAddCard={onAddCard}
+                  onOpenCard={onOpenCard}
+                  readOnly={readOnly}
+                />
+              )
+            )}
+          </SortableContext>
+          {readOnly ? (
+            lists.length === 0 && (
+              <p className="board-canvas__empty">This board has no lists yet.</p>
+            )
+          ) : (
+            <div className="board-canvas__add">
               <Composer
                 variant="column"
-                triggerLabel="Add a list"
+                triggerLabel={lists.length === 0 ? 'Add your first list' : 'Add another list'}
                 inputLabel="Name of the new list"
                 placeholder="Enter a list name"
                 submitLabel="Add list"
                 onSubmit={onAddList}
               />
+              <button type="button" className="board-canvas__block" onClick={onAddBlock}>
+                <PlusIcon size={16} />
+                Add a block
+                <span className="board-canvas__block-hint">Calendar, agenda, note, counter</span>
+              </button>
             </div>
-          }
-          renderPanel={(panel, tile) =>
-            panel.kind !== 'list' ? (
-              <BoardBlock
-                block={panel}
-                panels={lists}
-                index={0}
-                total={lists.length}
-                freshIds={freshIds}
-                collapsed={false}
-                onToggleCollapsed={NEVER_FOLDED}
-                onRename={onRenameList}
-                onMove={onMoveList}
-                onDelete={onDeleteList}
-                onSettings={onBlockSettings}
-                onSaveNote={onSaveNote}
-                onOpenCard={onOpenCard}
-                readOnly={readOnly}
-                tile={tile}
-                inGrid
-              />
-            ) : (
-              <BoardList
-                list={panel}
-                index={0}
-                total={lists.length}
-                labelsById={labelsById}
-                matches={matches}
-                freshIds={freshIds}
-                collapsed={false}
-                onToggleCollapsed={NEVER_FOLDED}
-                onEditLimit={onEditLimit}
-                onRename={onRenameList}
-                onMove={onMoveList}
-                onDelete={onDeleteList}
-                onAddCard={onAddCard}
-                onOpenCard={onOpenCard}
-                readOnly={readOnly}
-                tile={tile}
-                inGrid
-              />
-            )
-          }
-        />
-      </SortableContext>
+          )}
+        </div>
+      )}
       <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.2, 0, 0, 1)' }}>
         {activeCard && (
           <div className="board-card-overlay">
