@@ -137,3 +137,167 @@
     display: none;
   }
 }
+
+/* The way into full screen, beside the search. */
+.shell__fullscreen {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-on-dark);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    border-color var(--duration-fast) ease;
+}
+
+.shell__fullscreen:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/*
+ * Full screen: only the page. The top bar goes, and the navigation waits off screen at the left
+ * and slides in over the page when the pointer reaches the edge, when it is asked for with the
+ * button, or when it receives the keyboard focus.
+ */
+.shell[data-fullscreen] .shell__topbar {
+  display: none;
+}
+
+.shell[data-fullscreen] .shell__sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 60;
+  border-top: none;
+  border-right: 1px solid var(--chrome-border);
+  box-shadow: none;
+  transform: translateX(calc(-100% - 2px));
+  visibility: hidden;
+  transition:
+    transform 260ms var(--ease-out),
+    box-shadow 260ms var(--ease-out),
+    visibility 0s linear 260ms;
+}
+
+.shell[data-fullscreen][data-nav-open] .shell__sidebar,
+.shell[data-fullscreen] .shell__sidebar:focus-within {
+  transform: none;
+  visibility: visible;
+  box-shadow: var(--shadow-popover);
+  transition-delay: 0s;
+}
+
+/* A strip at the left edge that wakes the navigation, with a thin line that says so. */
+.shell__edge {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 59;
+  width: 14px;
+}
+
+.shell__edge::after {
+  content: '';
+  position: absolute;
+  top: 22%;
+  bottom: 22%;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--color-accent);
+  opacity: 0;
+  animation: shell-edge-hint 2.4s var(--ease-out) 0.3s 1;
+  transition: opacity var(--duration-base) ease;
+}
+
+.shell__edge:hover::after {
+  opacity: 0.7;
+}
+
+.shell__float {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 61;
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--chrome-border);
+  border-radius: 999px;
+  background: var(--chrome-bg);
+  box-shadow: var(--shadow-popover);
+  opacity: 0.5;
+  transition: opacity var(--duration-base) ease;
+  animation: shell-float-in 420ms var(--ease-out);
+}
+
+.shell__float:hover,
+.shell__float:focus-within {
+  opacity: 1;
+}
+
+.shell__float-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-on-dark);
+  font: inherit;
+  font-size: 0.86rem;
+  cursor: pointer;
+}
+
+.shell__float-button:hover,
+.shell__float-button[aria-expanded='true'] {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+@keyframes shell-edge-hint {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  60% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes shell-float-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shell[data-fullscreen] .shell__sidebar {
+    transition: none;
+  }
+
+  .shell__edge::after,
+  .shell__float {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduce'] .shell[data-fullscreen] .shell__sidebar {
+  transition: none;
+}
+
+:root[data-motion='reduce'] .shell__edge::after,
+:root[data-motion='reduce'] .shell__float {
+  animation: none;
+}
