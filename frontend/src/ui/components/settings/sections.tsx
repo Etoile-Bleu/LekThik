@@ -306,15 +306,45 @@ export function HelpSection() {
             </dt>
             <dd>Choose between options in a group, and move through a menu.</dd>
           </div>
+          <div>
+            <dt>
+              <kbd>Ctrl</kbd> + <kbd>K</kbd> or <kbd>⌘</kbd> + <kbd>K</kbd>
+            </dt>
+            <dd>
+              Open the command palette from anywhere. Type a few letters of what you want, a card, a
+              board or an action, and press <kbd>Enter</kbd>. Actions that need details, such as
+              adding a card, ask for them one question at a time, <kbd>Esc</kbd> steps back.
+            </dd>
+          </div>
         </dl>
       </Help>
 
-      <Help title="See the same cards three ways">
+      <Help title="Lay out a board the way you want">
         <ul className="settings-list">
           <li>
-            On a board, the <strong>Board</strong>, <strong>List</strong> and{' '}
-            <strong>Calendar</strong> buttons switch the view. Your choice is remembered for each
-            board.
+            The <strong>Canvas</strong> view puts every list and block on a grid you can arrange
+            freely, shared with everyone on the board. Drag a tile by its name, or its corner and
+            edges to resize it. Other tiles make room.
+          </li>
+          <li>
+            Without a mouse: on the move button of a tile press <kbd>Space</kbd>, then the arrow
+            keys to move it, <kbd>Shift</kbd> with the arrow keys to resize it, <kbd>Enter</kbd> to
+            drop it and <kbd>Esc</kbd> to cancel. The tile menu also has{' '}
+            <strong>Position and size</strong>, a form with numbers.
+          </li>
+          <li>
+            <strong>Fit</strong> arranges everything for you, keeping the order, and{' '}
+            <strong>Undo fit</strong> brings the previous layout back.
+          </li>
+        </ul>
+      </Help>
+
+      <Help title="See the same cards four ways">
+        <ul className="settings-list">
+          <li>
+            On a board, the <strong>Board</strong>, <strong>Canvas</strong>, <strong>List</strong>{' '}
+            and <strong>Calendar</strong> buttons switch the view. Your choice is remembered for
+            each board.
           </li>
           <li>
             In the <strong>List</strong> view, each column heading is a button that sorts. Press it
