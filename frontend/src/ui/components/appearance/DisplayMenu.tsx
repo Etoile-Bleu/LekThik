@@ -8,15 +8,7 @@ import {
   type BoardBackground,
   type BoardLook,
 } from '@lib/boardLooks';
-import {
-  type BoardViewKind,
-  type CardDisplay,
-  type ColumnWidth,
-  type Density,
-  boardPrefsFor,
-  cardDisplayFor,
-  hasBoardDisplay,
-} from '@lib/prefs';
+import { type CardDisplay, type Density, cardDisplayFor, hasBoardDisplay } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 
 import { SlidersIcon } from '../ui/Icons';
@@ -29,9 +21,6 @@ import './DisplayMenu.css';
 interface DisplayMenuProps {
   boardId: string;
   look: BoardLook;
-  view: BoardViewKind;
-  /** The lists of the board, in order, for folding them all at once. */
-  listIds: string[];
   /** Writers and above can change what the whole board looks like. */
   canStyle: boolean;
   onLookChange: (look: BoardLook) => void;
@@ -41,12 +30,6 @@ const DENSITIES: Array<{ value: Density; label: string }> = [
   { value: 'compact', label: 'Compact' },
   { value: 'comfortable', label: 'Comfortable' },
   { value: 'spacious', label: 'Spacious' },
-];
-
-const WIDTHS: Array<{ value: ColumnWidth; label: string }> = [
-  { value: 'narrow', label: 'Narrow' },
-  { value: 'default', label: 'Default' },
-  { value: 'wide', label: 'Wide' },
 ];
 
 const CARD_FIELDS: Array<{ key: keyof CardDisplay; label: string; hint?: string }> = [
@@ -62,26 +45,16 @@ const CARD_FIELDS: Array<{ key: keyof CardDisplay; label: string; hint?: string 
 ];
 
 /** Linear's "Display" idea: one button next to the view, everything that changes how it looks. */
-export function DisplayMenu({
-  boardId,
-  look,
-  view,
-  listIds,
-  canStyle,
-  onLookChange,
-}: DisplayMenuProps) {
+export function DisplayMenu({ boardId, look, canStyle, onLookChange }: DisplayMenuProps) {
   const prefs = usePrefsStore((state) => state.prefs);
   const update = usePrefsStore((state) => state.update);
   const setCardDisplay = usePrefsStore((state) => state.setCardDisplay);
   const setBoardCardDisplay = usePrefsStore((state) => state.setBoardCardDisplay);
-  const updateBoard = usePrefsStore((state) => state.updateBoard);
   const navigate = useNavigate();
   const headingId = useId();
 
   const display = cardDisplayFor(prefs, boardId);
   const ownDisplay = hasBoardDisplay(prefs, boardId);
-  const own = boardPrefsFor(prefs, boardId);
-  const foldedCount = listIds.filter((id) => own.collapsed_lists.includes(id)).length;
 
   function toggleField(key: keyof CardDisplay, value: boolean) {
     const next = { ...display, [key]: value };
@@ -119,36 +92,6 @@ export function DisplayMenu({
               onChange={(density) => update({ density })}
             />
           </section>
-
-          {view === 'board' && (
-            <section className="display-menu__section" aria-label="Columns">
-              <h3 className="display-menu__heading">Columns</h3>
-              <Segmented
-                label="Column width"
-                value={own.column_width}
-                options={WIDTHS}
-                onChange={(column_width) => updateBoard(boardId, { column_width })}
-              />
-              <div className="display-menu__pair">
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm"
-                  disabled={foldedCount === listIds.length || listIds.length === 0}
-                  onClick={() => updateBoard(boardId, { collapsed_lists: [...listIds] })}
-                >
-                  Collapse all
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--outline btn--sm"
-                  disabled={own.collapsed_lists.length === 0}
-                  onClick={() => updateBoard(boardId, { collapsed_lists: [] })}
-                >
-                  Expand all
-                </button>
-              </div>
-            </section>
-          )}
 
           <section className="display-menu__section" aria-label="Card content">
             <h3 className="display-menu__heading">Card content</h3>
