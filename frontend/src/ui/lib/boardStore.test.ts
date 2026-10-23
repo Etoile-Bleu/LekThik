@@ -7,6 +7,7 @@ vi.mock('./boardsApi', () => ({
   createList: vi.fn(),
   renameList: vi.fn(),
   moveList: vi.fn(),
+  setBoardLayout: vi.fn(),
   deleteList: vi.fn(),
   createCard: vi.fn(),
   updateCard: vi.fn(),
@@ -185,5 +186,34 @@ describe('useBoardStore', () => {
     await useBoardStore.getState().moveList('done', 0);
 
     expect(useBoardStore.getState().view?.lists.map((list) => list.id)).toEqual(['done', 'todo']);
+  });
+
+  it('shows a saved layout at once and sends every tile to the server', async () => {
+    vi.mocked(api.setBoardLayout).mockResolvedValueOnce(undefined);
+
+    await useBoardStore.getState().setLayout({
+      todo: { x: 0, y: 0, w: 4, h: 8 },
+      done: { x: 4, y: 0, w: 4, h: 8 },
+    });
+
+    const lists = useBoardStore.getState().view?.lists ?? [];
+    expect(lists.find((list) => list.id === 'done')?.layout).toEqual({ x: 4, y: 0, w: 4, h: 8 });
+    expect(api.setBoardLayout).toHaveBeenCalledWith('b1', [
+      { id: 'todo', x: 0, y: 0, w: 4, h: 8 },
+      { id: 'done', x: 4, y: 0, w: 4, h: 8 },
+    ]);
+  });
+
+  it('reloads the board and warns when the layout is refused', async () => {
+    vi.mocked(api.setBoardLayout).mockRejectedValueOnce(new ApiError(403, 'No.'));
+    vi.mocked(api.fetchBoard).mockResolvedValueOnce(sampleView());
+
+    await useBoardStore.getState().setLayout({ todo: { x: 0, y: 0, w: 4, h: 8 } });
+
+    expect(api.fetchBoard).toHaveBeenCalledWith('b1');
+    expect(useToastStore.getState().toasts).toHaveLength(1);
+    expect(
+      useBoardStore.getState().view?.lists.find((list) => list.id === 'todo')?.layout
+    ).toBeUndefined();
   });
 });
