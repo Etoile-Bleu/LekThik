@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   SNIPPETS,
   countTasks,
+  headingOutline,
   hostOf,
   insertBlock,
   isExternal,
@@ -143,5 +144,38 @@ describe('the formatting buttons', () => {
     expect(SNIPPETS.diagram).toContain('accDescr:');
     expect(needsMermaid(SNIPPETS.diagram)).toBe(true);
     expect(needsMath(SNIPPETS.math)).toBe(true);
+  });
+});
+
+describe('headingOutline', () => {
+  it('puts the shallowest heading right under the title, whatever it is written as', () => {
+    const outline = headingOutline('## Plan\n\nText\n\n### Step\n', 2);
+
+    expect(outline.get(1)).toBe(3);
+    expect(outline.get(5)).toBe(4);
+  });
+
+  it('never skips a level on the way down', () => {
+    const outline = headingOutline('# One\n\n##### Deep\n\n# Two\n', 2);
+
+    expect(outline.get(1)).toBe(3);
+    expect(outline.get(3)).toBe(4);
+    expect(outline.get(5)).toBe(3);
+  });
+
+  it('stops at level six', () => {
+    const text = ['# a', '## b', '### c', '#### d', '##### e', '###### f'].join('\n');
+
+    expect(Math.max(...headingOutline(text, 3).values())).toBe(6);
+  });
+
+  it('ignores hash marks inside fenced code and lines that are not headings', () => {
+    const text = '```sh\n# a comment\n```\n#nospace\n# Real\n';
+
+    expect([...headingOutline(text, 2).entries()]).toEqual([[5, 3]]);
+  });
+
+  it('has nothing to say about a text without headings', () => {
+    expect(headingOutline('just words', 2).size).toBe(0);
   });
 });

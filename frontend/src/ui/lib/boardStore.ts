@@ -14,6 +14,7 @@ import type {
   Priority,
 } from './boardsApi';
 import { moveCard, moveList, patchCard, removeCard } from './boardModel';
+import { type Layout, toPlacements } from './grid';
 import { notifyError } from './toastStore';
 import { useWorkspaceStore } from './workspaceStore';
 
@@ -49,6 +50,8 @@ interface BoardState {
   ) => Promise<void>;
   renameList: (listId: string, name: string) => Promise<void>;
   moveList: (listId: string, index: number) => Promise<void>;
+  /** Saves where tiles sit on the free layout, showing the new places at once. */
+  setLayout: (layout: Layout) => Promise<void>;
   setListWipLimit: (listId: string, limit: number | null) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
   createCard: (listId: string, title: string) => Promise<CardSummary | null>;
@@ -248,6 +251,23 @@ export const useBoardStore = create<BoardState>((set, get) => {
       update((current) => ({ ...current, lists: moveList(current.lists, listId, index) }));
       try {
         await api.moveList(listId, index);
+      } catch (error) {
+        await recoverFrom(error);
+      }
+    },
+
+    setLayout: async (layout) => {
+      const view = get().view;
+      if (!view) return;
+      const items = toPlacements(layout);
+      update((current) => ({
+        ...current,
+        lists: current.lists.map((list) =>
+          layout[list.id] ? { ...list, layout: { ...layout[list.id] } } : list
+        ),
+      }));
+      try {
+        await api.setBoardLayout(view.board.id, items);
       } catch (error) {
         await recoverFrom(error);
       }

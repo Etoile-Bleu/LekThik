@@ -1,0 +1,71 @@
+.tile-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.tile-dialog__title {
+  padding-right: 2.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.tile-dialog__lead {
+  color: var(--color-text-soft-on-light);
+}
+
+.tile-dialog__fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+.tile-dialog__fields input {
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+.tile-dialog__hint {
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+}
+
+/* A small picture of the grid with the tile on it, so the numbers mean something. */
+.tile-dialog__map {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows, 8), 0.6rem);
+  gap: 2px;
+  padding: 0.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-ink) 6%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: calc((100% - 0.8rem) / 12) 100%;
+  background-origin: content-box;
+  max-height: 11rem;
+  overflow: hidden;
+}
+
+.tile-dialog__tile {
+  grid-column: calc(var(--x) + 1) / span var(--w);
+  grid-row: calc(var(--y) + 1) / span var(--h);
+  border: 2px solid var(--color-accent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+  transition:
+    grid-column var(--duration-fast) ease,
+    grid-row var(--duration-fast) ease;
+}
+
+.tile-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

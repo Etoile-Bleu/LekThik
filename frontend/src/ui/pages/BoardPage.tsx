@@ -21,6 +21,7 @@ import {
   isCardList,
 } from '@lib/blocks';
 import { type PanelConfig, type PanelKind, uploadBlockImage } from '@lib/boardsApi';
+import { fitLayout, resolveLayout, settle } from '@lib/grid';
 import { type BoardViewKind, boardPrefsFor, cardDisplayFor } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
@@ -32,6 +33,8 @@ import { BlockSettingsDialog } from '../components/board/BlockSettingsDialog';
 import { BoardCalendar } from '../components/board/BoardCalendar';
 import { BoardCanvas } from '../components/board/BoardCanvas';
 import { BoardTable } from '../components/board/BoardTable';
+import { TilePositionDialog } from '../components/board/TilePositionDialog';
+import { BoardCommandSource } from '../components/command/BoardCommandSource';
 import { CardDialog } from '../components/board/CardDialog';
 import { FilterBar } from '../components/board/FilterBar';
 import { LabelsDialog } from '../components/board/LabelsDialog';
@@ -70,8 +73,10 @@ export function BoardPage() {
   const setImageVersion = useBoardStore((state) => state.setImageVersion);
   const renameList = useBoardStore((state) => state.renameList);
   const moveList = useBoardStore((state) => state.moveList);
+  const setLayout = useBoardStore((state) => state.setLayout);
   const setListWipLimit = useBoardStore((state) => state.setListWipLimit);
   const setCardDueDate = useBoardStore((state) => state.setCardDueDate);
+  const setCardAssignees = useBoardStore((state) => state.setCardAssignees);
   const deleteList = useBoardStore((state) => state.deleteList);
   const createCard = useBoardStore((state) => state.createCard);
   const moveCard = useBoardStore((state) => state.moveCard);
@@ -89,6 +94,7 @@ export function BoardPage() {
   const [pickingBlock, setPickingBlock] = useState(false);
   const [blockSettingsId, setBlockSettingsId] = useState<string | null>(null);
   const [mediaKind, setMediaKind] = useState<MediaKind | null>(null);
+  const [positionId, setPositionId] = useState<string | null>(null);
 
   useDocumentTitle(view?.board.name ?? 'Board');
 
@@ -167,6 +173,7 @@ export function BoardPage() {
   const deletingList = view.lists.find((list) => list.id === deletingListId);
   const limitList = view.lists.find((list) => list.id === limitListId);
   const settingsBlock = view.lists.find((list) => list.id === blockSettingsId) ?? null;
+  const positionPanel = view.lists.find((list) => list.id === positionId) ?? null;
   const own = boardPrefsFor(prefs, view.board.id);
 
   const boardId_ = view.board.id;
@@ -242,9 +249,22 @@ export function BoardPage() {
 
   function changeView(next: BoardViewKind) {
     updateBoardPrefs(boardId_, { view: next });
-    announce(`${next === 'board' ? 'Board' : next === 'list' ? 'List' : 'Calendar'} view.`);
+    const names: Record<BoardViewKind, string> = {
+      board: 'Board',
+      canvas: 'Canvas',
+      list: 'List',
+      calendar: 'Calendar',
+    };
+    announce(`${names[next]} view.`);
   }
   const editable = canEdit(view.role);
+
+  function fitEverything() {
+    const current = resolveLayout(view?.lists ?? []);
+    if (own.view !== 'canvas') changeView('canvas');
+    void setLayout(fitLayout(view?.lists ?? [], current));
+    announce('Panels arranged to fit the board.');
+  }
   const workspace = workspaces.find((candidate) => candidate.id === view.board.workspace_id);
 
   return (
@@ -255,6 +275,37 @@ export function BoardPage() {
       display={cardDisplayFor(prefs, view.board.id)}
     >
       <div className="board-page" style={lookStyle(view.look, theme)}>
+        <BoardCommandSource
+          context={{
+            view,
+            meId,
+            editable,
+            canManage: canManage(view.role),
+            currentView: own.view,
+            filter,
+            setFilter,
+            changeView,
+            fit: fitEverything,
+            openCard: setOpenCardId,
+            openMembers: () => setMembersOpen(true),
+            openLabels: () => setLabelsOpen(true),
+            openLimit: setLimitListId,
+            openBlockSettings: setBlockSettingsId,
+            openPosition: setPositionId,
+            askDelete: setDeletingListId,
+            askDeleteBoard: () => setDeletingBoard(true),
+            addBlock: pickBlock,
+            actions: {
+              createCard,
+              createList,
+              renameBoard,
+              renameList,
+              moveCard,
+              setCardDueDate,
+              setCardAssignees,
+            },
+          }}
+        />
         <header className="board-header">
           <div className="board-header__main">
             <Link className="board-header__back" to="/dashboard">
@@ -346,8 +397,11 @@ export function BoardPage() {
               onSetDueDate={(cardId, day) => void setCardDueDate(cardId, day)}
             />
           )}
-          {own.view === 'board' && (
+          {(own.view === 'board' || own.view === 'canvas') && (
             <BoardCanvas
+              freeLayout={own.view === 'canvas'}
+              onLayout={(layout) => void setLayout(layout)}
+              onPositionPanel={setPositionId}
               lists={view.lists}
               labels={view.labels}
               matches={matches}
@@ -395,6 +449,18 @@ export function BoardPage() {
             void setBlockConfig(blockId, kind as Exclude<PanelKind, 'list'>, config)
           }
           onClose={() => setBlockSettingsId(null)}
+        />
+        <TilePositionDialog
+          open={positionId !== null && editable}
+          name={positionPanel?.name ?? ''}
+          kind={positionPanel?.kind ?? 'list'}
+          rect={positionPanel ? (resolveLayout(view.lists)[positionPanel.id] ?? null) : null}
+          onSave={(rect) => {
+            if (!positionPanel) return;
+            const layout = resolveLayout(view.lists);
+            void setLayout(settle({ ...layout, [positionPanel.id]: rect }, positionPanel.id));
+          }}
+          onClose={() => setPositionId(null)}
         />
         <WipLimitDialog
           open={limitList !== undefined && editable}

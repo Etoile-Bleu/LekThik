@@ -5,7 +5,10 @@ mod list;
 mod members;
 mod workspace;
 
-pub use board::{CreateBoard, DeleteBoard, GetBoard, RenameBoard, SetBoardLook};
+pub use board::{
+    CreateBoard, DeleteBoard, GetBoard, PanelPlacementInput, RenameBoard, SetBoardLayout,
+    SetBoardLook,
+};
 pub use card::{
     CreateCard, DeleteCard, GetCard, ListMyCards, MoveCard, SetCardAssignees, SetCardLabels,
     UpdateCard,
