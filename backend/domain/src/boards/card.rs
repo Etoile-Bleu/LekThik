@@ -60,6 +60,8 @@ pub trait CardRepo: Send + Sync {
         list_id: Uuid,
         title: Title,
     ) -> Result<CardSummary, BoardsError>;
+    /// Copies a card, with its description, due date, labels and assignees, right after the original.
+    async fn duplicate(&self, user_id: Uuid, id: Uuid) -> Result<CardSummary, BoardsError>;
     async fn get(&self, user_id: Uuid, id: Uuid) -> Result<Card, BoardsError>;
     /// Every card assigned to the user in a workspace they still belong to, soonest due first.
     async fn assigned_to(&self, user_id: Uuid) -> Result<Vec<AssignedCard>, BoardsError>;
