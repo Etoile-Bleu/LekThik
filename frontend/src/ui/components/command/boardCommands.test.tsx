@@ -104,10 +104,10 @@ describe('boardCommands', () => {
   });
 
   it('offers the other views, not the one already shown', () => {
-    const ids = boardCommands(context({ currentView: 'canvas' })).map((item) => item.id);
+    const ids = boardCommands(context({ currentView: 'list' })).map((item) => item.id);
 
     expect(ids).toContain('view:board');
-    expect(ids).not.toContain('view:canvas');
+    expect(ids).not.toContain('view:list');
   });
 
   it('adds a card in two steps: which list, then the title', async () => {
@@ -170,9 +170,9 @@ describe('boardCommands', () => {
     expect(ctx.askDeleteBoard).toHaveBeenCalled();
   });
 
-  it('offers the position form only on the canvas', () => {
-    expect(boardCommands(context()).map((item) => item.id)).not.toContain('panel:position');
-    expect(boardCommands(context({ currentView: 'canvas' })).map((item) => item.id)).toContain(
+  it('offers the position form only on the board layout', () => {
+    expect(boardCommands(context()).map((item) => item.id)).toContain('panel:position');
+    expect(boardCommands(context({ currentView: 'list' })).map((item) => item.id)).not.toContain(
       'panel:position'
     );
   });
