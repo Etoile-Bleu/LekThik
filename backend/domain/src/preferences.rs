@@ -101,12 +101,13 @@ impl Default for CardDisplay {
     }
 }
 
-/// How a board is shown: on the free layout, as a sortable table or as a calendar of due dates.
+/// How a board is shown: columns, a free canvas, a sortable table or a calendar of due dates.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum BoardView {
     #[default]
     Board,
+    Canvas,
     List,
     Calendar,
 }
@@ -300,6 +301,18 @@ mod tests {
             vec![CardProperty::Labels, CardProperty::DueDate]
         );
         assert_eq!(parsed.card_dialog.hidden, vec![CardProperty::List]);
+        assert!(parsed.validate().is_ok());
+    }
+
+    #[test]
+    fn the_free_canvas_is_a_view_a_board_can_open_in() {
+        let board = Uuid::new_v4();
+        let parsed: Preferences = serde_json::from_str(&format!(
+            r#"{{"boards":{{"{board}":{{"view":"canvas"}}}}}}"#
+        ))
+        .expect("parse");
+
+        assert_eq!(parsed.boards[&board].view, BoardView::Canvas);
         assert!(parsed.validate().is_ok());
     }
 
