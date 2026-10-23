@@ -511,3 +511,28 @@ export function ZapIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function MaximizeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4" />
+    </Base>
+  );
+}
+
+export function MinimizeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M7.5 3.5v4h-4M12.5 3.5v4h4M7.5 16.5v-4h-4M12.5 16.5v-4h4" />
+    </Base>
+  );
+}
+
+export function SidebarIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="4" width="14" height="12" rx="2" />
+      <path d="M8 4v12" />
+    </Base>
+  );
+}
