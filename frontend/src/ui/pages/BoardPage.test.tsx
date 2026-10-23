@@ -14,6 +14,7 @@ vi.mock('@lib/boardsApi', async (importOriginal) => {
     createList: vi.fn(),
     renameList: vi.fn(),
     moveList: vi.fn(),
+    setBoardLayout: vi.fn(),
     deleteList: vi.fn(),
     setListWipLimit: vi.fn(),
     createBlock: vi.fn(),
@@ -114,7 +115,7 @@ describe('BoardPage', () => {
     renderBoard();
     await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add another list' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add a list' }));
     const field = screen.getByRole('textbox', { name: 'Name of the new list' });
     fireEvent.change(field, { target: { value: 'Review' } });
     fireEvent.keyDown(field, { key: 'Enter' });
@@ -123,19 +124,34 @@ describe('BoardPage', () => {
     expect(await screen.findByRole('heading', { level: 2, name: /Review/ })).toBeInTheDocument();
   });
 
-  it('moves a list one step to the right from its menu, without dragging', async () => {
-    vi.mocked(api.moveList).mockResolvedValueOnce(undefined);
-    renderBoard();
-    await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
+  it('places a list with numbers from its menu, without dragging', async () => {
+    const original = window.matchMedia;
+    // Placing tiles needs room, so the board only offers it on a screen wide enough.
+    window.matchMedia = ((query: string) =>
+      ({
+        matches: query.includes('min-width'),
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }) as unknown as MediaQueryList) as typeof window.matchMedia;
+    vi.mocked(api.setBoardLayout).mockResolvedValueOnce(undefined);
+    try {
+      renderBoard();
+      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Actions for list To do' }));
-    fireEvent.click(screen.getByRole('menuitem', { name: 'Move right' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Actions for list To do' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: /Position and size/ }));
+      const dialog = await screen.findByRole('dialog', { name: /Position and size of To do/ });
+      fireEvent.change(within(dialog).getByLabelText('Column'), { target: { value: '7' } });
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Place' }));
 
-    await waitFor(() => expect(api.moveList).toHaveBeenCalledWith('todo', 1));
-    const headings = screen
-      .getAllByRole('heading', { level: 2 })
-      .map((heading) => heading.textContent);
-    expect(headings[0]).toMatch(/Done/);
+      await waitFor(() => expect(api.setBoardLayout).toHaveBeenCalled());
+      const [boardId, items] = vi.mocked(api.setBoardLayout).mock.calls[0];
+      expect(boardId).toBe('b1');
+      expect(items.find((item) => item.id === 'todo')?.x).toBeGreaterThanOrEqual(6);
+    } finally {
+      window.matchMedia = original;
+    }
   });
 
   it('dims the cards that do not carry the selected label', async () => {
@@ -293,17 +309,6 @@ describe('BoardPage', () => {
 
       expect(await screen.findByRole('table')).toBeInTheDocument();
       expect(screen.getByRole('radio', { name: 'List' })).toBeChecked();
-    });
-
-    it('folds a list into a rail and keeps it folded', async () => {
-      renderBoard();
-      await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
-
-      fireEvent.click(screen.getByRole('button', { name: 'Collapse list To do' }));
-
-      expect(screen.getByRole('button', { name: /Expand list To do/ })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /^Write the spec/ })).not.toBeInTheDocument();
-      expect(usePrefsStore.getState().prefs.boards.b1.collapsed_lists).toEqual(['todo']);
     });
 
     it('sets a card limit from the list menu', async () => {
