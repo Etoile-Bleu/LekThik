@@ -55,6 +55,10 @@ interface BoardState {
   setListWipLimit: (listId: string, limit: number | null) => Promise<void>;
   deleteList: (listId: string) => Promise<void>;
   createCard: (listId: string, title: string) => Promise<CardSummary | null>;
+  /** Copies a card right after the original, with its labels, people and date. */
+  duplicateCard: (cardId: string) => Promise<CardSummary | null>;
+  /** Copies a list with its cards, or a block with its settings. The board is read again to show it. */
+  duplicatePanel: (panelId: string) => Promise<string | null>;
   renameCard: (cardId: string, title: string) => Promise<void>;
   markHasDescription: (cardId: string, hasDescription: boolean) => void;
   moveCard: (cardId: string, listId: string, index: number) => Promise<void>;
@@ -298,6 +302,39 @@ export const useBoardStore = create<BoardState>((set, get) => {
           ),
         }));
         return card;
+      } catch (error) {
+        notifyError(error);
+        return null;
+      }
+    },
+
+    duplicateCard: async (cardId) => {
+      try {
+        const card = await api.duplicateCard(cardId);
+        markFresh(card.id);
+        update((current) => ({
+          ...current,
+          lists: current.lists.map((list) => {
+            if (list.id !== card.list_id) return list;
+            const at = list.cards.findIndex((item) => item.id === cardId);
+            const cards = [...list.cards];
+            cards.splice(at === -1 ? cards.length : at + 1, 0, card);
+            return { ...list, cards };
+          }),
+        }));
+        return card;
+      } catch (error) {
+        notifyError(error);
+        return null;
+      }
+    },
+
+    duplicatePanel: async (panelId) => {
+      try {
+        const copy = await api.duplicatePanel(panelId);
+        await get().refresh();
+        markFresh(copy.id);
+        return copy.id;
       } catch (error) {
         notifyError(error);
         return null;
