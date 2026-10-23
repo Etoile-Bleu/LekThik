@@ -3,7 +3,8 @@ use std::collections::HashMap;
 use async_trait::async_trait;
 use domain::boards::{
     Board, BoardAccent, BoardBackground, BoardLook, BoardMember, BoardRepo, BoardTemplate,
-    BoardView, BoardsError, CardSummary, ListWithCards, MAX_BOARDS_PER_WORKSPACE, Role, Title,
+    BoardView, BoardsError, CardSummary, ListWithCards, MAX_BOARDS_PER_WORKSPACE, PanelPlacement,
+    Placement, Role, Title,
 };
 use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
@@ -42,6 +43,33 @@ fn row_to_look(row: &PgRow) -> Result<BoardLook, BoardsError> {
         accent: BoardAccent::parse(&accent)
             .ok_or_else(|| BoardsError::Repository(format!("unknown board accent {accent}")))?,
     })
+}
+
+/// Reads the four grid columns back: all set, or none of them for a panel nobody placed.
+fn row_to_placement(row: &PgRow) -> Result<Option<Placement>, BoardsError> {
+    let column = |name: &str| {
+        row.try_get::<Option<i16>, _>(name)
+            .map_err(repository_error)
+    };
+    let (Some(x), Some(y), Some(w), Some(h)) = (
+        column("grid_x")?,
+        column("grid_y")?,
+        column("grid_w")?,
+        column("grid_h")?,
+    ) else {
+        return Ok(None);
+    };
+    let cell = |value: i16| {
+        u32::try_from(value)
+            .map_err(|_| BoardsError::Repository("stored layout is out of range".to_string()))
+    };
+
+    Placement::parse(cell(x)?, cell(y)?, cell(w)?, cell(h)?).map(Some)
+}
+
+/// A layout number as the column stores it. The domain keeps them far below the limit.
+fn row_value(value: u16) -> Result<i16, BoardsError> {
+    i16::try_from(value).map_err(|_| BoardsError::Invalid("a tile is outside the grid".to_string()))
 }
 
 #[async_trait]
@@ -122,6 +150,7 @@ impl BoardRepo for PgBoardRepo {
 
         let list_rows = sqlx::query(
             "SELECT id, name, wip_limit, kind, config::text AS config, \
+                grid_x, grid_y, grid_w, grid_h, \
                 (SELECT (extract(epoch FROM i.updated_at) * 1000000)::bigint \
                     FROM block_images i WHERE i.block_id = lists.id) AS image_version \
                 FROM lists WHERE board_id = $1 ORDER BY position, created_at, id",
@@ -221,6 +250,7 @@ impl BoardRepo for PgBoardRepo {
                     .and_then(|limit| u8::try_from(limit).ok()),
                 config: crate::list_repo::row_to_config(row)?,
                 image_version: row.try_get("image_version").map_err(repository_error)?,
+                layout: row_to_placement(row)?,
                 cards: Vec::new(),
             });
         }
@@ -321,5 +351,52 @@ impl BoardRepo for PgBoardRepo {
         };
 
         row_to_look(&row)
+    }
+
+    async fn set_layout(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        items: Vec<PanelPlacement>,
+    ) -> Result<(), BoardsError> {
+        let mut transaction = self.pool.begin().await.map_err(repository_error)?;
+
+        let board = sqlx::query(concat!(
+            "SELECT b.id FROM ",
+            owned_board!(),
+            " WHERE b.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
+        ))
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+        if board.is_none() {
+            return Err(denial(&self.pool, Kind::Board, user_id, id).await);
+        }
+
+        for item in items {
+            let placed = sqlx::query(
+                "UPDATE lists SET grid_x = $3, grid_y = $4, grid_w = $5, grid_h = $6                     WHERE id = $1 AND board_id = $2",
+            )
+            .bind(item.id)
+            .bind(id)
+            .bind(i16::from(item.placement.x))
+            .bind(row_value(item.placement.y)?)
+            .bind(i16::from(item.placement.w))
+            .bind(row_value(item.placement.h)?)
+            .execute(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+            if placed.rows_affected() != 1 {
+                return Err(BoardsError::Invalid(
+                    "a placed panel does not belong to this board".to_string(),
+                ));
+            }
+        }
+
+        transaction.commit().await.map_err(repository_error)
     }
 }
