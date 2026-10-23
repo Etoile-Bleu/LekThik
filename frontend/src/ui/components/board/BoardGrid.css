@@ -1,0 +1,278 @@
+.canvas {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.canvas__toolbar {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 1.25rem 0.75rem;
+}
+
+.canvas__spacer {
+  flex: 1;
+}
+
+.canvas__fit {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border-strong));
+}
+
+.canvas__fit svg {
+  color: var(--color-accent);
+}
+
+.canvas__undo {
+  animation: canvas-pop var(--duration-base) var(--ease-out);
+}
+
+.canvas__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 0.25rem 1.25rem 2rem;
+}
+
+.canvas__empty {
+  max-width: 28rem;
+  margin: 1rem 0;
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-muted);
+}
+
+/* Twelve columns, rows of a fixed height. Cells are what tiles snap to. */
+.canvas__grid {
+  --canvas-row: 3rem;
+  --canvas-gap: 0.75rem;
+
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: repeat(var(--canvas-rows, 8), var(--canvas-row));
+  grid-auto-rows: var(--canvas-row);
+  gap: var(--canvas-gap);
+  min-width: 0;
+}
+
+/* While something is held, the page does not select text or scroll under the finger. */
+.canvas__grid[data-holding] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.canvas__grid[data-holding='move'] {
+  cursor: grabbing;
+}
+
+/* The grid cells, drawn faintly while a tile is held so the snapping can be seen. */
+.canvas__grid[data-holding]::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: var(--radius-lg);
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-ink) 7%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: calc((100% + var(--canvas-gap)) / 12) 100%;
+  animation: canvas-fade var(--duration-base) var(--ease-out);
+}
+
+.canvas__tile {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  grid-column: calc(var(--x) + 1) / span var(--w);
+  grid-row: calc(var(--y) + 1) / span var(--h);
+  min-width: 0;
+  min-height: 0;
+}
+
+.canvas__tile > .board-list,
+.canvas__tile > .board-block[data-size] {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  max-height: none;
+  min-height: 0;
+}
+
+.canvas__tile[data-fresh] > .board-list {
+  animation: list-in var(--duration-slow) var(--ease-out);
+}
+
+/* A held tile lifts off the grid. It follows the pointer, so it must stay above the others. */
+.canvas__tile[data-holding] {
+  z-index: 30;
+  will-change: transform;
+}
+
+.canvas__tile[data-holding] > .board-list {
+  border-color: var(--color-accent);
+  box-shadow:
+    0 0 0 1px var(--color-accent),
+    0 18px 40px -12px color-mix(in srgb, var(--color-ink) 35%, transparent);
+}
+
+.canvas__tile[data-holding='move'] > .board-list {
+  cursor: grabbing;
+}
+
+/* Where the held tile will land. */
+.canvas__ghost {
+  z-index: 0;
+  grid-column: calc(var(--x) + 1) / span var(--w);
+  grid-row: calc(var(--y) + 1) / span var(--h);
+  border: 2px dashed var(--color-accent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  pointer-events: none;
+}
+
+/* Handles sit on the edges and the corner, and only draw themselves when they are approached. */
+.canvas__handle {
+  position: absolute;
+  z-index: 2;
+  touch-action: none;
+}
+
+.canvas__handle--e {
+  top: 2.75rem;
+  right: -0.5rem;
+  bottom: 1.5rem;
+  width: 1rem;
+  cursor: ew-resize;
+}
+
+.canvas__handle--s {
+  right: 1.5rem;
+  bottom: -0.5rem;
+  left: 1.5rem;
+  height: 1rem;
+  cursor: ns-resize;
+}
+
+.canvas__handle--se {
+  right: -0.4rem;
+  bottom: -0.4rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  cursor: nwse-resize;
+}
+
+.canvas__handle::after {
+  content: '';
+  position: absolute;
+  opacity: 0;
+  transition: opacity var(--duration-fast) ease;
+}
+
+.canvas__handle--e::after {
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  margin-left: -1.5px;
+  border-radius: 2px;
+  background: var(--color-accent);
+}
+
+.canvas__handle--s::after {
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: var(--color-accent);
+}
+
+/* The corner always shows a small grip, so people can tell a tile is resizable. */
+.canvas__handle--se::after {
+  right: 0.55rem;
+  bottom: 0.55rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  border-bottom-right-radius: 3px;
+  opacity: 0.45;
+}
+
+.canvas__tile:hover .canvas__handle--se::after,
+.canvas__handle:hover::after,
+.canvas__tile[data-holding='resize'] .canvas__handle::after {
+  opacity: 1;
+}
+
+/* The header of a tile is the place to take hold of it. */
+.canvas__grid[data-editable] .board-list__header {
+  cursor: grab;
+  touch-action: none;
+}
+
+.canvas__grid [data-grip][aria-pressed='true'] {
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
+  outline: 2px solid var(--color-accent);
+}
+
+/* On a phone the tiles stack in reading order, at the height they were given. */
+@media (max-width: 719px) {
+  .canvas__toolbar {
+    padding-inline: 1rem;
+  }
+
+  .canvas__scroll {
+    padding-inline: 1rem;
+  }
+
+  .canvas__grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+
+  .canvas__tile {
+    grid-column: 1 / -1;
+    grid-row: auto / span var(--h);
+  }
+
+  .canvas__handle {
+    display: none;
+  }
+}
+
+@keyframes canvas-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes canvas-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .canvas__undo,
+  .canvas__grid[data-holding]::before {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduce'] .canvas__undo,
+:root[data-motion='reduce'] .canvas__grid[data-holding]::before {
+  animation: none;
+}
