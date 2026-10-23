@@ -88,9 +88,9 @@ remaining accessibility rules are in `styles/access.css`.
 - Controls: larger targets, a thick two tone focus ring, plain board backgrounds, reduce motion, and
   spoken announcements when teammates change the board. Notifications wait while you read them.
 
-Views and layout. A board is shown as columns, a sortable table or a calendar, chosen with a switcher
-beside the filters and remembered per board and per person. The three share the filters and stay in
-sync with the live stream.
+Views and layout. A board is shown as columns, a free canvas, a sortable table or a calendar, chosen with
+a switcher beside the filters and remembered per board and per person. They share the filters and stay
+in sync with the live stream.
 
 - Table (`BoardTable`): a real `<table>`, a button inside each sortable heading, `aria-sort` on the
   sorted column only, a glyph that changes shape (not just colour), the sort announced, and rows that
@@ -100,6 +100,19 @@ sync with the live stream.
   Page Down (`lib/calendar.ts`), the first day of the week taken from the locale. Picking a day lists
   its cards beside the grid, and cards without a date wait in a tray where a button gives them the
   chosen day, so planning never needs a drag. Dates are strings, never parsed as `Date`.
+- Canvas (`BoardGrid`, `lib/grid.ts`): every list and block is a tile on a 12 column grid of fixed height
+  rows, placed and sized freely. The layout is shared with the board (not personal) and saved in one
+  call (`PUT /api/boards/{id}/layout`), so it follows the live stream like everything else. A tile is
+  taken by its name, resized from its edges and corner, and while it is held the others glide aside
+  (FLIP), a dashed outline shows where it will land and the cells are drawn faintly. Gravity keeps
+  tiles from floating and from overlapping, whatever was stored (`settle`). Nothing needs a drag: on
+  the move button `Space` picks a tile up, the arrows move it, `Shift` with them resizes it, `Enter`
+  drops it and `Esc` cancels, each step announced, and the tile menu has "Position and size", a form
+  with numbers and a small picture of the grid (WCAG 2.5.7, 2.1.1). "Fit" lays everything out in the
+  most readable way: the reading order is kept, tiles take the size their content asks for, rows are
+  filled edge to edge with as few gaps as a small partition search finds, and "Undo fit" restores the
+  previous layout. A panel nobody placed yet takes the first free spot, the same one on every client.
+  Under 720px tiles stack in reading order at the height they were given.
 - Columns: a list folds into a slim rail that keeps its name and count, three widths, and an optional
   work in progress limit that warns with an icon and words when exceeded and never blocks
   (`lib/wipLimit.ts`). Folding and width are personal; the limit is shared.
@@ -108,6 +121,19 @@ sync with the live stream.
 - Card dialog layout: Settings, Card dialog. Properties are reordered with move buttons and hidden
   with switches, a preview follows, and each change is announced. Hidden properties stay one click
   away in the dialog.
+
+Command palette. `Ctrl+K` or `Cmd+K`, or the search button in the top bar, opens one field to jump
+anywhere and do anything (`components/command/`, `lib/commandStore.ts`, `lib/fuzzy.ts`). It is a
+combobox: focus stays in the field and `aria-activedescendant` follows the arrow keys, results are
+grouped under headings, the match is highlighted, and the count is announced once typing pauses. The
+search is fuzzy (letters in order, accents and case ignored, word starts and runs rank higher) over
+cards, boards, pages and actions, with recent commands first when nothing is typed and kept in this
+browser only. An action that needs details asks one question at a time, a list to choose from or a
+text, with the trail shown above the field, `Backspace` on an empty field and `Esc` stepping back, and
+a due date can be typed the way people say it (`tomorrow`, `friday`, `+3d`, `2026-03-14`, `none`). Each
+screen offers its own actions through `useCommandSource`, so the board adds its cards, "Add a card",
+"Move a card to a list", "Fit the layout" and the rest, and readers are only offered what they may do.
+Every action goes through the same store calls as the buttons, so the live stream shows it to everyone.
 
 Blocks. A board's row can hold blocks next to its lists, added from "Add a block" in a picker that
 shows a drawing of each. A block is a panel with a kind, so it moves, folds, renames and deletes like a
