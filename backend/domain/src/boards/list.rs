@@ -77,6 +77,8 @@ pub trait ListRepo: Send + Sync {
         id: Uuid,
         limit: Option<WipLimit>,
     ) -> Result<List, BoardsError>;
+    /// Copies a list with its cards, or a block with its settings and picture, right after the original.
+    async fn duplicate(&self, user_id: Uuid, id: Uuid) -> Result<List, BoardsError>;
     async fn move_to(&self, user_id: Uuid, id: Uuid, index: usize) -> Result<(), BoardsError>;
     async fn delete(&self, user_id: Uuid, id: Uuid) -> Result<(), BoardsError>;
 }
