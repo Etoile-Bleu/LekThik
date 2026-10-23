@@ -8,6 +8,7 @@ mod image;
 mod invitation;
 mod label;
 mod label_style;
+mod layout;
 mod limits;
 mod list;
 mod locator;
@@ -36,6 +37,9 @@ pub use image::{
 pub use invitation::{Invitation, InvitationRepo, InvitationStatus, NewInvitation};
 pub use label::{Label, LabelRepo, LabelUpdate};
 pub use label_style::{LabelColor, Priority};
+pub use layout::{
+    GRID_COLUMNS, GRID_MAX_ROWS, GRID_MAX_TILE_HEIGHT, PanelPlacement, Placement, check_layout,
+};
 pub use limits::{
     INVITATION_TTL_SECONDS, MAX_ASSIGNEES_PER_CARD, MAX_BOARDS_PER_WORKSPACE, MAX_CARDS_PER_LIST,
     MAX_LABELS_PER_BOARD, MAX_LISTS_PER_BOARD, MAX_MEMBERS_PER_WORKSPACE,
