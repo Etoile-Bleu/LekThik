@@ -319,6 +319,21 @@ export function HelpSection() {
         </dl>
       </Help>
 
+      <Help title="Use the whole screen">
+        <ul className="settings-list">
+          <li>
+            The <strong>full screen</strong> button in the top bar, or{' '}
+            <strong>Enter full screen</strong> in the command palette, hides the top bar and the
+            menu and leaves only the page.
+          </li>
+          <li>
+            Move the pointer to the left edge to slide the menu in, and away to send it back. The{' '}
+            <strong>Navigation</strong> and <strong>Exit full screen</strong> buttons at the bottom
+            right do the same without a mouse, and <kbd>Esc</kbd> leaves full screen too.
+          </li>
+        </ul>
+      </Help>
+
       <Help title="Lay out a board the way you want">
         <ul className="settings-list">
           <li>
