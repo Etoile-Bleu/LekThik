@@ -164,3 +164,37 @@ export const MARKDOWN_HELP: Array<{ what: string; how: string }> = [
   { what: 'Maths (LaTeX)', how: '$x^2$  or a block between $$ and $$' },
   { what: 'Diagram (Mermaid)', how: 'a fenced block that starts with ```mermaid' },
 ];
+
+/**
+ * The level each heading of a text is drawn at, by the line it starts on. Headings sit below the
+ * title of the place that shows them (`offset` is that title's level), the shallowest heading in
+ * the text takes the level right under it, and no heading skips a level on the way down, so a
+ * note that begins with "##" still reads as a proper outline.
+ */
+export function headingOutline(text: string, offset: number): Map<number, number> {
+  const found: Array<{ line: number; level: number }> = [];
+  let fence: string | null = null;
+  text.split('\n').forEach((raw, index) => {
+    const fenced = /^ {0,3}(`{3,}|~{3,})/.exec(raw);
+    if (fenced) {
+      if (fence === null) fence = fenced[1][0];
+      else if (fenced[1][0] === fence) fence = null;
+      return;
+    }
+    if (fence !== null) return;
+    const match = /^ {0,3}(#{1,6})[ \t]+\S/.exec(raw);
+    if (match) found.push({ line: index + 1, level: match[1].length });
+  });
+
+  const outline = new Map<number, number>();
+  if (found.length === 0) return outline;
+  const shallowest = Math.min(...found.map((heading) => heading.level));
+  let previous = offset;
+  for (const heading of found) {
+    const wanted = offset + (heading.level - shallowest + 1);
+    const level = Math.min(6, wanted, previous + 1);
+    outline.set(heading.line, level);
+    previous = level;
+  }
+  return outline;
+}
