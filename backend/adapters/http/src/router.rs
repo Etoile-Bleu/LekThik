@@ -78,6 +78,7 @@ fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(create_board))
         .routes(routes!(get_board, rename_board, delete_board))
         .routes(routes!(set_board_look))
+        .routes(routes!(set_board_layout))
         .routes(routes!(create_list))
         .routes(routes!(create_label))
         .routes(routes!(rename_list, delete_list))
