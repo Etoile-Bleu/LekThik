@@ -19,7 +19,8 @@ pub use common::ErrorResponseDto;
 pub use label::{CreateLabelRequestDto, LabelDto, UpdateLabelRequestDto};
 pub use list::{
     BlockImageResponseDto, CreateBlockRequestDto, ListResponseDto, ListWithCardsDto,
-    MoveListRequestDto, SetBlockConfigRequestDto, WipLimitRequestDto,
+    MoveListRequestDto, PanelPlacementDto, PlacementDto, SetBlockConfigRequestDto,
+    SetLayoutRequestDto, WipLimitRequestDto,
 };
 pub use members::{
     ChangeRoleRequestDto, InvitationDto, InviteMemberRequestDto, MemberDto, MembersResponseDto,
