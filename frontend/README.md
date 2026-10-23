@@ -122,6 +122,14 @@ in sync with the live stream.
   with switches, a preview follows, and each change is announced. Hidden properties stay one click
   away in the dialog.
 
+Full screen. A button in the top bar, and "Enter full screen" in the palette, ask the browser for full screen
+(`lib/fullscreenStore.ts`) and hide the top bar and the menu, so only the page is left. The menu waits off
+screen and slides in over the page when the pointer reaches the left edge (a strip with a thin line that
+shows itself once), when the Navigation button at the bottom right is pressed, or when it takes the keyboard
+focus, and slides out when the pointer leaves. Exit full screen sits beside it, `Esc` and `F11` end it and
+the app follows through `fullscreenchange`. Where the browser refuses full screen (an iPhone, a frame) the
+page still hides its chrome. Motion is skipped when reduced.
+
 Command palette. `Ctrl+K` or `Cmd+K`, or the search button in the top bar, opens one field to jump
 anywhere and do anything (`components/command/`, `lib/commandStore.ts`, `lib/fuzzy.ts`). It is a
 combobox: focus stays in the field and `aria-activedescendant` follows the arrow keys, results are
