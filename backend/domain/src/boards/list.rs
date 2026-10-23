@@ -4,6 +4,7 @@ use uuid::Uuid;
 use super::block::BlockConfig;
 use super::card::CardSummary;
 use super::error::BoardsError;
+use super::layout::Placement;
 use super::limits::MAX_WIP_LIMIT;
 use super::text::Title;
 
@@ -44,6 +45,8 @@ pub struct ListWithCards {
     pub config: BlockConfig,
     /// Changes with every new picture of an image block, `None` while it has none.
     pub image_version: Option<i64>,
+    /// Where it sits on the free layout, `None` until somebody places it.
+    pub layout: Option<Placement>,
     pub cards: Vec<CardSummary>,
 }
 
