@@ -450,3 +450,64 @@ export function UploadIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function LayoutIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3" y="3.5" width="6.5" height="8" rx="1.5" />
+      <rect x="12" y="3.5" width="5" height="4" rx="1.5" />
+      <rect x="12" y="10" width="5" height="6.5" rx="1.5" />
+      <rect x="3" y="14" width="6.5" height="2.5" rx="1.25" />
+    </Base>
+  );
+}
+
+export function FitIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M3.5 7.5v-4h4M16.5 7.5v-4h-4M3.5 12.5v4h4M16.5 12.5v4h-4" />
+      <rect x="7" y="7" width="6" height="6" rx="1.25" />
+    </Base>
+  );
+}
+
+export function SearchIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="9" cy="9" r="5" />
+      <path d="m13 13 3.5 3.5" />
+    </Base>
+  );
+}
+
+export function MoveIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M10 3v14M3 10h14M10 3 8 5M10 3l2 2M10 17l-2-2M10 17l2-2M3 10l2-2M3 10l2 2M17 10l-2-2M17 10l-2 2" />
+    </Base>
+  );
+}
+
+export function ResizeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M16 8v8H8M16 16 9 9M12 16h4M16 12v4" />
+    </Base>
+  );
+}
+
+export function CornerDownLeftIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M16 4.5v6a2 2 0 0 1-2 2H4.5M8 8.5l-3.5 3.5L8 15.5" />
+    </Base>
+  );
+}
+
+export function ZapIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M11 2.5 4.5 11H10l-1 6.5L15.5 9H10l1-6.5Z" />
+    </Base>
+  );
+}
