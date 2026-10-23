@@ -42,6 +42,17 @@ impl Title {
         &self.0
     }
 
+    /// The name of a copy: the original with " (copy)" after it, cut short when it would not fit.
+    pub fn copy_of(&self) -> Self {
+        const SUFFIX: &str = " (copy)";
+        let room = TITLE_MAX_CHARS - SUFFIX.chars().count();
+        if self.0.chars().count() <= room {
+            return Self(format!("{}{SUFFIX}", self.0));
+        }
+        let kept: String = self.0.chars().take(room).collect();
+        Self(format!("{}{SUFFIX}", kept.trim_end()))
+    }
+
     pub fn into_string(self) -> String {
         self.0
     }

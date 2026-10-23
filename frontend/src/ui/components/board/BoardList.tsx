@@ -6,6 +6,7 @@ import { useOpening } from '@hooks/useOpening';
 import { announce } from '@lib/announcer';
 import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
+import { useSelectionStore } from '@lib/selectionStore';
 import { type LimitState, describeCount, limitState } from '@lib/wipLimit';
 
 import { Composer } from '../ui/Composer';
@@ -119,6 +120,7 @@ export function BoardList({
   });
 
   const { onKeyDown, pointer: pointerListeners } = splitDragListeners(listeners);
+  const selectedPanel = useSelectionStore((state) => state.panels.includes(list.id));
   const cardIds = list.cards.map((card) => card.id);
   const count = list.cards.length;
   const state = limitState(count, list.wip_limit);
@@ -142,6 +144,8 @@ export function BoardList({
     return (
       <section
         ref={setNodeRef}
+        data-panel-id={list.id}
+        data-selected={selectedPanel || undefined}
         style={style}
         className="board-list board-list--collapsed"
         aria-label={`${list.name}, collapsed`}
@@ -171,6 +175,8 @@ export function BoardList({
   return (
     <section
       ref={setNodeRef}
+      data-panel-id={list.id}
+      data-selected={selectedPanel || undefined}
       style={style}
       className="board-list"
       aria-labelledby={headingId}

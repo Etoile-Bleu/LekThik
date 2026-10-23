@@ -337,7 +337,7 @@ export function BoardCalendar({
             ) : (
               <ul className="calendar__list calendar__list--tray">
                 {unscheduled.map((row) => (
-                  <li key={row.card.id} className="calendar__item">
+                  <li key={row.card.id} className="calendar__item" data-card-id={row.card.id}>
                     <button
                       type="button"
                       className="calendar__open"

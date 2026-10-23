@@ -122,6 +122,21 @@ in sync with the live stream.
   with switches, a preview follows, and each change is announced. Hidden properties stay one click
   away in the dialog.
 
+Selecting, the hand and the right click (`hooks/useBackdropGestures.ts`, `lib/selectionStore.ts`,
+`components/ui/ContextMenu.tsx`). Dragging on the background of the board or the canvas draws a rectangle that picks
+the lists and blocks it touches, or the cards when it starts in the empty part of a list, with no text selected on the
+way and the view scrolling when the pointer reaches an edge. Shift or Ctrl with a click, `X` on a focused card,
+`Ctrl+A` and the menus add to the selection, and a bar offers Duplicate, Move to, Due date, Assign to me and Delete
+for all of it, one call after the other so permissions and live updates are those of a single action. The hand
+(`Free navigation`, `H`, Space held or the middle button) moves the view in every direction instead, and the
+two tools sit in one dock at the bottom right with the full screen buttons. The right click is replaced in the work
+area by a menu that knows what is under the pointer and acts on the whole selection when the target is part of it
+(`components/board/boardContextMenu.tsx`): open, copy link, duplicate, due date, assign, labels, move, delete for
+cards; add a card, rename, duplicate, card limit, move all cards, position for lists; and add a list or a block, fit,
+select all, free navigation, view and full screen on the background. It follows the ARIA menu pattern with
+submenus, typeahead and checks, opens on the focused item from the menu key or `Shift+F10`, on a long press on touch,
+keeps the browser's menu in text fields, on selected text and with `Shift`, and sits inside the themed app area.
+
 Full screen. A button in the top bar, and "Enter full screen" in the palette, ask the browser for full screen
 (`lib/fullscreenStore.ts`) and hide the top bar and the menu, so only the page is left. The menu waits off
 screen and slides in over the page when the pointer reaches the left edge (a strip with a thin line that

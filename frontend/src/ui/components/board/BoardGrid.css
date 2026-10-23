@@ -276,3 +276,7 @@
 :root[data-motion='reduce'] .canvas__grid[data-holding]::before {
   animation: none;
 }
+
+.canvas__scroll {
+  position: relative;
+}

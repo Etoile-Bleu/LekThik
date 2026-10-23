@@ -25,13 +25,23 @@ import { fitLayout, resolveLayout, settle } from '@lib/grid';
 import { type BoardViewKind, boardPrefsFor, cardDisplayFor } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
+import { useCanvasToolStore } from '@lib/canvasToolStore';
+import { useCommandStore } from '@lib/commandStore';
+import { useFullscreenStore } from '@lib/fullscreenStore';
+import { useSelectionStore } from '@lib/selectionStore';
+import { notifySuccess } from '@lib/toastStore';
 import { useWorkspaceStore } from '@lib/workspaceStore';
+import { useBoardBulk } from '@hooks/useBoardBulk';
+import { useCanvasToolKeys } from '@hooks/useCanvasToolKeys';
 
 import { AddBlockDialog } from '../components/board/AddBlockDialog';
 import { type MediaInput, type MediaKind, MediaDialog } from '../components/board/MediaDialog';
 import { BlockSettingsDialog } from '../components/board/BlockSettingsDialog';
 import { BoardCalendar } from '../components/board/BoardCalendar';
 import { BoardCanvas } from '../components/board/BoardCanvas';
+import { BoardContextHost } from '../components/board/BoardContextHost';
+import { CanvasTools } from '../components/board/CanvasTools';
+import { SelectionBar } from '../components/board/SelectionBar';
 import { BoardTable } from '../components/board/BoardTable';
 import { TilePositionDialog } from '../components/board/TilePositionDialog';
 import { BoardCommandSource } from '../components/command/BoardCommandSource';
@@ -47,6 +57,14 @@ import { ArrowLeftIcon, TagIcon, TrashIcon, UsersIcon } from '../components/ui/I
 import { InlineEdit } from '../components/ui/InlineEdit';
 import { Menu } from '../components/ui/Menu';
 import './BoardPage.css';
+
+/** A day written `YYYY-MM-DD`, some days later, counted on the calendar and not in hours. */
+function addDaysTo(day: string, amount: number): string {
+  const [year, month, date] = day.split('-').map(Number);
+  const next = new Date(year, month - 1, date + amount);
+  const pad = (value: number) => String(value).padStart(2, '0');
+  return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
+}
 
 export function BoardPage() {
   const { boardId = '' } = useParams();
@@ -90,6 +108,12 @@ export function BoardPage() {
   const today = useToday();
   const [deletingBoard, setDeletingBoard] = useState(false);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
+  const [bulkDelete, setBulkDelete] = useState<{ cards: string[]; panels: string[] } | null>(null);
+  const [workArea, setWorkArea] = useState<HTMLDivElement | null>(null);
+  const bulk = useBoardBulk();
+  const pickedCards = useSelectionStore((state) => state.cards);
+  const pickedPanels = useSelectionStore((state) => state.panels);
+  const tool = useCanvasToolStore((state) => state.tool);
   const [limitListId, setLimitListId] = useState<string | null>(null);
   const [pickingBlock, setPickingBlock] = useState(false);
   const [blockSettingsId, setBlockSettingsId] = useState<string | null>(null);
@@ -97,6 +121,34 @@ export function BoardPage() {
   const [positionId, setPositionId] = useState<string | null>(null);
 
   useDocumentTitle(view?.board.name ?? 'Board');
+
+  const boardKey = view?.board.id;
+  const viewKind = view ? boardPrefsFor(prefs, view.board.id).view : null;
+  useEffect(() => {
+    useSelectionStore.getState().clear();
+  }, [boardKey, viewKind]);
+
+  function allCardIds(): string[] {
+    return (view?.lists ?? [])
+      .filter(isCardList)
+      .flatMap((list) => list.cards.map((card) => card.id));
+  }
+
+  function askDeleteSelection() {
+    const { cards, panels } = useSelectionStore.getState();
+    if (cards.length + panels.length > 0) setBulkDelete({ cards, panels });
+  }
+
+  useCanvasToolKeys({
+    enabled: view !== null,
+    selectAll: () => useSelectionStore.getState().setSelection(allCardIds(), []),
+    onDelete: askDeleteSelection,
+    onDuplicate: () => {
+      const { cards, panels } = useSelectionStore.getState();
+      if (cards.length > 0) void bulk.duplicateCards(cards);
+      else if (panels.length > 0) void bulk.duplicatePanels(panels);
+    },
+  });
 
   useEffect(() => {
     setFilter(EMPTY_FILTER);
@@ -372,7 +424,91 @@ export function BoardPage() {
           leading={<ViewSwitcher value={own.view} onChange={changeView} />}
         />
 
-        <div className="board-page__canvas" key={own.view}>
+        <BoardContextHost
+          container={workArea}
+          context={{
+            view,
+            meId,
+            editable,
+            canManage: canManage(view.role),
+            currentView: own.view,
+            tool,
+            selectedCards: pickedCards,
+            selectedPanels: pickedPanels,
+            today,
+            openCard: setOpenCardId,
+            copyLink: (cardId) => {
+              const link = `${window.location.origin}/b/${view.board.id}?card=${cardId}`;
+              void navigator.clipboard
+                ?.writeText(link)
+                .then(() => notifySuccess('Link copied.'))
+                .catch(() => notifyError(new Error('The link could not be copied.')));
+            },
+            select: (cards, panels) => useSelectionStore.getState().setSelection(cards, panels),
+            clearSelection: () => useSelectionStore.getState().clear(),
+            askDeleteCards: (ids) => setBulkDelete({ cards: ids, panels: [] }),
+            askDeletePanels: (ids) =>
+              ids.length === 1
+                ? setDeletingListId(ids[0])
+                : setBulkDelete({ cards: [], panels: ids }),
+            openLimit: setLimitListId,
+            openBlockSettings: setBlockSettingsId,
+            openPosition: setPositionId,
+            renamePanel: (panelId) =>
+              document
+                .querySelector<HTMLElement>(
+                  `[data-panel-id="${CSS.escape(panelId)}"] .board-list__title button`
+                )
+                ?.click(),
+            addCardIn: (listId) =>
+              document
+                .querySelector<HTMLElement>(
+                  `[data-panel-id="${CSS.escape(listId)}"] .board-list__footer button`
+                )
+                ?.click(),
+            addList: () =>
+              document
+                .querySelector<HTMLElement>('.canvas__add-list button, .board-canvas__add button')
+                ?.click(),
+            addBlock: pickBlock,
+            fit: fitEverything,
+            changeView,
+            setTool: (next) => useCanvasToolStore.getState().setTool(next),
+            enterFullscreen: () => void useFullscreenStore.getState().enter(),
+            openPalette: () => useCommandStore.getState().openPalette(),
+            actions: {
+              duplicateCards: (ids) => void bulk.duplicateCards(ids),
+              duplicatePanels: (ids) => void bulk.duplicatePanels(ids),
+              moveCards: (ids, listId, index) => void bulk.moveCards(ids, listId, index),
+              setDueDate: (ids, day) => void bulk.setDueDate(ids, day),
+              setLabel: (ids, labelId, on) => void bulk.setLabel(ids, labelId, on),
+              setAssignee: (ids, userId, on) => void bulk.setAssignee(ids, userId, on),
+              movePanel: (panelId, index) => void moveList(panelId, index),
+            },
+          }}
+        />
+        {(own.view === 'board' || own.view === 'canvas') && <CanvasTools />}
+        <SelectionBar
+          panels={view.lists}
+          meId={meId}
+          today={today}
+          tomorrow={addDaysTo(today, 1)}
+          nextWeek={addDaysTo(today, 7)}
+          editable={editable}
+          onDuplicate={() => {
+            const { cards, panels } = useSelectionStore.getState();
+            if (cards.length > 0) void bulk.duplicateCards(cards);
+            else void bulk.duplicatePanels(panels);
+          }}
+          onDelete={askDeleteSelection}
+          onMoveTo={(listId) => void bulk.moveCards(useSelectionStore.getState().cards, listId)}
+          onDueDate={(day) => void bulk.setDueDate(useSelectionStore.getState().cards, day)}
+          onAssignMe={() => {
+            if (meId) void bulk.setAssignee(useSelectionStore.getState().cards, meId, true);
+          }}
+        />
+
+        <div className="board-page__canvas" key={own.view} ref={setWorkArea}>
           {own.view === 'list' && (
             <BoardTable
               boardName={view.board.name}
@@ -476,6 +612,40 @@ export function BoardPage() {
         <MembersDialog
           workspace={membersOpen ? (workspace ?? null) : null}
           onClose={() => setMembersOpen(false)}
+        />
+
+        <ConfirmDialog
+          open={bulkDelete !== null}
+          title={
+            bulkDelete && bulkDelete.panels.length > 0
+              ? 'Delete the selection?'
+              : 'Delete these cards?'
+          }
+          message={
+            bulkDelete
+              ? `${[
+                  bulkDelete.cards.length > 0
+                    ? `${bulkDelete.cards.length} card${bulkDelete.cards.length === 1 ? '' : 's'}`
+                    : null,
+                  bulkDelete.panels.length > 0
+                    ? `${bulkDelete.panels.length} list${bulkDelete.panels.length === 1 ? '' : 's'} or block${bulkDelete.panels.length === 1 ? '' : 's'} with everything inside`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' and ')} will be removed for good.`
+              : ''
+          }
+          confirmLabel="Delete"
+          onCancel={() => setBulkDelete(null)}
+          onConfirm={() => {
+            const chosen = bulkDelete;
+            setBulkDelete(null);
+            if (!chosen) return;
+            void (async () => {
+              if (chosen.cards.length > 0) await bulk.deleteCards(chosen.cards);
+              if (chosen.panels.length > 0) await bulk.deletePanels(chosen.panels);
+            })();
+          }}
         />
 
         <ConfirmDialog

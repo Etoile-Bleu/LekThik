@@ -536,3 +536,46 @@ export function SidebarIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function CursorIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m4.5 3.5 11 5-4.7 1.6L9.2 15Z" />
+    </Base>
+  );
+}
+
+export function HandIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M7 10V4.8a1.2 1.2 0 0 1 2.4 0V9m0-4.7a1.2 1.2 0 0 1 2.4 0V9m0-3.6a1.2 1.2 0 0 1 2.4 0V11m0-3.2a1.2 1.2 0 0 1 2.4 0v4.2c0 2.6-1.8 4.5-4.5 4.5H10c-1.6 0-2.5-.7-3.4-1.9L4 11.4a1.2 1.2 0 0 1 1.9-1.4L7 11.4" />
+    </Base>
+  );
+}
+
+export function CopyIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="7" y="7" width="9" height="9" rx="2" />
+      <path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-6A1.5 1.5 0 0 0 4 5.5v6A1.5 1.5 0 0 0 5.5 13H7" />
+    </Base>
+  );
+}
+
+export function SelectAllIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <rect x="3.5" y="3.5" width="13" height="13" rx="2.5" strokeDasharray="2.5 2.5" />
+      <path d="m7.5 10 2 2 3.5-4" />
+    </Base>
+  );
+}
+
+export function FolderMoveIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H8l1.5 1.8h6A1.5 1.5 0 0 1 17 8.3v6.2a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 14.5Z" />
+      <path d="M8 11.5h5m-1.8-1.8 1.8 1.8-1.8 1.8" />
+    </Base>
+  );
+}

@@ -6,6 +6,7 @@ import { useOpening } from '@hooks/useOpening';
 import { KIND_LABEL, noteConfig } from '@lib/blocks';
 import type { BoardList, PanelKind } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
+import { useSelectionStore } from '@lib/selectionStore';
 
 import {
   ArrowLeftIcon,
@@ -117,6 +118,7 @@ export function BoardBlock({
     disabled: readOnly || (collapsed && !inGrid) ? true : inGrid ? { draggable: true } : false,
   });
   const { onKeyDown, pointer: pointerListeners } = splitDragListeners(listeners);
+  const selectedPanel = useSelectionStore((state) => state.panels.includes(block.id));
   const opening = useOpening(collapsed && !inGrid);
 
   const style = { transform: CSS.Translate.toString(transform), transition };
@@ -126,6 +128,8 @@ export function BoardBlock({
     return (
       <section
         ref={setNodeRef}
+        data-panel-id={block.id}
+        data-selected={selectedPanel || undefined}
         style={style}
         className="board-list board-list--collapsed board-block"
         role="group"
@@ -152,6 +156,8 @@ export function BoardBlock({
   return (
     <section
       ref={setNodeRef}
+      data-panel-id={block.id}
+      data-selected={selectedPanel || undefined}
       style={style}
       className="board-list board-block"
       role="group"

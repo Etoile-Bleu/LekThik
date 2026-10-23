@@ -1,0 +1,78 @@
+/*
+ * Picking things on a board. The rectangle and the picked cards, lists and blocks use the accent
+ * with a fill and a ring (never the colour alone), and moving the view shows a hand.
+ */
+.marquee {
+  position: absolute;
+  z-index: 40;
+  border: 1.5px solid var(--color-accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  pointer-events: none;
+}
+
+[data-tool='hand'],
+[data-tool='hand'] * {
+  cursor: grab !important;
+}
+
+[data-panning],
+[data-panning] * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+.board-card[data-selected] .board-card__open {
+  background: var(--color-accent-tint);
+  box-shadow: 0 0 0 2px var(--color-accent);
+}
+
+/* A small tick in the corner says "picked" without relying on the colour. */
+.board-card[data-selected]::after {
+  content: '';
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background:
+    linear-gradient(
+        135deg,
+        transparent 44%,
+        var(--color-accent-ink, #04201a) 44% 56%,
+        transparent 56%
+      )
+      0.2rem 0.38rem / 0.4rem 0.3rem no-repeat,
+    linear-gradient(
+        45deg,
+        transparent 44%,
+        var(--color-accent-ink, #04201a) 44% 56%,
+        transparent 56%
+      )
+      0.38rem 0.22rem / 0.6rem 0.5rem no-repeat,
+    var(--color-accent);
+  pointer-events: none;
+}
+
+.board-card {
+  position: relative;
+}
+
+.board-list[data-selected] {
+  border-color: var(--color-accent);
+  box-shadow:
+    0 0 0 2px var(--color-accent),
+    0 10px 28px -14px color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+/* Picking cards must not pick their words: no text is selected while a rectangle is drawn, and cards and picked panels are not text to copy. */
+[data-selecting],
+[data-selecting] *,
+.board-card,
+.board-card *,
+[data-panel-id][data-selected],
+[data-panel-id][data-selected] * {
+  -webkit-user-select: none;
+  user-select: none;
+}

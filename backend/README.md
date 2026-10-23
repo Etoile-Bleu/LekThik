@@ -118,6 +118,8 @@ emails) so a client can draw avatars without another request.
 | `GET /api/blocks/{id}/image` | The picture of an image block, for members only |
 | `PUT /api/blocks/{id}/config` | Change the settings of a block, the kind must match |
 | `PUT /api/lists/{id}/wip-limit` | Set a list's work in progress limit (1 to 99), or `null` to remove it |
+| `POST /api/cards/{id}/duplicate` | Copy a card right after the original, with its description, date, labels and assignees |
+| `POST /api/lists/{id}/duplicate` | Copy a list with its cards, or a block with its settings and picture |
 | `PUT /api/boards/{id}/layout` | Place lists and blocks on the free layout grid, shared with the board |
 
 ### Preferences and board look
