@@ -118,6 +118,7 @@ emails) so a client can draw avatars without another request.
 | `GET /api/blocks/{id}/image` | The picture of an image block, for members only |
 | `PUT /api/blocks/{id}/config` | Change the settings of a block, the kind must match |
 | `PUT /api/lists/{id}/wip-limit` | Set a list's work in progress limit (1 to 99), or `null` to remove it |
+| `PUT /api/boards/{id}/layout` | Place lists and blocks on the free layout grid, shared with the board |
 
 ### Preferences and board look
 
@@ -138,6 +139,16 @@ A list can carry a work in progress limit from 1 to 99 (`PUT /api/lists/{id}/wip
 above, `null` removes it). It is shared with the board, returned in the board view, and only warns:
 adding or moving cards past it still works. The field must be present, so an empty body can never
 clear a limit by accident.
+
+The free layout of a board is stored on its panels: four nullable columns on `lists` (`grid_x`,
+`grid_y`, `grid_w`, `grid_h`, set together or not at all, with a check constraint, migration
+`012_add_list_layout.sql`) on a grid 12 columns wide. `PUT /api/boards/{id}/layout` takes the tiles to
+place (writers and above), refuses anything outside the grid (a tile stays inside the 12 columns and the
+first 400 rows and is at most 100 rows tall), a panel named twice, a panel of another board and an empty
+list, and stores the whole call in one transaction, so a refused tile changes nothing. Panels left out
+keep their place, and a panel never placed comes back with `layout: null` so clients lay it out
+themselves. It is shared with everyone on the board and refreshed live like any other board change.
+The `canvas` view is one more value of the per board view preference.
 
 A board holds panels in one row, and a panel is either a list of cards or a block that shows
 something about them: `calendar`, `agenda`, `note` or `counter`. Blocks live in the `lists` table with a

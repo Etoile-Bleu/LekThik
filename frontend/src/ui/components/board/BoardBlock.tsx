@@ -17,7 +17,9 @@ import {
   GripIcon,
   HashIcon,
   ImageIcon,
+  LayoutIcon,
   LinkIcon,
+  MoveIcon,
   NoteIcon,
   PlayIcon,
   SettingsIcon,
@@ -25,6 +27,7 @@ import {
 } from '../ui/Icons';
 import { InlineEdit } from '../ui/InlineEdit';
 import { Menu } from '../ui/Menu';
+import type { TileControls } from './BoardGrid';
 import { AgendaBlock } from './blocks/AgendaBlock';
 import { CalendarBlock } from './blocks/CalendarBlock';
 import { CounterBlock } from './blocks/CounterBlock';
@@ -50,6 +53,9 @@ interface BoardBlockProps {
   onSaveNote: (blockId: string, text: string) => void;
   onOpenCard: (cardId: string) => void;
   readOnly?: boolean;
+  /** Set when the block is a tile of the free layout, where the grip and the menu place it. */
+  tile?: TileControls | null;
+  inGrid?: boolean;
 }
 
 export function KindIcon({ kind, size = 16 }: { kind: PanelKind; size?: number }) {
@@ -92,6 +98,8 @@ export function BoardBlock({
   onSaveNote,
   onOpenCard,
   readOnly = false,
+  tile = null,
+  inGrid = false,
 }: BoardBlockProps) {
   const headingId = useId();
   const {
@@ -106,15 +114,15 @@ export function BoardBlock({
     id: block.id,
     // Cards can be dropped on lists only, so the canvas tells blocks apart by this flag.
     data: { type: 'list', block: true },
-    disabled: readOnly || collapsed,
+    disabled: readOnly || (collapsed && !inGrid) ? true : inGrid ? { draggable: true } : false,
   });
   const { onKeyDown, pointer: pointerListeners } = splitDragListeners(listeners);
-  const opening = useOpening(collapsed);
+  const opening = useOpening(collapsed && !inGrid);
 
   const style = { transform: CSS.Translate.toString(transform), transition };
   const size = (block.config as { size?: string }).size === 'wide' ? 'wide' : 'normal';
 
-  if (collapsed) {
+  if (collapsed && !inGrid) {
     return (
       <section
         ref={setNodeRef}
@@ -154,8 +162,12 @@ export function BoardBlock({
       data-dragging={isDragging || undefined}
       data-opening={opening || undefined}
     >
-      <div className="board-list__header" {...(readOnly ? {} : pointerListeners)}>
-        {!readOnly && (
+      <div
+        className="board-list__header"
+        {...(readOnly || inGrid ? {} : pointerListeners)}
+        onPointerDown={tile?.onHeaderPointerDown}
+      >
+        {!readOnly && !inGrid && (
           <button
             type="button"
             ref={setActivatorNodeRef}
@@ -167,11 +179,16 @@ export function BoardBlock({
             <GripIcon size={16} />
           </button>
         )}
+        {tile && (
+          <button type="button" className="board-list__grip" {...tile.gripProps}>
+            <MoveIcon size={16} />
+          </button>
+        )}
         <span className="board-block__kind" title={KIND_LABEL[block.kind]}>
           <KindIcon kind={block.kind} />
           <span className="sr-only">{KIND_LABEL[block.kind]}:</span>
         </span>
-        <div className="board-list__title" id={headingId}>
+        <div className="board-list__title" id={headingId} data-drag-title>
           <InlineEdit
             as="h2"
             className="board-list__name"
@@ -181,15 +198,17 @@ export function BoardBlock({
             onCommit={(name) => onRename(block.id, name)}
           />
         </div>
-        <button
-          type="button"
-          className="board-list__fold"
-          aria-expanded={true}
-          aria-label={`Collapse block ${block.name}`}
-          onClick={() => onToggleCollapsed(block.id)}
-        >
-          <ChevronsLeftIcon size={16} />
-        </button>
+        {!inGrid && (
+          <button
+            type="button"
+            className="board-list__fold"
+            aria-expanded={true}
+            aria-label={`Collapse block ${block.name}`}
+            onClick={() => onToggleCollapsed(block.id)}
+          >
+            <ChevronsLeftIcon size={16} />
+          </button>
+        )}
         {!readOnly && (
           <Menu
             label={`Actions for block ${block.name}`}
@@ -199,18 +218,30 @@ export function BoardBlock({
                 icon: <SettingsIcon />,
                 onSelect: () => onSettings(block.id),
               },
-              {
-                label: 'Move left',
-                icon: <ArrowLeftIcon />,
-                disabled: index === 0,
-                onSelect: () => onMove(block.id, index - 1),
-              },
-              {
-                label: 'Move right',
-                icon: <ArrowRightIcon />,
-                disabled: index === total - 1,
-                onSelect: () => onMove(block.id, index + 1),
-              },
+              ...(inGrid
+                ? tile
+                  ? [
+                      {
+                        label: 'Position and size…',
+                        icon: <LayoutIcon />,
+                        onSelect: tile.onPosition,
+                      },
+                    ]
+                  : []
+                : [
+                    {
+                      label: 'Move left',
+                      icon: <ArrowLeftIcon />,
+                      disabled: index === 0,
+                      onSelect: () => onMove(block.id, index - 1),
+                    },
+                    {
+                      label: 'Move right',
+                      icon: <ArrowRightIcon />,
+                      disabled: index === total - 1,
+                      onSelect: () => onMove(block.id, index + 1),
+                    },
+                  ]),
               {
                 label: 'Delete block',
                 icon: <TrashIcon />,
