@@ -3,11 +3,14 @@ import type { NavigateFunction } from 'react-router-dom';
 import type { AssignedCard, Workspace } from '@lib/boardsApi';
 import type { Command } from '@lib/commandStore';
 import type { Preferences, Theme } from '@lib/prefs';
+import { useFullscreenStore } from '@lib/fullscreenStore';
 
 import {
   CheckCircleIcon,
   ColumnsIcon,
   HelpIcon,
+  MaximizeIcon,
+  MinimizeIcon,
   PaletteIcon,
   PlusIcon,
   SettingsIcon,
@@ -95,6 +98,19 @@ export function globalCommands(context: GlobalContext): Command[] {
       icon: <PaletteIcon size={16} />,
       searchOnly: true,
       run: () => context.updatePrefs({ motion: prefs.motion === 'reduce' ? 'system' : 'reduce' }),
+    },
+    {
+      id: 'screen:full',
+      title: useFullscreenStore.getState().active ? 'Exit full screen' : 'Enter full screen',
+      group: 'Appearance',
+      keywords: ['fullscreen', 'focus', 'hide the menu', 'presentation', 'distraction free'],
+      icon: useFullscreenStore.getState().active ? (
+        <MinimizeIcon size={16} />
+      ) : (
+        <MaximizeIcon size={16} />
+      ),
+      suggested: true,
+      run: () => useFullscreenStore.getState().toggle(),
     },
     {
       id: 'help:keys',
