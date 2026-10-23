@@ -44,7 +44,7 @@ fn plan_for(method: &Method, path: &str) -> Option<Plan> {
             touches_workspace: true,
             touches_board: true,
         }),
-        ("boards", 3, Some("lists" | "labels" | "look" | "blocks")) => Some(Plan {
+        ("boards", 3, Some("lists" | "labels" | "look" | "blocks" | "layout")) => Some(Plan {
             target: Target::Board(id),
             touches_workspace: false,
             touches_board: true,
@@ -145,6 +145,7 @@ mod tests {
             format!("boards/{id}/lists"),
             format!("boards/{id}/labels"),
             format!("boards/{id}/look"),
+            format!("boards/{id}/layout"),
             format!("lists/{id}"),
             format!("lists/{id}/move"),
             format!("lists/{id}/wip-limit"),
