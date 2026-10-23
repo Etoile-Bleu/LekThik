@@ -187,7 +187,7 @@ export function globalCommands(context: GlobalContext): Command[] {
       title: card.title,
       group: 'My cards',
       hint: card.due_date ? `due ${card.due_date}` : 'assigned to me',
-      keywords: ['card', 'task', 'assigned'],
+      keywords: ['task', 'assigned'],
       icon: <CheckCircleIcon size={16} />,
       searchOnly: true,
       run: () => navigate(`/b/${card.board_id}?card=${card.id}`),
