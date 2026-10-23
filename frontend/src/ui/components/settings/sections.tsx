@@ -319,6 +319,29 @@ export function HelpSection() {
         </dl>
       </Help>
 
+      <Help title="Select, copy and move around on a board">
+        <ul className="settings-list">
+          <li>
+            Drag on the background to draw a rectangle that picks the lists and blocks it touches,
+            or start in the empty part of a list to pick its cards. <kbd>Shift</kbd> or{' '}
+            <kbd>Ctrl</kbd> with a click adds a card to the selection, <kbd>X</kbd> picks the card
+            in focus, <kbd>Ctrl</kbd> + <kbd>A</kbd> picks every card and <kbd>Esc</kbd> puts it
+            down. A bar appears with Duplicate, Move to, Due date, Assign to me and Delete.
+          </li>
+          <li>
+            <strong>Free navigation</strong>, in the bottom right corner, turns the background into
+            a hand: drag to move the view in every direction. <kbd>H</kbd> turns it on and off,
+            holding <kbd>Space</kbd> or pressing the middle button does it for a moment.
+          </li>
+          <li>
+            A right click opens a menu for what is under the pointer: a card, a list, a block, the
+            picked group or the background. The menu key or <kbd>Shift</kbd> + <kbd>F10</kbd> opens
+            it on the focused item, a long press does on a touch screen, and <kbd>Shift</kbd> with a
+            right click gives the browser&rsquo;s own menu.
+          </li>
+        </ul>
+      </Help>
+
       <Help title="Use the whole screen">
         <ul className="settings-list">
           <li>
