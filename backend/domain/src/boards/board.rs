@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use super::error::BoardsError;
 use super::label::Label;
+use super::layout::PanelPlacement;
 use super::list::ListWithCards;
 use super::look::BoardLook;
 use super::role::Role;
@@ -59,4 +60,11 @@ pub trait BoardRepo: Send + Sync {
         id: Uuid,
         look: BoardLook,
     ) -> Result<BoardLook, BoardsError>;
+    /// Stores where panels sit on the free layout. Panels that are not named keep their place.
+    async fn set_layout(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        items: Vec<PanelPlacement>,
+    ) -> Result<(), BoardsError>;
 }
