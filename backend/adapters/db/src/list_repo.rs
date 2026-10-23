@@ -264,6 +264,127 @@ impl ListRepo for PgListRepo {
         row_to_list(&row)
     }
 
+    async fn duplicate(&self, user_id: Uuid, id: Uuid) -> Result<List, BoardsError> {
+        let mut transaction = self.pool.begin().await.map_err(repository_error)?;
+
+        let Some(original) = sqlx::query(concat!(
+            "SELECT l.board_id, l.name, l.wip_limit, l.kind, l.config::text AS config, l.position \
+                FROM ",
+            owned_list!(),
+            " WHERE l.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
+        ))
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?
+        else {
+            return Err(denial(&self.pool, Kind::List, user_id, id).await);
+        };
+        let board_id: Uuid = original.try_get("board_id").map_err(repository_error)?;
+        let name: String = original.try_get("name").map_err(repository_error)?;
+        let wip_limit: Option<i16> = original.try_get("wip_limit").map_err(repository_error)?;
+        let kind: String = original.try_get("kind").map_err(repository_error)?;
+        let config: String = original.try_get("config").map_err(repository_error)?;
+        let position: i32 = original.try_get("position").map_err(repository_error)?;
+
+        let existing: i64 = sqlx::query_scalar("SELECT count(*) FROM lists WHERE board_id = $1")
+            .bind(board_id)
+            .fetch_one(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+        if existing >= MAX_LISTS_PER_BOARD {
+            return Err(BoardsError::LimitReached("lists"));
+        }
+
+        let copy_name = Title::parse(&name)?.copy_of();
+
+        sqlx::query(
+            "UPDATE lists SET position = position + 1 WHERE board_id = $1 AND position > $2",
+        )
+        .bind(board_id)
+        .bind(position)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        // The copy has no place on the free layout yet, so every client finds it the first free spot.
+        let row = sqlx::query(
+            "INSERT INTO lists (board_id, name, position, wip_limit, kind, config) \
+                VALUES ($1, $2, $3, $4, $5, $6::jsonb) \
+                RETURNING id, board_id, name, wip_limit, kind, config::text AS config",
+        )
+        .bind(board_id)
+        .bind(copy_name.as_str())
+        .bind(position + 1)
+        .bind(wip_limit)
+        .bind(&kind)
+        .bind(&config)
+        .fetch_one(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+        let new_id: Uuid = row.try_get("id").map_err(repository_error)?;
+
+        if kind == "list" {
+            sqlx::query(
+                "INSERT INTO cards (list_id, title, description, due_date, position) \
+                    SELECT $1, title, description, due_date, position FROM cards WHERE list_id = $2",
+            )
+            .bind(new_id)
+            .bind(id)
+            .execute(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+
+            // The cards of the two lists line up by position, which is how labels and
+            // assignees find their way to the right copy.
+            sqlx::query(
+                "INSERT INTO card_labels (card_id, label_id) \
+                    SELECT n.id, cl.label_id FROM cards o \
+                        JOIN cards n ON n.list_id = $1 AND n.position = o.position \
+                        JOIN card_labels cl ON cl.card_id = o.id \
+                        WHERE o.list_id = $2",
+            )
+            .bind(new_id)
+            .bind(id)
+            .execute(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+
+            sqlx::query(
+                "INSERT INTO card_assignees (card_id, user_id) \
+                    SELECT n.id, ca.user_id FROM cards o \
+                        JOIN cards n ON n.list_id = $1 AND n.position = o.position \
+                        JOIN card_assignees ca ON ca.card_id = o.id \
+                        WHERE o.list_id = $2",
+            )
+            .bind(new_id)
+            .bind(id)
+            .execute(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+        }
+
+        if kind == "image" {
+            sqlx::query(
+                "INSERT INTO block_images (block_id, content_type, width, height, bytes) \
+                    SELECT $1, content_type, width, height, bytes FROM block_images \
+                        WHERE block_id = $2",
+            )
+            .bind(new_id)
+            .bind(id)
+            .execute(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+        }
+
+        transaction.commit().await.map_err(repository_error)?;
+
+        row_to_list(&row)
+    }
+
     async fn move_to(&self, user_id: Uuid, id: Uuid, index: usize) -> Result<(), BoardsError> {
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
 
