@@ -127,6 +127,8 @@ export interface BoardList {
   config: PanelConfig;
   /** Changes with every new picture of an image block, `null` while it has none. */
   image_version?: number | null;
+  /** Where it sits on the free layout, `null` until somebody places it. */
+  layout?: { x: number; y: number; w: number; h: number } | null;
   cards: CardSummary[];
 }
 
@@ -326,6 +328,13 @@ export function setBlockConfig(
 
 export function moveList(id: string, index: number): Promise<void> {
   return sendWithoutResult(`/api/lists/${id}/move`, 'POST', { index });
+}
+
+export function setBoardLayout(
+  boardId: string,
+  items: Array<{ id: string; x: number; y: number; w: number; h: number }>
+): Promise<void> {
+  return sendWithoutResult(`/api/boards/${boardId}/layout`, 'PUT', { items });
 }
 
 export function deleteList(id: string): Promise<void> {
