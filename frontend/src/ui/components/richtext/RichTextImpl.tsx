@@ -14,7 +14,7 @@ import ReactMarkdown, { type Components, type Options } from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 
-import { hostOf, isExternal, needsMath, safeHref } from '@lib/richText';
+import { headingOutline, hostOf, isExternal, needsMath, safeHref } from '@lib/richText';
 
 import { CodeBlock } from './CodeBlock';
 import { MermaidDiagram } from './MermaidDiagram';
@@ -65,13 +65,15 @@ export default function RichTextImpl({ text, headingOffset = 2, onToggleTask }: 
   }, [wantsMath, math]);
 
   const components = useMemo<Components>(() => {
+    const outline = headingOutline(text, headingOffset);
     const heading = (level: number) =>
-      function Heading({ children }: ComponentPropsWithoutRef<'h1'>) {
-        return createElement(
-          `h${Math.min(6, level + headingOffset)}`,
-          { className: 'rt-heading' },
-          children
-        );
+      function Heading({
+        children,
+        node,
+      }: ComponentPropsWithoutRef<'h1'> & { node?: { position?: { start: { line: number } } } }) {
+        // The outline knows which level each heading really needs, a heading never skips one.
+        const drawn = outline.get(node?.position?.start.line ?? -1) ?? level + headingOffset;
+        return createElement(`h${Math.min(6, drawn)}`, { className: 'rt-heading' }, children);
       };
 
     return {
@@ -152,7 +154,7 @@ export default function RichTextImpl({ text, headingOffset = 2, onToggleTask }: 
         );
       },
     };
-  }, [headingOffset, onToggleTask]);
+  }, [headingOffset, onToggleTask, text]);
 
   return (
     <div className="rt">
