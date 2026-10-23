@@ -12,8 +12,10 @@ import {
   useState,
 } from 'react';
 
+import { useBackdropGestures } from '@hooks/useBackdropGestures';
 import { useMediaQuery } from '@hooks/useMediaQuery';
 import { announce } from '@lib/announcer';
+import { useCanvasToolStore } from '@lib/canvasToolStore';
 import type { BoardList, PanelKind } from '@lib/boardsApi';
 import {
   GRID_COLUMNS,
@@ -156,7 +158,9 @@ export function BoardGrid({
   draftRef.current = draft;
   // Dragging a tile needs room, so on a phone the tiles simply stack.
   const roomy = useMediaQuery('(min-width: 720px)');
-  const canPoint = editable && roomy;
+  const handTool = useCanvasToolStore((state) => state.tool === 'hand' || state.spaceHeld);
+  const canPoint = editable && roomy && !handTool;
+  const { marquee } = useBackdropGestures(scrollRef, true);
 
   // ---- animation: every tile glides from where it was to where it is ----
   const rects = useRef(new Map<string, DOMRect>());
@@ -566,7 +570,7 @@ export function BoardGrid({
         without dragging.
       </p>
 
-      <div className="canvas__scroll" ref={scrollRef}>
+      <div className="canvas__scroll" ref={scrollRef} data-tool={handTool ? 'hand' : 'select'}>
         {panels.length === 0 ? (
           <p className="canvas__empty">
             {editable ? 'Add a list or a block to start your layout.' : 'This board is empty.'}
@@ -635,6 +639,18 @@ export function BoardGrid({
               );
             })}
           </div>
+        )}
+        {marquee && (
+          <div
+            className="marquee"
+            aria-hidden="true"
+            style={{
+              left: marquee.left,
+              top: marquee.top,
+              width: marquee.width,
+              height: marquee.height,
+            }}
+          />
         )}
       </div>
     </div>
