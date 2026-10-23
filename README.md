@@ -21,7 +21,7 @@ A collaborative task board in the spirit of Trello. Lists and blocks sit on a fr
 ![GDPR](https://img.shields.io/badge/privacy-no_tracking-14c9a0?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square)
 
-<img src="docs/assets/board.png" alt="A dark board called Final sprint: three counters, an agenda and lists of cards laid out on a grid, with the Display, Members and Labels buttons and a Fit button above" width="900">
+<img src="docs/assets/board.png" alt="A dark board called Final sprint in the Canvas view: counters, an agenda and lists of cards laid out on a grid, with the Display, Members and Labels buttons and a Fit button above" width="900">
 
 **[Live demo](https://lekthik.weier-corp.fr) · [Privacy notes](docs/privacy.md) · [API reference](#api)**
 
@@ -52,10 +52,10 @@ Most boards force one shape: a row of columns. LekThik lets the board take the s
 
 1. **Create an account** with an email and a password, confirm the address with the six digit code that arrives by email.
 2. **Make a workspace**, invite people by email and give them a role: reader, writer, admin or owner. Start a board from a template (sprint planning, bug tracker, content calendar and more) or from nothing.
-3. **Lay it out.** Lists and blocks are tiles on a 12 column grid. Drag them anywhere, one under another or side by side, resize them from the corner, or press **Fit** and let LekThik arrange them. The layout is shared, so everyone sees the same board.
+3. **Lay it out.** Keep the classic row of columns, or switch to the **Canvas**, where lists and blocks are tiles on a 12 column grid. Drag them anywhere, one under another or side by side, resize them from the corner, or press **Fit** and let LekThik arrange them. The canvas layout is shared, so everyone sees the same one.
 4. **Write.** A card has assignees, a due date, coloured labels with a priority and a description in Markdown: tables, checklists, code, LaTeX formulas and Mermaid diagrams.
 5. **Add blocks.** A calendar, an agenda, a counter, a note, a picture, a video or a link sit beside the lists and draw on the cards of the board.
-6. **See it three ways.** The same cards as a board, a sortable table or a calendar of due dates.
+6. **See it four ways.** The same cards as columns, on a free canvas, in a sortable table or in a calendar of due dates.
 7. **Do it from the keyboard.** `Ctrl+K` jumps to anything and adds, moves, assigns or schedules without touching the mouse.
 8. **Work together.** Nothing needs a refresh: cards, layouts and members follow what others do, and a reconnection catches up on what was missed.
 
@@ -102,7 +102,7 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 
 ## Boards, blocks and cards
 
-**A board lays itself out.** Every list and block is a tile on a 12 column grid. Take a tile by its name to move it, take its edges or corner to resize it. While it is held the other tiles glide aside, a dashed outline shows where it will land and nothing ever overlaps. **Fit** arranges everything in the most readable way and keeps the order, **Undo fit** brings the previous layout back, and without a mouse `Space` picks a tile up, the arrow keys move it, `Shift` with them resizes it and `Enter` drops it. On a phone the tiles stack in reading order.
+**A board can be a row of columns or a canvas.** The **Board** view is the classic row: lists and blocks side by side, lists that fold into a slim rail, three column widths, and a drag handle to reorder. The **Canvas** view lets you lay everything out yourself: every list and block is a tile on a 12 column grid. Take a tile by its name to move it, take its edges or corner to resize it. While it is held the other tiles glide aside, a dashed outline shows where it will land and nothing ever overlaps. **Fit** arranges everything in the most readable way and keeps the order, **Undo fit** brings the previous layout back, and without a mouse `Space` picks a tile up, the arrow keys move it, `Shift` with them resizes it and `Enter` drops it. On a phone the tiles stack in reading order.
 
 **Blocks** sit among the lists and draw on the cards of the board, so they update with no request of their own.
 
@@ -118,7 +118,7 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 
 **Cards** carry up to ten assignees, a due date that reads `Today`, `Yesterday` or a date with an icon and words rather than a colour, labels with a priority, and a description written in Markdown with GitHub tables, checklists, highlighted code, LaTeX formulas drawn by KaTeX (as HTML for the eye and MathML for screen readers) and Mermaid diagrams. Lists can carry a work in progress limit that warns without ever blocking.
 
-**Views.** The board, a sortable table and a calendar share the filters (by label, mine, overdue). **My cards** gathers everything assigned to you across workspaces, grouped overdue, today, next seven days and later.
+**Views.** The board, the canvas, a sortable table and a calendar share the filters (by label, mine, overdue). **My cards** gathers everything assigned to you across workspaces, grouped overdue, today, next seven days and later.
 
 ## The command palette
 
