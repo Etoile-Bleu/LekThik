@@ -118,6 +118,8 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 
 **Cards** carry up to ten assignees, a due date that reads `Today`, `Yesterday` or a date with an icon and words rather than a colour, labels with a priority, and a description written in Markdown with GitHub tables, checklists, highlighted code, LaTeX formulas drawn by KaTeX (as HTML for the eye and MathML for screen readers) and Mermaid diagrams. Lists can carry a work in progress limit that warns without ever blocking.
 
+**Full screen.** A button in the top bar (or the palette) hides the bars and leaves only the board. The menu slides in from the left edge when the pointer reaches it.
+
 **Views.** The board, the canvas, a sortable table and a calendar share the filters (by label, mine, overdue). **My cards** gathers everything assigned to you across workspaces, grouped overdue, today, next seven days and later.
 
 ## The command palette
