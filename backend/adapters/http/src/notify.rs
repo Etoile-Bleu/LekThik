@@ -154,6 +154,8 @@ mod tests {
             format!("blocks/{id}/image"),
             format!("cards/{id}"),
             format!("cards/{id}/labels"),
+            format!("cards/{id}/duplicate"),
+            format!("lists/{id}/duplicate"),
             format!("cards/{id}/assignees"),
             format!("labels/{id}"),
         ] {
