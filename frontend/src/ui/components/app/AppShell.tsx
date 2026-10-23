@@ -3,14 +3,17 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 
 import { useMediaQuery } from '@hooks/useMediaQuery';
 import { applyAppearance, pickAppearance, watchSystemSettings } from '@lib/appearance';
+import { useCommandStore } from '@lib/commandStore';
 import { useInvitationStore } from '@lib/invitationStore';
 import { usePrefsStore } from '@lib/prefsStore';
 import { startRealtime } from '@lib/realtime';
 import { useWorkspaceStore } from '@lib/workspaceStore';
 
+import { CommandPalette } from '../command/CommandPalette';
+import { useGlobalCommands } from '../command/useGlobalCommands';
 import { InvitationsButton } from '../collab/InvitationsButton';
 import { LiveIndicator } from '../collab/LiveIndicator';
-import { MenuIcon } from '../ui/Icons';
+import { MenuIcon, SearchIcon } from '../ui/Icons';
 import { Dialog } from '../ui/Dialog';
 import { LiveAnnouncer } from '../ui/LiveAnnouncer';
 import { Toaster } from '../ui/Toaster';
@@ -25,6 +28,8 @@ export function AppShell() {
   const loadInvitations = useInvitationStore((state) => state.load);
   const loadPrefs = usePrefsStore((state) => state.load);
   const location = useLocation();
+  useGlobalCommands();
+  const openPalette = useCommandStore((state) => state.openPalette);
 
   useEffect(() => {
     void loadWorkspaces();
@@ -66,6 +71,20 @@ export function AppShell() {
           LekThik
         </Link>
         <div className="shell__spacer" />
+        <button
+          type="button"
+          className="shell__search"
+          aria-keyshortcuts="Control+K Meta+K"
+          onClick={openPalette}
+        >
+          <SearchIcon size={16} />
+          <span className="shell__search-text">Search or run a command</span>
+          <kbd className="shell__search-key" aria-hidden="true">
+            {typeof navigator !== 'undefined' && /mac|iphone|ipad/i.test(navigator.platform)
+              ? '⌘K'
+              : 'Ctrl K'}
+          </kbd>
+        </button>
         <LiveIndicator />
         <InvitationsButton />
         <UserMenu />
@@ -93,6 +112,7 @@ export function AppShell() {
         </Dialog>
       )}
 
+      <CommandPalette />
       <LiveAnnouncer />
       <Toaster />
     </div>
