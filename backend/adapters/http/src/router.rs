@@ -87,6 +87,8 @@ fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(set_block_config))
         .routes(routes!(move_list))
         .routes(routes!(create_card))
+        .routes(routes!(duplicate_card))
+        .routes(routes!(duplicate_panel))
         .routes(routes!(get_card, update_card, delete_card))
         .routes(routes!(move_card))
         .routes(routes!(set_card_labels))
