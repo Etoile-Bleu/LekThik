@@ -88,9 +88,9 @@ remaining accessibility rules are in `styles/access.css`.
 - Controls: larger targets, a thick two tone focus ring, plain board backgrounds, reduce motion, and
   spoken announcements when teammates change the board. Notifications wait while you read them.
 
-Views and layout. A board is shown on a free layout, as a sortable table or as a calendar, chosen with a
-switcher beside the filters and remembered per board and per person. They share the filters and stay in
-sync with the live stream.
+Views and layout. A board is shown as columns, a free canvas, a sortable table or a calendar, chosen with
+a switcher beside the filters and remembered per board and per person. They share the filters and stay
+in sync with the live stream.
 
 - Table (`BoardTable`): a real `<table>`, a button inside each sortable heading, `aria-sort` on the
   sorted column only, a glyph that changes shape (not just colour), the sort announced, and rows that
@@ -100,7 +100,7 @@ sync with the live stream.
   Page Down (`lib/calendar.ts`), the first day of the week taken from the locale. Picking a day lists
   its cards beside the grid, and cards without a date wait in a tray where a button gives them the
   chosen day, so planning never needs a drag. Dates are strings, never parsed as `Date`.
-- Board (`BoardGrid`, `lib/grid.ts`): every list and block is a tile on a 12 column grid of fixed height
+- Canvas (`BoardGrid`, `lib/grid.ts`): every list and block is a tile on a 12 column grid of fixed height
   rows, placed and sized freely. The layout is shared with the board (not personal) and saved in one
   call (`PUT /api/boards/{id}/layout`), so it follows the live stream like everything else. A tile is
   taken by its name, resized from its edges and corner, and while it is held the others glide aside
@@ -112,10 +112,10 @@ sync with the live stream.
   most readable way: the reading order is kept, tiles take the size their content asks for, rows are
   filled edge to edge with as few gaps as a small partition search finds, and "Undo fit" restores the
   previous layout. A panel nobody placed yet takes the first free spot, the same one on every client.
-  Under 720px tiles stack in reading order at the height they were given. A board nobody has arranged yet
-  is fitted on the fly and only saved once somebody moves something.
-- Work in progress limits: a list can carry an optional limit that warns with an icon and words when
-  exceeded and never blocks (`lib/wipLimit.ts`). The limit is shared with the board.
+  Under 720px tiles stack in reading order at the height they were given.
+- Columns: a list folds into a slim rail that keeps its name and count, three widths, and an optional
+  work in progress limit that warns with an icon and words when exceeded and never blocks
+  (`lib/wipLimit.ts`). Folding and width are personal; the limit is shared.
 - My cards (`/my-cards`): everything assigned to you across workspaces, grouped overdue, today, next
   seven days, later, no date (`lib/myCards.ts`). Each row is a link that opens the card on its board.
 - Card dialog layout: Settings, Card dialog. Properties are reordered with move buttons and hidden

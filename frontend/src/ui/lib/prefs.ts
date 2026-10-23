@@ -15,8 +15,8 @@ export interface CardDisplay {
   description_preview: boolean;
 }
 
-/** How a board is shown: on the free layout, as a sortable table or as a calendar of due dates. */
-export type BoardViewKind = 'board' | 'list' | 'calendar';
+/** How a board is shown: columns, a free canvas, a sortable table or a calendar of due dates. */
+export type BoardViewKind = 'board' | 'canvas' | 'list' | 'calendar';
 export type ColumnWidth = 'narrow' | 'default' | 'wide';
 
 /** A property of the card dialog that can be moved or hidden. */
