@@ -1,4 +1,4 @@
-use domain::boards::{List, ListWithCards};
+use domain::boards::{List, ListWithCards, Placement};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
@@ -32,6 +32,46 @@ impl From<List> for ListResponseDto {
     }
 }
 
+/// Where a panel sits on the 12 column free layout, in cells from the top left corner.
+#[derive(Serialize, Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PlacementDto {
+    /// Column of the left edge, from 0.
+    pub x: u32,
+    /// Row of the top edge, from 0.
+    pub y: u32,
+    /// Width in columns, 1 to 12, and `x + w` is at most 12.
+    pub w: u32,
+    /// Height in rows, 1 to 100.
+    pub h: u32,
+}
+
+impl From<Placement> for PlacementDto {
+    fn from(placement: Placement) -> Self {
+        Self {
+            x: u32::from(placement.x),
+            y: u32::from(placement.y),
+            w: u32::from(placement.w),
+            h: u32::from(placement.h),
+        }
+    }
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct PanelPlacementDto {
+    pub id: Uuid,
+    #[serde(flatten)]
+    pub placement: PlacementDto,
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SetLayoutRequestDto {
+    /// The panels to place. Panels that are left out keep their place.
+    pub items: Vec<PanelPlacementDto>,
+}
+
 #[derive(Serialize, ToSchema)]
 pub struct ListWithCardsDto {
     pub id: Uuid,
@@ -42,6 +82,8 @@ pub struct ListWithCardsDto {
     pub config: serde_json::Value,
     /// Changes with every new picture of an image block, `null` while it has none.
     pub image_version: Option<i64>,
+    /// Where it sits on the free layout, `null` until somebody places it.
+    pub layout: Option<PlacementDto>,
     pub cards: Vec<CardSummaryDto>,
 }
 
@@ -54,6 +96,7 @@ impl From<ListWithCards> for ListWithCardsDto {
             kind: list.config.kind().as_str().to_string(),
             config: list.config.to_value(),
             image_version: list.image_version,
+            layout: list.layout.map(Into::into),
             cards: list.cards.into_iter().map(Into::into).collect(),
         }
     }
