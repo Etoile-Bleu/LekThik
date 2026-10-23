@@ -61,6 +61,7 @@ export function BoardPage() {
   const setLook = useBoardStore((state) => state.setLook);
   const prefs = usePrefsStore((state) => state.prefs);
   const updateBoardPrefs = usePrefsStore((state) => state.updateBoard);
+  const toggleListCollapsed = usePrefsStore((state) => state.toggleListCollapsed);
   const [searchParams, setSearchParams] = useSearchParams();
   const linkedCard = useRef<string | null>(null);
   linkedCard.current = searchParams.get('card');
@@ -250,6 +251,7 @@ export function BoardPage() {
     updateBoardPrefs(boardId_, { view: next });
     const names: Record<BoardViewKind, string> = {
       board: 'Board',
+      canvas: 'Canvas',
       list: 'List',
       calendar: 'Calendar',
     };
@@ -259,7 +261,7 @@ export function BoardPage() {
 
   function fitEverything() {
     const current = resolveLayout(view?.lists ?? []);
-    if (own.view !== 'board') changeView('board');
+    if (own.view !== 'canvas') changeView('canvas');
     void setLayout(fitLayout(view?.lists ?? [], current));
     announce('Panels arranged to fit the board.');
   }
@@ -324,6 +326,8 @@ export function BoardPage() {
             <DisplayMenu
               boardId={view.board.id}
               look={view.look}
+              view={own.view}
+              listIds={view.lists.map((list) => list.id)}
               canStyle={editable}
               onLookChange={(look) => void setLook(look)}
             />
@@ -393,14 +397,18 @@ export function BoardPage() {
               onSetDueDate={(cardId, day) => void setCardDueDate(cardId, day)}
             />
           )}
-          {own.view === 'board' && (
+          {(own.view === 'board' || own.view === 'canvas') && (
             <BoardCanvas
+              freeLayout={own.view === 'canvas'}
               onLayout={(layout) => void setLayout(layout)}
               onPositionPanel={setPositionId}
               lists={view.lists}
               labels={view.labels}
               matches={matches}
               freshIds={freshIds}
+              columnWidth={own.column_width}
+              collapsedIds={own.collapsed_lists}
+              onToggleCollapsed={(listId) => toggleListCollapsed(view.board.id, listId)}
               onEditLimit={setLimitListId}
               onBlockSettings={setBlockSettingsId}
               onSaveNote={saveNote}
