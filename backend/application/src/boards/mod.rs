@@ -10,13 +10,13 @@ pub use board::{
     SetBoardLook,
 };
 pub use card::{
-    CreateCard, DeleteCard, GetCard, ListMyCards, MoveCard, SetCardAssignees, SetCardLabels,
-    UpdateCard,
+    CreateCard, DeleteCard, DuplicateCard, GetCard, ListMyCards, MoveCard, SetCardAssignees,
+    SetCardLabels, UpdateCard,
 };
 pub use label::{CreateLabel, DeleteLabel, UpdateLabel};
 pub use list::{
-    CreateBlock, CreateList, DeleteList, GetBlockImage, MoveList, RenameList, SetBlockConfig,
-    SetBlockImage, SetListWipLimit,
+    CreateBlock, CreateList, DeleteList, DuplicatePanel, GetBlockImage, MoveList, RenameList,
+    SetBlockConfig, SetBlockImage, SetListWipLimit,
 };
 pub use members::{
     ChangeMemberRole, GetMyInvitation, InviteMember, ListMembers, ListMyInvitations,

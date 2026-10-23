@@ -158,9 +158,12 @@ export function AppShell() {
         </Dialog>
       )}
 
-      {fullscreen && (
-        <>
-          {isWide && <div className="shell__edge" aria-hidden="true" onPointerEnter={openNav} />}
+      {fullscreen && isWide && (
+        <div className="shell__edge" aria-hidden="true" onPointerEnter={openNav} />
+      )}
+      {/* One corner for the floating controls: the board tools join the full screen buttons here. */}
+      <div id="shell-dock" className="shell__dock" role="region" aria-label="Board controls">
+        {fullscreen && (
           <div className="shell__float" role="group" aria-label="Full screen">
             <button
               type="button"
@@ -180,8 +183,8 @@ export function AppShell() {
               Exit full screen
             </button>
           </div>
-        </>
-      )}
+        )}
+      </div>
       <CommandPalette />
       <LiveAnnouncer />
       <Toaster />

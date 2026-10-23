@@ -1,0 +1,54 @@
+.canvas-tools {
+  display: inline-flex;
+  gap: 0.15rem;
+  padding: 0.25rem;
+  border: 1px solid var(--chrome-border);
+  border-radius: 999px;
+  background: var(--chrome-bg);
+  box-shadow: var(--shadow-popover);
+}
+
+.canvas-tools__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-on-dark);
+  font: inherit;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) ease;
+}
+
+.canvas-tools__button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* The tool in use is told apart by a fill and a ring, not by colour alone. */
+.canvas-tools__button[aria-pressed='true'] {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset 0 0 0 1.5px var(--color-accent);
+}
+
+.canvas-tools__button[aria-pressed='true'] svg {
+  color: var(--color-accent);
+}
+
+@media (max-width: 719px) {
+  .canvas-tools__button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .canvas-tools__button {
+    padding: 0 0.6rem;
+  }
+}

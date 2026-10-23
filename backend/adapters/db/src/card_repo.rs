@@ -118,6 +118,99 @@ impl CardRepo for PgCardRepo {
         })
     }
 
+    async fn duplicate(&self, user_id: Uuid, id: Uuid) -> Result<CardSummary, BoardsError> {
+        let mut transaction = self.pool.begin().await.map_err(repository_error)?;
+
+        let Some(original) = sqlx::query(concat!(
+            "SELECT c.list_id, c.title, c.description, c.due_date::text AS due_date, c.position \
+                FROM ",
+            owned_card!(),
+            " WHERE c.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
+        ))
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?
+        else {
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
+        };
+        let list_id: Uuid = original.try_get("list_id").map_err(repository_error)?;
+        let title: String = original.try_get("title").map_err(repository_error)?;
+        let description: String = original.try_get("description").map_err(repository_error)?;
+        let due_date: Option<String> = original.try_get("due_date").map_err(repository_error)?;
+        let position: i32 = original.try_get("position").map_err(repository_error)?;
+
+        let existing: i64 = sqlx::query_scalar("SELECT count(*) FROM cards WHERE list_id = $1")
+            .bind(list_id)
+            .fetch_one(&mut *transaction)
+            .await
+            .map_err(repository_error)?;
+        if existing >= MAX_CARDS_PER_LIST {
+            return Err(BoardsError::LimitReached("cards"));
+        }
+
+        let copy_title = Title::parse(&title)?.copy_of();
+
+        // Room is made right after the original, so the copy sits beside it.
+        sqlx::query(
+            "UPDATE cards SET position = position + 1 WHERE list_id = $1 AND position > $2",
+        )
+        .bind(list_id)
+        .bind(position)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        let new_id: Uuid = sqlx::query_scalar(
+            "INSERT INTO cards (list_id, title, description, due_date, position) \
+                VALUES ($1, $2, $3, $4::date, $5) RETURNING id",
+        )
+        .bind(list_id)
+        .bind(copy_title.as_str())
+        .bind(&description)
+        .bind(&due_date)
+        .bind(position + 1)
+        .fetch_one(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        sqlx::query(
+            "INSERT INTO card_labels (card_id, label_id) \
+                SELECT $1, label_id FROM card_labels WHERE card_id = $2",
+        )
+        .bind(new_id)
+        .bind(id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        sqlx::query(
+            "INSERT INTO card_assignees (card_id, user_id) \
+                SELECT $1, user_id FROM card_assignees WHERE card_id = $2",
+        )
+        .bind(new_id)
+        .bind(id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        transaction.commit().await.map_err(repository_error)?;
+
+        Ok(CardSummary {
+            id: new_id,
+            list_id,
+            title: copy_title.into_string(),
+            has_description: !description.is_empty(),
+            description_preview: description.chars().take(140).collect(),
+            label_ids: self.label_ids_of(new_id).await?,
+            assignee_ids: self.assignee_ids_of(new_id).await?,
+            due_date,
+        })
+    }
+
     async fn get(&self, user_id: Uuid, id: Uuid) -> Result<Card, BoardsError> {
         let row = sqlx::query(concat!(
             "SELECT c.id, c.list_id, c.title, c.description, c.due_date::text AS due_date FROM ",

@@ -23,6 +23,9 @@ import {
 } from '@dnd-kit/sortable';
 import { useMemo, useRef, useState } from 'react';
 
+import { useBackdropGestures } from '@hooks/useBackdropGestures';
+import { useCanvasToolStore } from '@lib/canvasToolStore';
+
 import { findCard, moveCard } from '@lib/boardModel';
 import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boardsApi';
 import type { Layout } from '@lib/grid';
@@ -35,6 +38,7 @@ import { BoardBlock } from './BoardBlock';
 import { BoardGrid } from './BoardGrid';
 import { BoardList, ListFace } from './BoardList';
 import './BoardCanvas.css';
+import './Selection.css';
 
 interface BoardCanvasProps {
   lists: BoardListData[];
@@ -96,6 +100,9 @@ export function BoardCanvas({
   const activeTypeRef = useRef<ActiveItem['type'] | null>(null);
   const lastOverId = useRef<string | null>(null);
   const lists = draft ?? storedLists;
+  const rowRef = useRef<HTMLDivElement>(null);
+  const handTool = useCanvasToolStore((state) => state.tool === 'hand' || state.spaceHeld);
+  const { marquee } = useBackdropGestures(rowRef, !freeLayout);
 
   const labelsById = useMemo(() => new Map(labels.map((label) => [label.id, label])), [labels]);
 
@@ -365,73 +372,92 @@ export function BoardCanvas({
           />
         </SortableContext>
       ) : (
-        <div className="board-canvas" data-width={columnWidth}>
-          <SortableContext
-            items={lists.map((list) => list.id)}
-            strategy={horizontalListSortingStrategy}
+        <div className="board-row">
+          <div
+            className="board-canvas"
+            data-width={columnWidth}
+            ref={rowRef}
+            data-tool={handTool ? 'hand' : 'select'}
           >
-            {lists.map((list, index) =>
-              list.kind !== 'list' ? (
-                <BoardBlock
-                  key={list.id}
-                  block={list}
-                  panels={lists}
-                  index={index}
-                  total={lists.length}
-                  freshIds={freshIds}
-                  collapsed={collapsedIds.includes(list.id)}
-                  onToggleCollapsed={onToggleCollapsed}
-                  onRename={onRenameList}
-                  onMove={onMoveList}
-                  onDelete={onDeleteList}
-                  onSettings={onBlockSettings}
-                  onSaveNote={onSaveNote}
-                  onOpenCard={onOpenCard}
-                  readOnly={readOnly}
-                />
-              ) : (
-                <BoardList
-                  key={list.id}
-                  list={list}
-                  index={index}
-                  total={lists.length}
-                  labelsById={labelsById}
-                  matches={matches}
-                  freshIds={freshIds}
-                  collapsed={collapsedIds.includes(list.id)}
-                  onToggleCollapsed={onToggleCollapsed}
-                  onEditLimit={onEditLimit}
-                  onRename={onRenameList}
-                  onMove={onMoveList}
-                  onDelete={onDeleteList}
-                  onAddCard={onAddCard}
-                  onOpenCard={onOpenCard}
-                  readOnly={readOnly}
-                />
+            <SortableContext
+              items={lists.map((list) => list.id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              {lists.map((list, index) =>
+                list.kind !== 'list' ? (
+                  <BoardBlock
+                    key={list.id}
+                    block={list}
+                    panels={lists}
+                    index={index}
+                    total={lists.length}
+                    freshIds={freshIds}
+                    collapsed={collapsedIds.includes(list.id)}
+                    onToggleCollapsed={onToggleCollapsed}
+                    onRename={onRenameList}
+                    onMove={onMoveList}
+                    onDelete={onDeleteList}
+                    onSettings={onBlockSettings}
+                    onSaveNote={onSaveNote}
+                    onOpenCard={onOpenCard}
+                    readOnly={readOnly}
+                  />
+                ) : (
+                  <BoardList
+                    key={list.id}
+                    list={list}
+                    index={index}
+                    total={lists.length}
+                    labelsById={labelsById}
+                    matches={matches}
+                    freshIds={freshIds}
+                    collapsed={collapsedIds.includes(list.id)}
+                    onToggleCollapsed={onToggleCollapsed}
+                    onEditLimit={onEditLimit}
+                    onRename={onRenameList}
+                    onMove={onMoveList}
+                    onDelete={onDeleteList}
+                    onAddCard={onAddCard}
+                    onOpenCard={onOpenCard}
+                    readOnly={readOnly}
+                  />
+                )
+              )}
+            </SortableContext>
+            {readOnly ? (
+              lists.length === 0 && (
+                <p className="board-canvas__empty">This board has no lists yet.</p>
               )
+            ) : (
+              <div className="board-canvas__add">
+                <Composer
+                  variant="column"
+                  triggerLabel={lists.length === 0 ? 'Add your first list' : 'Add another list'}
+                  inputLabel="Name of the new list"
+                  placeholder="Enter a list name"
+                  submitLabel="Add list"
+                  onSubmit={onAddList}
+                />
+                <button type="button" className="board-canvas__block" onClick={onAddBlock}>
+                  <PlusIcon size={16} />
+                  Add a block
+                  <span className="board-canvas__block-hint">Calendar, agenda, note, counter</span>
+                </button>
+              </div>
             )}
-          </SortableContext>
-          {readOnly ? (
-            lists.length === 0 && (
-              <p className="board-canvas__empty">This board has no lists yet.</p>
-            )
-          ) : (
-            <div className="board-canvas__add">
-              <Composer
-                variant="column"
-                triggerLabel={lists.length === 0 ? 'Add your first list' : 'Add another list'}
-                inputLabel="Name of the new list"
-                placeholder="Enter a list name"
-                submitLabel="Add list"
-                onSubmit={onAddList}
+            {marquee && (
+              <div
+                className="marquee"
+                aria-hidden="true"
+                style={{
+                  left: marquee.left,
+                  top: marquee.top,
+                  width: marquee.width,
+                  height: marquee.height,
+                }}
               />
-              <button type="button" className="board-canvas__block" onClick={onAddBlock}>
-                <PlusIcon size={16} />
-                Add a block
-                <span className="board-canvas__block-hint">Calendar, agenda, note, counter</span>
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
       <DragOverlay dropAnimation={{ duration: 200, easing: 'cubic-bezier(0.2, 0, 0, 1)' }}>

@@ -341,6 +341,14 @@ export function deleteList(id: string): Promise<void> {
   return sendWithoutResult(`/api/lists/${id}`, 'DELETE');
 }
 
+export function duplicateCard(id: string): Promise<CardSummary> {
+  return send<CardSummary>(`/api/cards/${id}/duplicate`, 'POST');
+}
+
+export function duplicatePanel(id: string): Promise<{ id: string; name: string }> {
+  return send<{ id: string; name: string }>(`/api/lists/${id}/duplicate`, 'POST');
+}
+
 export function createCard(listId: string, title: string): Promise<CardSummary> {
   return send<CardSummary>(`/api/lists/${listId}/cards`, 'POST', { title });
 }

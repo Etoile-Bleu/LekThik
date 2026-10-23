@@ -149,6 +149,7 @@ export function BoardTable({
           {rows.map((row, position) => (
             <tr
               key={row.card.id}
+              data-card-id={row.card.id}
               className="board-table__row"
               data-fresh={freshIds.includes(row.card.id) || undefined}
               style={

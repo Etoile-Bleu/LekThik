@@ -1,5 +1,6 @@
 mod create;
 mod delete;
+mod duplicate;
 mod get;
 mod move_card;
 mod my_cards;
@@ -9,6 +10,7 @@ mod update;
 
 pub use create::*;
 pub use delete::*;
+pub use duplicate::*;
 pub use get::*;
 pub use move_card::*;
 pub use my_cards::*;
