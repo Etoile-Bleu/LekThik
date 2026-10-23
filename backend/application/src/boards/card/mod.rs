@@ -1,5 +1,6 @@
 mod create;
 mod delete;
+mod duplicate;
 mod get;
 mod move_card;
 mod my_cards;
@@ -9,6 +10,7 @@ mod update;
 
 pub use create::CreateCard;
 pub use delete::DeleteCard;
+pub use duplicate::DuplicateCard;
 pub use get::GetCard;
 pub use move_card::MoveCard;
 pub use my_cards::ListMyCards;
