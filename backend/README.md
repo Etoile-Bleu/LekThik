@@ -148,7 +148,6 @@ first 400 rows and is at most 100 rows tall), a panel named twice, a panel of an
 list, and stores the whole call in one transaction, so a refused tile changes nothing. Panels left out
 keep their place, and a panel never placed comes back with `layout: null` so clients lay it out
 themselves. It is shared with everyone on the board and refreshed live like any other board change.
-The `canvas` view is one more value of the per board view preference.
 
 A board holds panels in one row, and a panel is either a list of cards or a block that shows
 something about them: `calendar`, `agenda`, `note` or `counter`. Blocks live in the `lists` table with a
