@@ -322,9 +322,9 @@ export function HelpSection() {
       <Help title="Lay out a board the way you want">
         <ul className="settings-list">
           <li>
-            The <strong>Board</strong> view puts every list and block on a grid you can arrange
-            freely, one under another or side by side, shared with everyone on the board. Drag a
-            tile by its name, or its corner and edges to resize it. Other tiles make room.
+            The <strong>Canvas</strong> view puts every list and block on a grid you can arrange
+            freely, shared with everyone on the board. Drag a tile by its name, or its corner and
+            edges to resize it. Other tiles make room.
           </li>
           <li>
             Without a mouse: on the move button of a tile press <kbd>Space</kbd>, then the arrow
@@ -339,12 +339,12 @@ export function HelpSection() {
         </ul>
       </Help>
 
-      <Help title="See the same cards three ways">
+      <Help title="See the same cards four ways">
         <ul className="settings-list">
           <li>
-            On a board, the <strong>Board</strong>, <strong>List</strong> and{' '}
-            <strong>Calendar</strong> buttons switch the view. Your choice is remembered for each
-            board.
+            On a board, the <strong>Board</strong>, <strong>Canvas</strong>, <strong>List</strong>{' '}
+            and <strong>Calendar</strong> buttons switch the view. Your choice is remembered for
+            each board.
           </li>
           <li>
             In the <strong>List</strong> view, each column heading is a button that sorts. Press it
