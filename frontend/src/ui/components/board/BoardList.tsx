@@ -17,10 +17,13 @@ import {
   ChevronsRightIcon,
   GaugeIcon,
   GripIcon,
+  LayoutIcon,
+  MoveIcon,
   TrashIcon,
 } from '../ui/Icons';
 import { InlineEdit } from '../ui/InlineEdit';
 import { Menu } from '../ui/Menu';
+import type { TileControls } from './BoardGrid';
 import { BoardCard } from './BoardCard';
 import './BoardList.css';
 
@@ -40,6 +43,9 @@ interface BoardListProps {
   onAddCard: (listId: string, title: string) => Promise<unknown>;
   onOpenCard: (cardId: string) => void;
   readOnly?: boolean;
+  /** Set when the list is a tile of the free layout, where the grip and the menu place it. */
+  tile?: TileControls | null;
+  inGrid?: boolean;
 }
 
 export function ListFace({ list, count }: { list: BoardListData; count: number }) {
@@ -92,6 +98,8 @@ export function BoardList({
   onAddCard,
   onOpenCard,
   readOnly = false,
+  tile = null,
+  inGrid = false,
 }: BoardListProps) {
   const headingId = useId();
   const {
@@ -106,7 +114,8 @@ export function BoardList({
   } = useSortable({
     id: list.id,
     data: { type: 'list' },
-    disabled: readOnly || collapsed,
+    // On the free layout a list is placed by its grip, but still takes cards dropped on it.
+    disabled: readOnly || (collapsed && !inGrid) ? true : inGrid ? { draggable: true } : false,
   });
 
   const { onKeyDown, pointer: pointerListeners } = splitDragListeners(listeners);
@@ -125,11 +134,11 @@ export function BoardList({
   }, [state, description, list.name]);
 
   // A list that has just opened grows from the rail, with its contents clipped meanwhile.
-  const opening = useOpening(collapsed);
+  const opening = useOpening(collapsed && !inGrid);
 
   const style = { transform: CSS.Translate.toString(transform), transition };
 
-  if (collapsed) {
+  if (collapsed && !inGrid) {
     return (
       <section
         ref={setNodeRef}
@@ -169,9 +178,14 @@ export function BoardList({
       data-dragging={isDragging || undefined}
       data-opening={opening || undefined}
       data-limit={state}
+      data-in-grid={inGrid || undefined}
     >
-      <div className="board-list__header" {...(readOnly ? {} : pointerListeners)}>
-        {!readOnly && (
+      <div
+        className="board-list__header"
+        {...(readOnly || inGrid ? {} : pointerListeners)}
+        onPointerDown={tile?.onHeaderPointerDown}
+      >
+        {!readOnly && !inGrid && (
           <button
             type="button"
             ref={setActivatorNodeRef}
@@ -183,7 +197,12 @@ export function BoardList({
             <GripIcon size={16} />
           </button>
         )}
-        <div className="board-list__title" id={headingId}>
+        {tile && (
+          <button type="button" className="board-list__grip" {...tile.gripProps}>
+            <MoveIcon size={16} />
+          </button>
+        )}
+        <div className="board-list__title" id={headingId} data-drag-title>
           <InlineEdit
             as="h2"
             className="board-list__name"
@@ -194,31 +213,45 @@ export function BoardList({
           />
         </div>
         <CountBadge count={count} limit={list.wip_limit} state={state} description={description} />
-        <button
-          type="button"
-          className="board-list__fold"
-          aria-expanded={true}
-          aria-label={`Collapse list ${list.name}`}
-          onClick={() => onToggleCollapsed(list.id)}
-        >
-          <ChevronsLeftIcon size={16} />
-        </button>
+        {!inGrid && (
+          <button
+            type="button"
+            className="board-list__fold"
+            aria-expanded={true}
+            aria-label={`Collapse list ${list.name}`}
+            onClick={() => onToggleCollapsed(list.id)}
+          >
+            <ChevronsLeftIcon size={16} />
+          </button>
+        )}
         {!readOnly && (
           <Menu
             label={`Actions for list ${list.name}`}
             items={[
-              {
-                label: 'Move left',
-                icon: <ArrowLeftIcon />,
-                disabled: index === 0,
-                onSelect: () => onMove(list.id, index - 1),
-              },
-              {
-                label: 'Move right',
-                icon: <ArrowRightIcon />,
-                disabled: index === total - 1,
-                onSelect: () => onMove(list.id, index + 1),
-              },
+              ...(inGrid
+                ? tile
+                  ? [
+                      {
+                        label: 'Position and size…',
+                        icon: <LayoutIcon />,
+                        onSelect: tile.onPosition,
+                      },
+                    ]
+                  : []
+                : [
+                    {
+                      label: 'Move left',
+                      icon: <ArrowLeftIcon />,
+                      disabled: index === 0,
+                      onSelect: () => onMove(list.id, index - 1),
+                    },
+                    {
+                      label: 'Move right',
+                      icon: <ArrowRightIcon />,
+                      disabled: index === total - 1,
+                      onSelect: () => onMove(list.id, index + 1),
+                    },
+                  ]),
               {
                 label: list.wip_limit === null ? 'Set a card limit…' : 'Change the card limit…',
                 icon: <GaugeIcon />,
