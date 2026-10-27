@@ -11,6 +11,7 @@ import {
   isCardList,
   linkConfig,
   noteConfig,
+  chartConfig,
   progressConfig,
 } from '@lib/blocks';
 import type {
@@ -24,6 +25,9 @@ import type {
   LinkConfig,
   PanelConfig,
   ProgressConfig,
+  ChartConfig,
+  ChartSource,
+  ChartStyle,
   ProgressStyle,
 } from '@lib/boardsApi';
 import { parseEmbedUrl } from '@lib/embeds';
@@ -55,6 +59,18 @@ const RANGES: Array<{ value: AgendaRange; label: string }> = [
   { value: 'week', label: 'Next 7 days' },
 ];
 
+const CHART_SOURCES: Array<{ value: ChartSource; label: string; hint: string }> = [
+  { value: 'list', label: 'Cards per list', hint: 'How the work is spread across the lists.' },
+  { value: 'label', label: 'Cards per label', hint: 'A card with two labels counts in both.' },
+  { value: 'assignee', label: 'Cards per person', hint: 'Who holds how many cards.' },
+  { value: 'due', label: 'Cards per due date', hint: 'Late, today, this week, later and no date.' },
+];
+
+const CHART_STYLES: Array<{ value: ChartStyle; label: string }> = [
+  { value: 'bars', label: 'Bars' },
+  { value: 'donut', label: 'Donut' },
+];
+
 const PROGRESS_STYLES: Array<{ value: ProgressStyle; label: string }> = [
   { value: 'ring', label: 'Ring' },
   { value: 'bar', label: 'Bar' },
@@ -79,6 +95,8 @@ function initial(block: BoardList): PanelConfig {
       return counterConfig(block);
     case 'progress':
       return progressConfig(block);
+    case 'chart':
+      return chartConfig(block);
     case 'image':
       return imageConfig(block);
     case 'link':
@@ -132,6 +150,7 @@ export function BlockSettingsDialog({
   const needsList = block.kind === 'counter' && counter.metric === 'done_percent';
   const needsDate = block.kind === 'counter' && counter.metric === 'days_left';
   const progress = draft as ProgressConfig;
+  const chart = draft as ChartConfig;
   const progressMissing = block.kind === 'progress' && !progress.done_list_id;
   const image = draft as ImageConfig;
   const embed = draft as EmbedConfig;
@@ -286,6 +305,37 @@ export function BlockSettingsDialog({
                 placeholder="Days to launch"
                 autoComplete="off"
                 onChange={(event) => update({ label: event.target.value })}
+              />
+            </div>
+          </>
+        )}
+
+        {block.kind === 'chart' && (
+          <>
+            <div className="field">
+              <label htmlFor={metricId}>What to count</label>
+              <select
+                id={metricId}
+                value={chart.source ?? 'list'}
+                onChange={(event) => update({ source: event.target.value as ChartSource })}
+              >
+                {CHART_SOURCES.map((source) => (
+                  <option key={source.value} value={source.value}>
+                    {source.label}
+                  </option>
+                ))}
+              </select>
+              <p className="block-settings__hint">
+                {CHART_SOURCES.find((source) => source.value === chart.source)?.hint}
+              </p>
+            </div>
+            <div className="block-settings__field">
+              <span className="block-settings__label">Shape</span>
+              <Segmented<ChartStyle>
+                label="Shape"
+                value={chart.style ?? 'bars'}
+                options={CHART_STYLES}
+                onChange={(style) => update({ style })}
               />
             </div>
           </>
