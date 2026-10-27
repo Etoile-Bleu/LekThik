@@ -17,7 +17,9 @@ import {
   DEFAULT_CALENDAR,
   DEFAULT_COUNTER,
   DEFAULT_NOTE,
+  DEFAULT_PROGRESS,
   KIND_LABEL,
+  guessDoneList,
   isCardList,
 } from '@lib/blocks';
 import { type PanelConfig, type PanelKind, uploadBlockImage } from '@lib/boardsApi';
@@ -65,6 +67,8 @@ function addDaysTo(day: string, amount: number): string {
   const pad = (value: number) => String(value).padStart(2, '0');
   return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
 }
+
+type PlainBlockKind = 'calendar' | 'agenda' | 'note' | 'counter' | 'progress';
 
 export function BoardPage() {
   const { boardId = '' } = useParams();
@@ -230,11 +234,12 @@ export function BoardPage() {
 
   const boardId_ = view.board.id;
 
-  const DEFAULTS: Record<'calendar' | 'agenda' | 'note' | 'counter', PanelConfig> = {
+  const DEFAULTS: Record<PlainBlockKind, PanelConfig> = {
     calendar: DEFAULT_CALENDAR,
     agenda: DEFAULT_AGENDA,
     note: DEFAULT_NOTE,
     counter: DEFAULT_COUNTER,
+    progress: DEFAULT_PROGRESS,
   };
 
   function saveNote(blockId: string, text: string) {
@@ -291,12 +296,19 @@ export function BoardPage() {
     }
   }
 
-  async function addBlock(kind: 'calendar' | 'agenda' | 'note' | 'counter') {
-    const block = await createBlock(kind, uniqueName(KIND_LABEL[kind]), DEFAULTS[kind]);
+  async function addBlock(kind: PlainBlockKind) {
+    const config =
+      kind === 'progress'
+        ? { ...DEFAULT_PROGRESS, done_list_id: guessDoneList(view?.lists ?? [])?.id ?? null }
+        : DEFAULTS[kind];
+    const block = await createBlock(kind, uniqueName(KIND_LABEL[kind]), config);
     if (!block) return;
     announce(`${KIND_LABEL[kind]} block added.`);
     // A counter needs to be pointed at something before it says anything useful.
     if (kind === 'counter') setBlockSettingsId(block.id);
+    if (kind === 'progress' && !(config as { done_list_id: string | null }).done_list_id) {
+      setBlockSettingsId(block.id);
+    }
   }
 
   function changeView(next: BoardViewKind) {
