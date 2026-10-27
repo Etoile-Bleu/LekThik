@@ -28,6 +28,7 @@ describe('AddBlockDialog', () => {
       'Progress',
       'My late cards',
       'Chart',
+      'Code',
     ]) {
       expect(screen.getByRole('button', { name: new RegExp(`^${name}`) })).toBeInTheDocument();
     }
@@ -47,6 +48,49 @@ describe('AddBlockDialog', () => {
 });
 
 describe('BlockSettingsDialog', () => {
+  it('saves the language, file name, line numbers and code of a snippet', () => {
+    const onSave = vi.fn();
+    render(
+      <BlockSettingsDialog
+        block={panel('s', 'Query', 'snippet', {})}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('Language'), { target: { value: 'sql' } });
+    fireEvent.change(screen.getByLabelText(/File name/), { target: { value: ' cards.sql ' } });
+    fireEvent.click(screen.getByRole('switch', { name: /Line numbers/ }));
+    fireEvent.change(screen.getByLabelText('Code'), { target: { value: 'SELECT 1;' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).toHaveBeenCalledWith('s', 'snippet', {
+      size: 'wide',
+      language: 'sql',
+      filename: ' cards.sql ',
+      code: 'SELECT 1;',
+      line_numbers: true,
+    });
+  });
+
+  it('will not save a snippet that is too long', () => {
+    const onSave = vi.fn();
+    render(
+      <BlockSettingsDialog
+        block={panel('s', 'Query', 'snippet', { code: 'x'.repeat(12_001) })}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(screen.getAllByText(/At most 12,000 characters/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it('sets what a chart counts and how it draws it', () => {
     const onSave = vi.fn();
     render(
