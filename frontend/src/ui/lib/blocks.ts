@@ -12,6 +12,7 @@ import type {
   OverdueConfig,
   PanelKind,
   ProgressConfig,
+  SnippetConfig,
 } from './boardsApi';
 import { daysUntil, shortDue } from './dueDate';
 
@@ -26,6 +27,13 @@ export const DEFAULT_NOTE: NoteConfig = { size: 'normal', text: '' };
 /** Pictures and videos want room, so they start wide. */
 export const DEFAULT_IMAGE: ImageConfig = { size: 'wide', alt: '', caption: '' };
 export const DEFAULT_LINK: LinkConfig = { size: 'normal', url: '', title: '' };
+export const DEFAULT_SNIPPET: SnippetConfig = {
+  size: 'wide',
+  language: 'text',
+  filename: '',
+  code: '',
+  line_numbers: false,
+};
 export const DEFAULT_OVERDUE: OverdueConfig = { size: 'normal' };
 export const DEFAULT_CHART: ChartConfig = { size: 'normal', source: 'list', style: 'bars' };
 export const DEFAULT_PROGRESS: ProgressConfig = {
@@ -73,6 +81,9 @@ export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
 }
 
+export function snippetConfig(panel: BoardList): SnippetConfig {
+  return { ...DEFAULT_SNIPPET, ...(panel.config as Partial<SnippetConfig>) };
+}
 export function chartConfig(panel: BoardList): ChartConfig {
   return { ...DEFAULT_CHART, ...(panel.config as Partial<ChartConfig>) };
 }
@@ -132,6 +143,11 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
       'Cards by list, label, person or due date, as bars or a donut, with a table behind.',
   },
   {
+    kind: 'snippet',
+    label: 'Code',
+    description: 'A command, a config or a query with its language, highlighted, ready to copy.',
+  },
+  {
     kind: 'image',
     label: 'Picture',
     description: 'A moodboard, a plan or a logo, with a description for people who cannot see it.',
@@ -160,6 +176,7 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   progress: 'Progress',
   overdue: 'My late cards',
   chart: 'Chart',
+  snippet: 'Code',
 };
 
 export const BLOCK_KIND_IDS: Array<Exclude<PanelKind, 'list'>> = BLOCK_KINDS.map(
