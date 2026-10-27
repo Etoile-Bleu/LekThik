@@ -14,6 +14,7 @@ import {
   chartConfig,
   progressConfig,
   snippetConfig,
+  tableConfig,
 } from '@lib/blocks';
 import type {
   AgendaRange,
@@ -32,8 +33,10 @@ import type {
   ProgressStyle,
   SnippetConfig,
   SnippetLanguage,
+  TableConfig,
 } from '@lib/boardsApi';
 import { parseEmbedUrl } from '@lib/embeds';
+import { CSV_MAX_BYTES, fitToLimits, parseDelimited } from '@lib/csv';
 import { PICTURE_TYPES, checkPicture, checkWebAddress } from '@lib/media';
 import {
   FILENAME_MAX_CHARS,
@@ -109,6 +112,8 @@ function initial(block: BoardList): PanelConfig {
       return chartConfig(block);
     case 'snippet':
       return snippetConfig(block);
+    case 'table':
+      return tableConfig(block);
     case 'image':
       return imageConfig(block);
     case 'link':
@@ -130,6 +135,7 @@ export function BlockSettingsDialog({
 }: BlockSettingsDialogProps) {
   const [draft, setDraft] = useState<PanelConfig>({});
   const [address, setAddress] = useState('');
+  const [pasted, setPasted] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -143,6 +149,7 @@ export function BlockSettingsDialog({
     if (block) {
       setDraft(initial(block));
       setAddress('');
+      setPasted('');
       setFile(null);
       setBusy(false);
     }
@@ -164,6 +171,11 @@ export function BlockSettingsDialog({
   const progress = draft as ProgressConfig;
   const chart = draft as ChartConfig;
   const snippet = draft as SnippetConfig;
+  const table = draft as TableConfig;
+  const imported =
+    block.kind === 'table' && pasted.trim() !== ''
+      ? fitToLimits(parseDelimited(pasted.slice(0, CSV_MAX_BYTES)))
+      : null;
   const progressMissing = block.kind === 'progress' && !progress.done_list_id;
   const image = draft as ImageConfig;
   const embed = draft as EmbedConfig;
@@ -215,6 +227,7 @@ export function BlockSettingsDialog({
           ? { size: embed.size, title: embed.title.trim(), url: address.trim() }
           : { size: embed.size, provider: embed.provider, id: embed.id, title: embed.title.trim() };
     }
+    if (block.kind === 'table' && imported) config = { ...table, rows: imported.rows };
     onSave(block.id, block.kind, config);
     onClose();
   }
@@ -320,6 +333,35 @@ export function BlockSettingsDialog({
                 autoComplete="off"
                 onChange={(event) => update({ label: event.target.value })}
               />
+            </div>
+          </>
+        )}
+
+        {block.kind === 'table' && (
+          <>
+            <Switch
+              label="First row is a heading"
+              hint="It stays on top, and the totals leave it out."
+              checked={Boolean(table.header)}
+              onChange={(header) => update({ header })}
+            />
+            <div className="field">
+              <label htmlFor={listId}>Replace the table with pasted cells (optional)</label>
+              <textarea
+                id={listId}
+                className="block-settings__code"
+                rows={6}
+                value={pasted}
+                autoComplete="off"
+                spellCheck={false}
+                placeholder={'Name,Cost\nRent,800'}
+                onChange={(event) => setPasted(event.target.value)}
+              />
+              <p className="block-settings__hint">
+                {imported
+                  ? `${imported.rows.length} rows, ${imported.rows[0]?.length ?? 0} columns${imported.trimmed ? '. What does not fit in 100 rows, 12 columns and 200 characters a cell is cut' : ''}. Saving replaces the current table.`
+                  : 'Paste a CSV file or cells copied from a spreadsheet. Leave empty to keep the table as it is.'}
+              </p>
             </div>
           </>
         )}
