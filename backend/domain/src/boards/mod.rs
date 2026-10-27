@@ -22,11 +22,12 @@ mod workspace;
 
 pub use block::{
     ALT_MAX_CHARS, AgendaConfig, AgendaRange, BLOCK_TITLE_MAX_CHARS, BlockConfig, BlockSize,
-    CAPTION_MAX_CHARS, COUNTER_LABEL_MAX_CHARS, CalendarConfig, ChartConfig, ChartSource,
-    ChartStyle, CounterConfig, CounterMetric, EmbedConfig, ImageConfig, LinkConfig, ListKind,
-    NOTE_MAX_CHARS, NoteConfig, OverdueConfig, ProgressConfig, ProgressStyle, SNIPPET_MAX_CHARS,
-    SNIPPET_MAX_LINES, SnippetConfig, SnippetLanguage, TABLE_CELL_MAX_CHARS, TABLE_MAX_BYTES,
-    TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TableConfig,
+    CAPTION_MAX_CHARS, CLOCKS_MAX_ZONES, COUNTER_LABEL_MAX_CHARS, CalendarConfig, ChartConfig,
+    ChartSource, ChartStyle, ClocksConfig, CounterConfig, CounterMetric, EmbedConfig, ImageConfig,
+    LinkConfig, ListKind, NOTE_MAX_CHARS, NoteConfig, OverdueConfig, PLACE_NAME_MAX_CHARS, Place,
+    ProgressConfig, ProgressStyle, SNIPPET_MAX_CHARS, SNIPPET_MAX_LINES, SnippetConfig,
+    SnippetLanguage, TABLE_CELL_MAX_CHARS, TABLE_MAX_BYTES, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS,
+    TableConfig, ZONE_MAX_CHARS,
 };
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};
