@@ -102,6 +102,31 @@ function Preview({ kind }: { kind: Exclude<PanelKind, 'list'> }) {
           <rect x="12" y="50" width="26" height="4" rx="2" className="add-block__accent" />
         </svg>
       );
+    case 'clocks':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          {['Paris', 'Tokyo'].map((city, row) => (
+            <g key={city} transform={`translate(10 ${10 + row * 20})`}>
+              <rect width="22" height="4" rx="2" className="add-block__ink" />
+              <rect y="8" width="14" height="3" rx="1.5" className="add-block__faint" />
+              <text x="76" y="10" textAnchor="end" className="add-block__time">
+                {row === 0 ? '14:20' : '22:20'}
+              </text>
+            </g>
+          ))}
+          {Array.from({ length: 12 }, (_, cell) => (
+            <rect
+              key={cell}
+              x={10 + cell * 6.4}
+              y="52"
+              width="5"
+              height="5"
+              rx="1"
+              className={cell >= 4 && cell < 8 ? 'add-block__accent' : 'add-block__faint'}
+            />
+          ))}
+        </svg>
+      );
     case 'table':
       return (
         <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
