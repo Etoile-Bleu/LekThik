@@ -21,6 +21,7 @@ import {
   DEFAULT_OVERDUE,
   DEFAULT_PROGRESS,
   DEFAULT_SNIPPET,
+  DEFAULT_TABLE,
   KIND_LABEL,
   guessDoneList,
   isCardList,
@@ -246,6 +247,7 @@ export function BoardPage() {
     overdue: DEFAULT_OVERDUE,
     chart: DEFAULT_CHART,
     snippet: DEFAULT_SNIPPET,
+    table: DEFAULT_TABLE,
   };
 
   function saveNote(blockId: string, text: string) {
@@ -567,6 +569,9 @@ export function BoardPage() {
               onEditLimit={setLimitListId}
               onBlockSettings={setBlockSettingsId}
               onSaveNote={saveNote}
+              onSaveConfig={(blockId, kind, config) =>
+                void setBlockConfig(blockId, kind as Exclude<PanelKind, 'list'>, config)
+              }
               onAddBlock={() => setPickingBlock(true)}
               onRenameList={(listId, name) => void renameList(listId, name)}
               onMoveList={(listId, index) => void moveList(listId, index)}
