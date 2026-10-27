@@ -31,6 +31,7 @@ const MIN_SIZE: Record<PanelKind, Size> = {
   image: { w: 2, h: 3 },
   embed: { w: 3, h: 5 },
   link: { w: 2, h: 3 },
+  progress: { w: 2, h: 4 },
 };
 
 /** The widest a tile of each kind gets when Fit stretches a row to fill the board. */
@@ -71,6 +72,8 @@ export function idealSize(panel: BoardList): Size {
       return wide(panel) ? { w: 6, h: 9 } : { w: 4, h: 8 };
     case 'link':
       return { w: 3, h: 3 };
+    case 'progress':
+      return (panel.config as { style?: string }).style === 'bar' ? { w: 3, h: 3 } : { w: 3, h: 5 };
   }
 }
 
