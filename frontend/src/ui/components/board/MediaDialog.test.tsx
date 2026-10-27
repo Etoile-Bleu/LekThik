@@ -102,11 +102,26 @@ describe('MediaDialog for a picture', () => {
   });
 });
 
-describe('MediaDialog for a video or calendar', () => {
+describe('MediaDialog for an embed', () => {
+  it.each([
+    [
+      'https://excalidraw.com/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk',
+      'Excalidraw drawing found.',
+    ],
+    ['https://www.figma.com/design/AbCdEf1234567890xyz/Home', 'Figma design found.'],
+    ['https://acme.notion.site/Roadmap-0123456789abcdef0123456789abcdef', 'Notion page found.'],
+  ])('understands %s', async (address, found) => {
+    setup('embed');
+
+    fireEvent.change(screen.getByLabelText('Address to embed'), { target: { value: address } });
+
+    expect(await screen.findByText(found)).toBeInTheDocument();
+  });
+
   it('says what it understood while the address is typed, and suggests a name', async () => {
     setup('embed');
 
-    fireEvent.change(screen.getByLabelText('Address of the video or calendar'), {
+    fireEvent.change(screen.getByLabelText('Address to embed'), {
       target: { value: 'https://youtu.be/dQw4w9WgXcQ' },
     });
 
@@ -118,7 +133,7 @@ describe('MediaDialog for a video or calendar', () => {
     setup('embed');
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'My own name' } });
 
-    fireEvent.change(screen.getByLabelText('Address of the video or calendar'), {
+    fireEvent.change(screen.getByLabelText('Address to embed'), {
       target: { value: 'https://vimeo.com/76979871' },
     });
 
@@ -127,7 +142,7 @@ describe('MediaDialog for a video or calendar', () => {
 
   it('refuses addresses of other sites and says which are possible', async () => {
     const { onSubmit } = setup('embed');
-    fireEvent.change(screen.getByLabelText('Address of the video or calendar'), {
+    fireEvent.change(screen.getByLabelText('Address to embed'), {
       target: { value: 'https://evil.example/video' },
     });
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Video' } });
@@ -135,7 +150,7 @@ describe('MediaDialog for a video or calendar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
-      'Only YouTube, Vimeo and Google Calendar addresses can be added.'
+      'Only YouTube, Vimeo, Google Calendar, Excalidraw, Figma or Notion addresses can be added. A Notion page must be published to the web.'
     );
     expect(onSubmit).not.toHaveBeenCalled();
   });
@@ -151,7 +166,7 @@ describe('MediaDialog for a video or calendar', () => {
   it('adds it with the address, the name and the width', async () => {
     const { onSubmit } = setup('embed');
 
-    fireEvent.change(screen.getByLabelText('Address of the video or calendar'), {
+    fireEvent.change(screen.getByLabelText('Address to embed'), {
       target: { value: 'https://youtu.be/dQw4w9WgXcQ' },
     });
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Teaser' } });
