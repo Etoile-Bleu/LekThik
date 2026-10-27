@@ -102,6 +102,17 @@ function Preview({ kind }: { kind: Exclude<PanelKind, 'list'> }) {
           <rect x="12" y="50" width="26" height="4" rx="2" className="add-block__accent" />
         </svg>
       );
+    case 'chart':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          {[62, 44, 30, 18].map((width, row) => (
+            <g key={row} transform={`translate(10 ${9 + row * 13})`}>
+              <rect width="14" height="3" rx="1.5" className="add-block__faint" />
+              <rect x="19" width={width} height="8" rx="2" className="add-block__accent" />
+            </g>
+          ))}
+        </svg>
+      );
     case 'overdue':
       return (
         <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
