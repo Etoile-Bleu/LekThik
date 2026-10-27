@@ -177,8 +177,9 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
   },
   {
     kind: 'embed',
-    label: 'Video or calendar',
-    description: 'YouTube, Vimeo or a Google Calendar. Nothing loads until someone presses play.',
+    label: 'Embed',
+    description:
+      'A video, a calendar, a drawing, a design or a Notion page. Nothing loads until someone presses a button.',
   },
   {
     kind: 'link',
@@ -194,7 +195,7 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   note: 'Note',
   counter: 'Counter',
   image: 'Picture',
-  embed: 'Video or calendar',
+  embed: 'Embed',
   link: 'Link',
   progress: 'Progress',
   overdue: 'My late cards',
