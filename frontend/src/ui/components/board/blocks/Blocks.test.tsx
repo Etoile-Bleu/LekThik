@@ -6,6 +6,7 @@ import type { BoardList, CardSummary } from '@lib/boardsApi';
 
 import { AgendaBlock } from './AgendaBlock';
 import { CalendarBlock } from './CalendarBlock';
+import { ChartBlock } from './ChartBlock';
 import { CounterBlock } from './CounterBlock';
 import { NoteBlock } from './NoteBlock';
 import { OverdueBlock } from './OverdueBlock';
@@ -316,6 +317,52 @@ describe('ProgressBlock', () => {
     const meter = screen.getByRole('progressbar');
     expect(meter).not.toHaveAttribute('aria-valuenow');
     expect(screen.getByText(/Choose the list that means done/)).toBeInTheDocument();
+  });
+});
+
+describe('ChartBlock', () => {
+  it('draws bars that are hidden from assistive tech, with the data in a table instead', () => {
+    inBoard(<ChartBlock block={block('chart', { source: 'list' })} panels={panels} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Cards by list, 5 cards: Doing 4, Done 1.'
+    );
+    expect(document.querySelector('.chart-block__bars')).toHaveAttribute('aria-hidden', 'true');
+    const table = screen.getByRole('table', { name: 'Cards by list' });
+    expect(within(table).getByRole('rowheader', { name: 'Doing' })).toBeInTheDocument();
+    expect(within(table).getByText('80%')).toBeInTheDocument();
+  });
+
+  it('swaps the drawing for a visible table and back', () => {
+    inBoard(<ChartBlock block={block('chart', { source: 'list' })} panels={panels} />);
+
+    const toggle = screen.getByRole('button', { name: 'Show table' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(toggle);
+
+    expect(document.querySelector('.chart-block__bars')).toBeNull();
+    expect(document.querySelector('.chart-block__table')).not.toHaveClass('sr-only');
+    expect(screen.getByRole('button', { name: 'Show chart' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  });
+
+  it('can be a donut with a legend and the total in the middle', () => {
+    inBoard(
+      <ChartBlock block={block('chart', { source: 'list', style: 'donut' })} panels={panels} />
+    );
+
+    expect(document.querySelectorAll('.chart-block__segment')).toHaveLength(2);
+    expect(document.querySelector('.chart-block__total')).toHaveTextContent('5');
+    expect(document.querySelectorAll('.chart-block__legend li')).toHaveLength(2);
+  });
+
+  it('says there is nothing to chart on a board with no cards', () => {
+    inBoard(<ChartBlock block={block('chart', {})} panels={[]} />);
+
+    expect(screen.getByText('Nothing to chart yet')).toBeInTheDocument();
+    expect(screen.queryByRole('table')).toBeNull();
   });
 });
 
