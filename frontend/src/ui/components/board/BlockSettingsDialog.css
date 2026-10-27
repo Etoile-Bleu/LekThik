@@ -33,6 +33,17 @@
   font-size: 0.84rem;
 }
 
+.block-settings__durations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem;
+}
+
+.block-settings__durations .block-settings__hint {
+  grid-column: 1 / -1;
+  color: var(--color-danger-ink);
+}
+
 .block-settings__code {
   width: 100%;
   font-family: var(--font-mono);
