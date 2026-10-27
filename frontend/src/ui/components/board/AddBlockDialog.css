@@ -124,3 +124,11 @@
     transform: translateY(8px);
   }
 }
+
+.add-block__ring-track {
+  stroke: color-mix(in srgb, var(--color-ink) 16%, transparent);
+}
+
+.add-block__ring-fill {
+  stroke: var(--color-accent);
+}
