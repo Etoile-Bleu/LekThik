@@ -66,7 +66,8 @@ export type PanelKind =
   | 'embed'
   | 'link'
   | 'progress'
-  | 'overdue';
+  | 'overdue'
+  | 'chart';
 export type EmbedProvider = 'youtube' | 'vimeo' | 'google_calendar';
 export type BlockSize = 'normal' | 'wide';
 export type AgendaRange = 'today' | 'week';
@@ -96,6 +97,13 @@ export interface CounterConfig {
 }
 export interface OverdueConfig {
   size: BlockSize;
+}
+export type ChartSource = 'list' | 'label' | 'assignee' | 'due';
+export type ChartStyle = 'bars' | 'donut';
+export interface ChartConfig {
+  size: BlockSize;
+  source: ChartSource;
+  style: ChartStyle;
 }
 export type ProgressStyle = 'ring' | 'bar';
 export interface ProgressConfig {
@@ -133,7 +141,8 @@ export type PanelConfig =
   | NoteConfig
   | CounterConfig
   | ProgressConfig
-  | OverdueConfig;
+  | OverdueConfig
+  | ChartConfig;
 
 /**
  * One panel of a board: a list of cards, or a block that shows something else.
