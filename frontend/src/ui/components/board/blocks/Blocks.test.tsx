@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { BoardMetaProvider } from '@hooks/useBoardMeta';
@@ -12,6 +12,7 @@ import { NoteBlock } from './NoteBlock';
 import { OverdueBlock } from './OverdueBlock';
 import { ProgressBlock } from './ProgressBlock';
 import { SnippetBlock } from './SnippetBlock';
+import { TableBlock } from './TableBlock';
 
 function card(id: string, due: string | null, extra: Partial<CardSummary> = {}): CardSummary {
   return {
@@ -318,6 +319,181 @@ describe('ProgressBlock', () => {
     const meter = screen.getByRole('progressbar');
     expect(meter).not.toHaveAttribute('aria-valuenow');
     expect(screen.getByText(/Choose the list that means done/)).toBeInTheDocument();
+  });
+});
+
+describe('TableBlock', () => {
+  const rows = [
+    ['Item', 'Cost'],
+    ['Rent', '800'],
+    ['Food', '120,5'],
+  ];
+
+  function table(onSave = vi.fn(), editable = true, config: Record<string, unknown> = {}) {
+    inBoard(
+      <TableBlock
+        block={{
+          ...block('table', { size: 'wide', header: true, rows, ...config }),
+          name: 'Budget',
+        }}
+        editable={editable}
+        onSave={onSave}
+      />
+    );
+    return onSave;
+  }
+
+  function focusOn(cell: HTMLElement) {
+    act(() => cell.focus());
+  }
+
+  it('is a grid with a heading row, one tab stop and a total for the number columns', () => {
+    table();
+
+    expect(screen.getByRole('grid', { name: 'Budget' })).toBeInTheDocument();
+    expect(screen.getAllByRole('columnheader').map((cell) => cell.textContent)).toEqual([
+      'Item',
+      'Cost',
+    ]);
+    const cells = [...screen.getAllByRole('columnheader'), ...screen.getAllByRole('gridcell')];
+    expect(cells.filter((cell) => cell.getAttribute('tabindex') === '0')).toHaveLength(1);
+    expect(screen.getByRole('columnheader', { name: 'Item' })).toHaveAttribute('tabindex', '0');
+    expect(screen.getByText(/Total:/)).toBeInTheDocument();
+  });
+
+  it('moves with the arrow keys and keeps a single tab stop', () => {
+    table();
+    const first = screen.getByRole('columnheader', { name: 'Item' });
+    focusOn(first);
+
+    fireEvent.keyDown(first, { key: 'ArrowDown' });
+    expect(screen.getByRole('gridcell', { name: 'Rent' })).toHaveFocus();
+
+    fireEvent.keyDown(screen.getByRole('gridcell', { name: 'Rent' }), { key: 'ArrowRight' });
+    expect(screen.getByRole('gridcell', { name: '800' })).toHaveFocus();
+    expect(screen.getByRole('gridcell', { name: '800' })).toHaveAttribute('tabindex', '0');
+    expect(screen.getByRole('gridcell', { name: 'Rent' })).toHaveAttribute('tabindex', '-1');
+
+    fireEvent.keyDown(screen.getByRole('gridcell', { name: '800' }), { key: 'End', ctrlKey: true });
+    expect(screen.getByRole('gridcell', { name: '120,5' })).toHaveFocus();
+    fireEvent.keyDown(screen.getByRole('gridcell', { name: '120,5' }), {
+      key: 'Home',
+      ctrlKey: true,
+    });
+    expect(screen.getByRole('columnheader', { name: 'Item' })).toHaveFocus();
+  });
+
+  it('edits a cell with Enter, saves on Enter and moves down', () => {
+    const onSave = table();
+    const cell = screen.getByRole('gridcell', { name: 'Rent' });
+    focusOn(cell);
+
+    fireEvent.keyDown(cell, { key: 'Enter' });
+    const input = screen.getByRole('textbox', { name: 'Cell A2' });
+    fireEvent.change(input, { target: { value: 'Rent and bills' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(onSave).toHaveBeenCalledWith('blk', {
+      size: 'wide',
+      header: true,
+      rows: [
+        ['Item', 'Cost'],
+        ['Rent and bills', '800'],
+        ['Food', '120,5'],
+      ],
+    });
+    expect(screen.getByRole('gridcell', { name: 'Food' })).toHaveFocus();
+  });
+
+  it('puts the cell back on Escape and saves nothing when nothing changed', () => {
+    const onSave = table();
+    const cell = screen.getByRole('gridcell', { name: 'Rent' });
+    focusOn(cell);
+
+    fireEvent.keyDown(cell, { key: 'Enter' });
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Changed' } });
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Escape' });
+
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByRole('gridcell', { name: 'Rent' })).toBeInTheDocument();
+
+    fireEvent.keyDown(screen.getByRole('gridcell', { name: 'Rent' }), { key: 'Enter' });
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter' });
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('starts typing over a cell and clears one with Delete', () => {
+    const onSave = table();
+    const cell = screen.getByRole('gridcell', { name: 'Rent' });
+    focusOn(cell);
+
+    fireEvent.keyDown(cell, { key: 'Delete' });
+    expect(onSave).toHaveBeenLastCalledWith(
+      'blk',
+      expect.objectContaining({ rows: [rows[0], ['', '800'], rows[2]] })
+    );
+
+    fireEvent.keyDown(cell, { key: 'x' });
+    expect(screen.getByRole('textbox', { name: 'Cell A2' })).toHaveValue('x');
+  });
+
+  it('fills the grid from cells pasted from a spreadsheet', () => {
+    const onSave = table();
+    const cell = screen.getByRole('gridcell', { name: 'Rent' });
+    focusOn(cell);
+
+    fireEvent.paste(screen.getByRole('grid'), {
+      clipboardData: { getData: () => 'Gym\t30\nBooks\t15' },
+    });
+
+    expect(onSave).toHaveBeenCalledWith(
+      'blk',
+      expect.objectContaining({
+        rows: [
+          ['Item', 'Cost'],
+          ['Gym', '30'],
+          ['Books', '15'],
+        ],
+      })
+    );
+  });
+
+  it('adds and removes rows and columns from the toolbar', () => {
+    const onSave = table();
+    focusOn(screen.getByRole('gridcell', { name: 'Rent' }));
+
+    fireEvent.click(screen.getByRole('button', { name: /^Row$/ }));
+    expect(onSave).toHaveBeenLastCalledWith(
+      'blk',
+      expect.objectContaining({ rows: [rows[0], rows[1], ['', ''], rows[2]] })
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Column$/ }));
+    expect(onSave.mock.calls.at(-1)?.[1].rows[0]).toHaveLength(3);
+  });
+
+  it('can be read but not changed by a reader', () => {
+    const onSave = table(vi.fn(), false);
+    const cell = screen.getByRole('gridcell', { name: 'Rent' });
+    focusOn(cell);
+
+    fireEvent.keyDown(cell, { key: 'Enter' });
+    fireEvent.keyDown(cell, { key: 'Delete' });
+    fireEvent.paste(screen.getByRole('grid'), { clipboardData: { getData: () => 'x' } });
+
+    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.queryByRole('toolbar')).toBeNull();
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByRole('gridcell', { name: 'Rent' })).toHaveAttribute('aria-readonly', 'true');
+  });
+
+  it('offers to start an empty table', () => {
+    const onSave = vi.fn();
+    inBoard(<TableBlock block={block('table', { rows: [] })} editable onSave={onSave} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /Add a cell/ }));
+
+    expect(onSave).toHaveBeenCalledWith('blk', expect.objectContaining({ rows: [['']] }));
   });
 });
 
