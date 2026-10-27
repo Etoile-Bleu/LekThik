@@ -1,0 +1,214 @@
+.timer-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.3rem 0.85rem 1rem;
+}
+
+.timer-block__dial {
+  position: relative;
+  width: min(100%, 11rem);
+}
+
+.timer-block__dial svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: rotate(-90deg);
+}
+
+.timer-block__track,
+.timer-block__elapsed {
+  fill: none;
+  stroke-width: 7;
+}
+
+.timer-block__track {
+  stroke: color-mix(in srgb, var(--color-ink) 12%, transparent);
+}
+
+.timer-block__elapsed {
+  stroke: var(--color-accent-text);
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  transition: stroke-dashoffset 280ms linear;
+}
+
+.timer-block[data-mode='short_break'] .timer-block__elapsed,
+.timer-block[data-mode='long_break'] .timer-block__elapsed {
+  stroke: var(--chart-2);
+}
+
+.timer-block[data-status='done'] .timer-block__elapsed {
+  stroke: var(--color-danger-ink);
+}
+
+.timer-block__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+}
+
+.timer-block__mode {
+  color: var(--color-text-soft-on-light);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.timer-block__time {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 2.3rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-block__state {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.timer-block[data-status='done'] .timer-block__state {
+  color: var(--color-danger-ink);
+  font-weight: 700;
+}
+
+.timer-block[data-status='done'] .timer-block__time {
+  animation: timer-ring 900ms var(--ease-out) 2;
+}
+
+.timer-block__sessions {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timer-block__sessions li {
+  width: 0.6rem;
+  height: 0.6rem;
+  border: 1.5px solid var(--color-border-strong);
+  border-radius: 999px;
+}
+
+.timer-block__sessions li[data-done] {
+  border-color: var(--color-accent-text);
+  background: var(--color-accent-text);
+}
+
+.timer-block__sessions li[data-current] {
+  border-color: var(--color-ink);
+}
+
+.timer-block__modes {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+}
+
+.timer-block__modes button {
+  min-height: 30px;
+  padding: 0 0.6rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-soft-on-light);
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) ease,
+    color var(--duration-fast) ease;
+}
+
+.timer-block__modes button[aria-pressed='true'] {
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+}
+
+.timer-block__modes button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.timer-block__modes button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.timer-block__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.timer-block__note {
+  max-width: 17rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  text-align: center;
+}
+
+.timer-block__sound {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-soft-on-light);
+  font-size: 0.8rem;
+}
+
+.timer-block__sound input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--color-accent-text);
+}
+
+@keyframes timer-ring {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+@media (forced-colors: active) {
+  .timer-block__elapsed {
+    stroke: Highlight;
+  }
+
+  .timer-block__track {
+    stroke: GrayText;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .timer-block__elapsed,
+  .timer-block__modes button {
+    transition: none;
+  }
+
+  .timer-block[data-status='done'] .timer-block__time {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduce'] .timer-block__elapsed,
+:root[data-motion='reduce'] .timer-block__modes button {
+  transition: none;
+}
+
+:root[data-motion='reduce'] .timer-block[data-status='done'] .timer-block__time {
+  animation: none;
+}
