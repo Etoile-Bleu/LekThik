@@ -389,6 +389,15 @@ export function HashIcon(props: IconProps) {
   );
 }
 
+export function RingIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10" cy="10" r="6.5" opacity="0.35" />
+      <path d="M10 3.5a6.5 6.5 0 0 1 6.5 6.5" />
+    </Base>
+  );
+}
+
 export function ExternalLinkIcon(props: IconProps) {
   return (
     <Base {...props}>
