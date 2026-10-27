@@ -25,6 +25,7 @@ pub enum ListKind {
     Embed,
     Link,
     Progress,
+    Overdue,
 }
 
 impl ListKind {
@@ -39,6 +40,7 @@ impl ListKind {
             Self::Embed => "embed",
             Self::Link => "link",
             Self::Progress => "progress",
+            Self::Overdue => "overdue",
         }
     }
 
@@ -53,6 +55,7 @@ impl ListKind {
             "embed" => Ok(Self::Embed),
             "link" => Ok(Self::Link),
             "progress" => Ok(Self::Progress),
+            "overdue" => Ok(Self::Overdue),
             _ => Err(BoardsError::Invalid(format!("unknown block kind {value}"))),
         }
     }
@@ -138,6 +141,12 @@ pub struct ProgressConfig {
     pub done_list_id: Option<Uuid>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct OverdueConfig {
+    pub size: BlockSize,
+}
+
 /// A picture kept by LekThik itself. Alternative text is required, not optional.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -189,6 +198,7 @@ pub enum BlockConfig {
     Embed(EmbedConfig),
     Link(LinkConfig),
     Progress(ProgressConfig),
+    Overdue(OverdueConfig),
 }
 
 fn invalid(message: impl Into<String>) -> BoardsError {
@@ -220,6 +230,7 @@ impl BlockConfig {
             Self::Embed(_) => ListKind::Embed,
             Self::Link(_) => ListKind::Link,
             Self::Progress(_) => ListKind::Progress,
+            Self::Overdue(_) => ListKind::Overdue,
         }
     }
 
@@ -326,6 +337,7 @@ impl BlockConfig {
                 clean_text(&progress.label, COUNTER_LABEL_MAX_CHARS, false)?;
                 Ok(Self::Progress(progress))
             }
+            ListKind::Overdue => Ok(Self::Overdue(serde_json::from_value(value).map_err(from)?)),
         }
     }
 
@@ -340,6 +352,7 @@ impl BlockConfig {
             Self::Embed(config) => serde_json::to_value(config),
             Self::Link(config) => serde_json::to_value(config),
             Self::Progress(config) => serde_json::to_value(config),
+            Self::Overdue(config) => serde_json::to_value(config),
         };
         value.unwrap_or(Value::Null)
     }
@@ -379,6 +392,7 @@ mod tests {
             ListKind::Embed,
             ListKind::Link,
             ListKind::Progress,
+            ListKind::Overdue,
         ] {
             assert_eq!(ListKind::parse(kind.as_str()), Ok(kind));
         }
@@ -659,6 +673,29 @@ mod tests {
         ] {
             assert!(
                 BlockConfig::parse(ListKind::Progress, bad.clone()).is_err(),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn an_overdue_block_only_has_a_size() {
+        let config =
+            BlockConfig::parse(ListKind::Overdue, json!({ "size": "wide" })).expect("parse");
+
+        assert_eq!(config.to_value(), json!({ "size": "wide" }));
+        assert_eq!(config.kind(), ListKind::Overdue);
+        assert_eq!(
+            BlockConfig::parse(ListKind::Overdue, Value::Null),
+            Ok(BlockConfig::Overdue(OverdueConfig::default()))
+        );
+        for bad in [
+            json!({ "user_id": "someone" }),
+            json!({ "size": "huge" }),
+            json!([]),
+        ] {
+            assert!(
+                BlockConfig::parse(ListKind::Overdue, bad.clone()).is_err(),
                 "{bad}"
             );
         }
