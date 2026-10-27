@@ -9,6 +9,7 @@ import type {
   LinkConfig,
   NoteConfig,
   PanelKind,
+  ProgressConfig,
 } from './boardsApi';
 import { daysUntil, shortDue } from './dueDate';
 
@@ -23,6 +24,12 @@ export const DEFAULT_NOTE: NoteConfig = { size: 'normal', text: '' };
 /** Pictures and videos want room, so they start wide. */
 export const DEFAULT_IMAGE: ImageConfig = { size: 'wide', alt: '', caption: '' };
 export const DEFAULT_LINK: LinkConfig = { size: 'normal', url: '', title: '' };
+export const DEFAULT_PROGRESS: ProgressConfig = {
+  size: 'normal',
+  style: 'ring',
+  label: '',
+  done_list_id: null,
+};
 export const DEFAULT_COUNTER: CounterConfig = {
   size: 'normal',
   metric: 'overdue',
@@ -62,6 +69,10 @@ export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
 }
 
+export function progressConfig(panel: BoardList): ProgressConfig {
+  return { ...DEFAULT_PROGRESS, ...(panel.config as Partial<ProgressConfig>) };
+}
+
 export function sizeOf(panel: BoardList): 'normal' | 'wide' {
   return (panel.config as { size?: string }).size === 'wide' ? 'wide' : 'normal';
 }
@@ -95,6 +106,11 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
     description: 'One number: late cards, progress, days left or a total.',
   },
   {
+    kind: 'progress',
+    label: 'Progress',
+    description: 'A ring or a bar for the share of cards that are done.',
+  },
+  {
     kind: 'image',
     label: 'Picture',
     description: 'A moodboard, a plan or a logo, with a description for people who cannot see it.',
@@ -120,7 +136,20 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   image: 'Picture',
   embed: 'Video or calendar',
   link: 'Link',
+  progress: 'Progress',
 };
+
+export const BLOCK_KIND_IDS: Array<Exclude<PanelKind, 'list'>> = BLOCK_KINDS.map(
+  (info) => info.kind
+);
+
+export function guessDoneList(panels: BoardList[]): BoardList | null {
+  const lists = panels.filter(isCardList);
+  const named = lists.find((list) =>
+    /\b(done|finished|complete[d]?|shipped|termin|fini)/i.test(list.name)
+  );
+  return named ?? lists[lists.length - 1] ?? null;
+}
 
 export function cardsOf(panels: BoardList[]): CardSummary[] {
   return panels.flatMap((panel) => (isCardList(panel) ? panel.cards : []));
@@ -308,4 +337,58 @@ export function dueByDay(panels: BoardList[]): Map<string, CardSummary[]> {
     if (card.due_date) byDay.set(card.due_date, [...(byDay.get(card.due_date) ?? []), card]);
   }
   return byDay;
+}
+
+export interface ProgressReading {
+  percent: number;
+  done: number;
+  total: number;
+  caption: string;
+  detail: string;
+  state: 'setup' | 'empty' | 'running' | 'complete';
+  spoken: string;
+}
+
+export function readProgress(config: ProgressConfig, panels: BoardList[]): ProgressReading {
+  const caption = config.label.trim() || 'Done';
+  const doneList = panels.find((panel) => panel.id === config.done_list_id);
+
+  if (!doneList || !isCardList(doneList)) {
+    const detail = 'Choose the list that means done, in the settings of this block.';
+    return {
+      percent: 0,
+      done: 0,
+      total: 0,
+      caption,
+      detail,
+      state: 'setup',
+      spoken: `${caption}: no done list chosen. ${detail}`,
+    };
+  }
+
+  const total = cardsOf(panels).length;
+  const done = doneList.cards.length;
+  if (total === 0) {
+    return {
+      percent: 0,
+      done: 0,
+      total: 0,
+      caption,
+      detail: 'No cards yet.',
+      state: 'empty',
+      spoken: `${caption}: there are no cards yet.`,
+    };
+  }
+
+  const percent = Math.round((done / total) * 100);
+  const detail = `${done} of ${plural(total, 'card')} in ${doneList.name}`;
+  return {
+    percent,
+    done,
+    total,
+    caption,
+    detail,
+    state: percent === 100 ? 'complete' : 'running',
+    spoken: `${caption}: ${percent} percent. ${detail}.`,
+  };
 }
