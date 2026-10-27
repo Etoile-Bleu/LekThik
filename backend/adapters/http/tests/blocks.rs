@@ -576,6 +576,65 @@ async fn a_snippet_block_keeps_its_code_and_refuses_what_is_unsafe_or_too_big() 
 }
 
 #[tokio::test]
+async fn a_table_block_keeps_its_cells_as_text_and_enforces_its_limits() -> anyhow::Result<()> {
+    let (app, pool, _container) = spawn_app().await?;
+    let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
+    let (_, board_id, _) = create_workspace_board_list(&app, &alice).await?;
+    let uri = format!("/api/boards/{board_id}/blocks");
+
+    let (status, table) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "table", "name": "Budget",
+            "config": { "rows": [["Item", "Cost"], ["=1+1", "800"], ["Food"]] } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{table}");
+    assert_eq!(
+        table["config"]["rows"],
+        json!([["Item", "Cost"], ["=1+1", "800"], ["Food", ""]]),
+        "a formula stays text and a short row is padded"
+    );
+
+    let id = id_of(&table)?;
+    let (status, changed) = call(
+        &app,
+        "PUT",
+        &format!("/api/blocks/{id}/config"),
+        Some(&alice),
+        Some(json!({ "kind": "table", "config": { "header": false, "rows": [["a", "b"]] } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::OK, "{changed}");
+    assert_eq!(changed["config"]["header"], false);
+
+    let too_wide: Vec<String> = (0..13).map(|_| "a".to_string()).collect();
+    let too_tall: Vec<Vec<String>> = (0..101).map(|_| vec!["a".to_string()]).collect();
+    for bad in [
+        json!({ "rows": [too_wide] }),
+        json!({ "rows": too_tall }),
+        json!({ "rows": [["x".repeat(201)]] }),
+        json!({ "rows": [["a\tb"]] }),
+        json!({ "rows": [[1]] }),
+        json!({ "formulas": true }),
+    ] {
+        let (status, _) = call(
+            &app,
+            "POST",
+            &uri,
+            Some(&alice),
+            Some(json!({ "kind": "table", "name": "Nope", "config": bad })),
+        )
+        .await?;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{bad}");
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn cards_only_live_in_lists() -> anyhow::Result<()> {
     let (app, pool, _container) = spawn_app().await?;
     let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
