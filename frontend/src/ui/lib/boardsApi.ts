@@ -70,7 +70,8 @@ export type PanelKind =
   | 'chart'
   | 'snippet'
   | 'table'
-  | 'clocks';
+  | 'clocks'
+  | 'timer';
 export type EmbedProvider =
   'youtube' | 'vimeo' | 'google_calendar' | 'excalidraw' | 'figma' | 'notion';
 export type BlockSize = 'normal' | 'wide';
@@ -101,6 +102,22 @@ export interface CounterConfig {
 }
 export interface OverdueConfig {
   size: BlockSize;
+}
+export type TimerMode = 'focus' | 'short_break' | 'long_break';
+export type TimerState = 'idle' | 'running' | 'paused';
+export interface TimerConfig {
+  size: BlockSize;
+  mode: TimerMode;
+  focus_minutes: number;
+  short_minutes: number;
+  long_minutes: number;
+  state: TimerState;
+  /** Epoch milliseconds on the server clock, set while running. */
+  ends_at_ms: number | null;
+  /** Milliseconds left, set while paused. */
+  remaining_ms: number | null;
+  /** Focus sessions finished so far. */
+  cycle: number;
 }
 export interface ClockPlace {
   name: string;
@@ -189,7 +206,8 @@ export type PanelConfig =
   | ChartConfig
   | SnippetConfig
   | TableConfig
-  | ClocksConfig;
+  | ClocksConfig
+  | TimerConfig;
 
 /**
  * One panel of a board: a list of cards, or a block that shows something else.
