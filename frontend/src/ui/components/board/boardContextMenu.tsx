@@ -1,4 +1,4 @@
-import { KIND_LABEL, isCardList } from '@lib/blocks';
+import { BLOCK_KIND_IDS, KIND_LABEL, isCardList } from '@lib/blocks';
 import type { BoardView, PanelKind } from '@lib/boardsApi';
 import { parseQuickDate } from '@lib/commandStore';
 import type { BoardViewKind } from '@lib/prefs';
@@ -75,16 +75,6 @@ export interface BoardContext {
     movePanel: (panelId: string, index: number) => void;
   };
 }
-
-const BLOCK_KINDS: Array<Exclude<PanelKind, 'list'>> = [
-  'calendar',
-  'agenda',
-  'note',
-  'counter',
-  'image',
-  'embed',
-  'link',
-];
 
 const VIEWS: Array<{ value: BoardViewKind; label: string }> = [
   { value: 'board', label: 'Board' },
@@ -438,7 +428,7 @@ function backgroundEntries(context: BoardContext): MenuEntry[] {
         type: 'submenu',
         label: 'Add a block',
         icon: <NoteIcon size={16} />,
-        items: BLOCK_KINDS.map<MenuEntry>((kind) => ({
+        items: BLOCK_KIND_IDS.map<MenuEntry>((kind) => ({
           label: KIND_LABEL[kind],
           onSelect: () => context.addBlock(kind),
         })),
