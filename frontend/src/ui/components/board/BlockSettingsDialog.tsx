@@ -35,7 +35,7 @@ import type {
   SnippetLanguage,
   TableConfig,
 } from '@lib/boardsApi';
-import { parseEmbedUrl } from '@lib/embeds';
+import { PROVIDER_NAMES, parseEmbedUrl } from '@lib/embeds';
 import { CSV_MAX_BYTES, fitToLimits, parseDelimited } from '@lib/csv';
 import { PICTURE_TYPES, checkPicture, checkWebAddress } from '@lib/media';
 import {
@@ -190,7 +190,7 @@ export function BlockSettingsDialog({
       : block.kind === 'embed'
         ? embed.title?.trim()
           ? address.trim() !== '' && !parseEmbedUrl(address)
-            ? 'Only YouTube, Vimeo and Google Calendar addresses can be used.'
+            ? `Only ${PROVIDER_NAMES} addresses can be used.`
             : null
           : 'Name it, for people who cannot see it.'
         : block.kind === 'link'
