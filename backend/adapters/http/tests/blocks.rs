@@ -635,6 +635,72 @@ async fn a_table_block_keeps_its_cells_as_text_and_enforces_its_limits() -> anyh
 }
 
 #[tokio::test]
+async fn excalidraw_figma_and_notion_embeds_are_stored_as_identifiers_only() -> anyhow::Result<()> {
+    let (app, pool, _container) = spawn_app().await?;
+    let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
+    let (_, board_id, _) = create_workspace_board_list(&app, &alice).await?;
+    let uri = format!("/api/boards/{board_id}/blocks");
+
+    for (url, provider, id) in [
+        (
+            "https://excalidraw.com/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk",
+            "excalidraw",
+            "json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk",
+        ),
+        (
+            "https://www.figma.com/design/AbCdEf1234567890xyz/Home-page?node-id=1-2",
+            "figma",
+            "design/AbCdEf1234567890xyz",
+        ),
+        (
+            "https://acme.notion.site/Roadmap-0123456789abcdef0123456789abcdef",
+            "notion",
+            "acme/0123456789abcdef0123456789abcdef",
+        ),
+    ] {
+        let (status, embed) = call(
+            &app,
+            "POST",
+            &uri,
+            Some(&alice),
+            Some(json!({ "kind": "embed", "name": "Outside", "config": { "url": url, "title": "Outside content" } })),
+        )
+        .await?;
+        assert_eq!(status, StatusCode::CREATED, "{embed}");
+        assert_eq!(embed["config"]["provider"], provider);
+        assert_eq!(
+            embed["config"]["id"], id,
+            "only the identifier is kept, never the address"
+        );
+        assert!(
+            embed["config"].get("url").is_none(),
+            "the address a person typed is not stored"
+        );
+    }
+
+    for url in [
+        "https://www.notion.so/Roadmap-0123456789abcdef0123456789abcdef",
+        "https://excalidraw.com/#json=abc,def",
+        "https://www.figma.com/community/file/1234567890123",
+        "https://evil.example/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk",
+    ] {
+        let (status, _) = call(
+            &app,
+            "POST",
+            &uri,
+            Some(&alice),
+            Some(
+                json!({ "kind": "embed", "name": "Nope", "config": { "url": url, "title": "x" } }),
+            ),
+        )
+        .await?;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{url}");
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn cards_only_live_in_lists() -> anyhow::Result<()> {
     let (app, pool, _container) = spawn_app().await?;
     let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
