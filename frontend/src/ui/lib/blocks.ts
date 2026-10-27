@@ -15,6 +15,7 @@ import type {
   ProgressConfig,
   SnippetConfig,
   TableConfig,
+  TimerConfig,
 } from './boardsApi';
 import { daysUntil, shortDue } from './dueDate';
 
@@ -37,6 +38,17 @@ export const DEFAULT_SNIPPET: SnippetConfig = {
   line_numbers: false,
 };
 export const DEFAULT_CLOCKS: ClocksConfig = { size: 'normal', zones: [], place: null };
+export const DEFAULT_TIMER: TimerConfig = {
+  size: 'normal',
+  mode: 'focus',
+  focus_minutes: 25,
+  short_minutes: 5,
+  long_minutes: 15,
+  state: 'idle',
+  ends_at_ms: null,
+  remaining_ms: null,
+  cycle: 0,
+};
 export const DEFAULT_TABLE: TableConfig = {
   size: 'wide',
   header: true,
@@ -93,6 +105,9 @@ export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
 }
 
+export function timerConfig(panel: BoardList): TimerConfig {
+  return { ...DEFAULT_TIMER, ...(panel.config as Partial<TimerConfig>) };
+}
 export function clocksConfig(panel: BoardList): ClocksConfig {
   const stored = panel.config as Partial<ClocksConfig>;
   return {
@@ -171,6 +186,11 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
       'Cards by list, label, person or due date, as bars or a donut, with a table behind.',
   },
   {
+    kind: 'timer',
+    label: 'Timer',
+    description: 'A focus and break timer the whole board follows, started by whoever can edit.',
+  },
+  {
     kind: 'clocks',
     label: 'Clocks',
     description:
@@ -219,6 +239,7 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   snippet: 'Code',
   table: 'Table',
   clocks: 'Clocks',
+  timer: 'Timer',
 };
 
 export const BLOCK_KIND_IDS: Array<Exclude<PanelKind, 'list'>> = BLOCK_KINDS.map(
