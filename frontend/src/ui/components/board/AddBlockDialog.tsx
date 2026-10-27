@@ -102,6 +102,34 @@ function Preview({ kind }: { kind: Exclude<PanelKind, 'list'> }) {
           <rect x="12" y="50" width="26" height="4" rx="2" className="add-block__accent" />
         </svg>
       );
+    case 'timer':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          <circle
+            cx="48"
+            cy="32"
+            r="21"
+            fill="none"
+            strokeWidth="6"
+            className="add-block__ring-track"
+          />
+          <circle
+            cx="48"
+            cy="32"
+            r="21"
+            fill="none"
+            strokeWidth="6"
+            strokeLinecap="round"
+            pathLength="100"
+            strokeDasharray="38 100"
+            transform="rotate(-90 48 32)"
+            className="add-block__ring-fill"
+          />
+          <text x="48" y="37" textAnchor="middle" className="add-block__time">
+            25:00
+          </text>
+        </svg>
+      );
     case 'clocks':
       return (
         <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
