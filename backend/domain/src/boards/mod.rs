@@ -27,7 +27,7 @@ pub use block::{
     LinkConfig, ListKind, NOTE_MAX_CHARS, NoteConfig, OverdueConfig, PLACE_NAME_MAX_CHARS, Place,
     ProgressConfig, ProgressStyle, SNIPPET_MAX_CHARS, SNIPPET_MAX_LINES, SnippetConfig,
     SnippetLanguage, TABLE_CELL_MAX_CHARS, TABLE_MAX_BYTES, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS,
-    TableConfig, ZONE_MAX_CHARS,
+    TableConfig, TimerConfig, TimerMode, TimerState, ZONE_MAX_CHARS,
 };
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};
