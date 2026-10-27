@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { acceptsId, defaultTitle, embedSrc, parseEmbedUrl } from './embeds';
+import { acceptsId, defaultTitle, embedSrc, openSrc, parseEmbedUrl } from './embeds';
 
 describe('recognising an address', () => {
   it('understands every way to write a YouTube address', () => {
@@ -63,6 +63,82 @@ describe('recognising an address', () => {
     expect(acceptsId('vimeo', '7697987a')).toBe(false);
     expect(acceptsId('google_calendar', 'team%40example.com')).toBe(true);
     expect(acceptsId('google_calendar', 'a&b=c')).toBe(false);
+  });
+});
+
+describe('Excalidraw, Figma and Notion addresses', () => {
+  it('are recognised the same way the server does', () => {
+    expect(
+      parseEmbedUrl('https://excalidraw.com/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk')
+    ).toEqual({ provider: 'excalidraw', id: 'json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk' });
+    expect(
+      parseEmbedUrl('https://www.figma.com/file/AbCdEf1234567890xyz/My-design?node-id=0%3A1')
+    ).toEqual({ provider: 'figma', id: 'file/AbCdEf1234567890xyz' });
+    expect(
+      parseEmbedUrl('https://acme.notion.site/Roadmap-0123456789ABCDEF0123456789abcdef')
+    ).toEqual({ provider: 'notion', id: 'acme/0123456789abcdef0123456789abcdef' });
+    expect(parseEmbedUrl('https://acme.notion.site/ebd/0123456789abcdef0123456789abcdef')).toEqual({
+      provider: 'notion',
+      id: 'acme/0123456789abcdef0123456789abcdef',
+    });
+  });
+
+  it('are refused when they are not a shared page, or come from another site', () => {
+    for (const url of [
+      'https://excalidraw.com/',
+      'https://excalidraw.com/#json=abc,def',
+      'https://excalidraw.com/draw#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk',
+      'https://excalidraw.com.evil.example/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk',
+      'https://www.figma.com/community/file/1234567890123',
+      'https://www.figma.com/file/short',
+      'https://figma.com.evil.example/file/AbCdEf1234567890xyz/Name',
+      'https://www.notion.so/Roadmap-0123456789abcdef0123456789abcdef',
+      'https://a.b.notion.site/Roadmap-0123456789abcdef0123456789abcdef',
+      'https://acme.notion.site/Roadmap-0123456789abcdef0123456789abcde',
+      'https://acme.notion.site/Roadmap0123456789abcdef0123456789abcdef',
+      'https://acme.notion.site.evil.example/Roadmap-0123456789abcdef0123456789abcdef',
+      'http://excalidraw.com/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk',
+    ]) {
+      expect(parseEmbedUrl(url), url).toBeNull();
+    }
+  });
+
+  it('check their identifiers when they come back from storage', () => {
+    expect(acceptsId('excalidraw', 'room=0123456789abcdef0123,AbCdEfGhIjKlMnOpQrStUv')).toBe(true);
+    expect(acceptsId('excalidraw', 'json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk/..')).toBe(false);
+    expect(acceptsId('figma', 'proto/AbCdEf1234567890xyz')).toBe(true);
+    expect(acceptsId('figma', 'file/AbCdEf1234567890xyz?x=1')).toBe(false);
+    expect(acceptsId('notion', 'acme/0123456789abcdef0123456789abcdef')).toBe(true);
+    expect(acceptsId('notion', 'ac.me/0123456789abcdef0123456789abcdef')).toBe(false);
+    expect(acceptsId('notion', 'acme/0123456789ABCDEF0123456789ABCDEF')).toBe(false);
+  });
+
+  it('are given frames that only point at their provider, and builds nothing from bad ones', () => {
+    expect(embedSrc('excalidraw', 'json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk')).toBe(
+      'https://excalidraw.com/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk'
+    );
+    expect(embedSrc('figma', 'design/AbCdEf1234567890xyz')).toBe(
+      'https://www.figma.com/embed?embed_host=lekthik&url=https%3A%2F%2Fwww.figma.com%2Fdesign%2FAbCdEf1234567890xyz'
+    );
+    expect(embedSrc('notion', 'acme/0123456789abcdef0123456789abcdef')).toBe(
+      'https://acme.notion.site/ebd/0123456789abcdef0123456789abcdef'
+    );
+    expect(embedSrc('figma', 'file/x"onload=1')).toBeNull();
+    expect(embedSrc('notion', 'evil.example/0123456789abcdef0123456789abcdef')).toBeNull();
+    expect(embedSrc('excalidraw', 'json=a,b')).toBeNull();
+  });
+
+  it('can be opened as ordinary pages, and are named for people', () => {
+    expect(openSrc('figma', 'file/AbCdEf1234567890xyz')).toBe(
+      'https://www.figma.com/file/AbCdEf1234567890xyz'
+    );
+    expect(openSrc('notion', 'acme/0123456789abcdef0123456789abcdef')).toBe(
+      'https://acme.notion.site/0123456789abcdef0123456789abcdef'
+    );
+    expect(openSrc('figma', 'nope')).toBeNull();
+    expect(defaultTitle('figma')).toBe('Figma design');
+    expect(defaultTitle('excalidraw')).toBe('Excalidraw drawing');
+    expect(defaultTitle('notion')).toBe('Notion page');
   });
 });
 
