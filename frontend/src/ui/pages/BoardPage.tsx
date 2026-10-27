@@ -16,6 +16,7 @@ import {
   DEFAULT_AGENDA,
   DEFAULT_CALENDAR,
   DEFAULT_CHART,
+  DEFAULT_CLOCKS,
   DEFAULT_COUNTER,
   DEFAULT_NOTE,
   DEFAULT_OVERDUE,
@@ -248,6 +249,7 @@ export function BoardPage() {
     chart: DEFAULT_CHART,
     snippet: DEFAULT_SNIPPET,
     table: DEFAULT_TABLE,
+    clocks: DEFAULT_CLOCKS,
   };
 
   function saveNote(blockId: string, text: string) {
@@ -313,7 +315,9 @@ export function BoardPage() {
     if (!block) return;
     announce(`${KIND_LABEL[kind]} block added.`);
     // A counter needs to be pointed at something before it says anything useful.
-    if (kind === 'counter' || kind === 'snippet') setBlockSettingsId(block.id);
+    if (kind === 'counter' || kind === 'snippet' || kind === 'clocks') {
+      setBlockSettingsId(block.id);
+    }
     if (kind === 'progress' && !(config as { done_list_id: string | null }).done_list_id) {
       setBlockSettingsId(block.id);
     }
