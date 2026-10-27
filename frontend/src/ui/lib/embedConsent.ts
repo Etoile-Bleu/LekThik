@@ -13,6 +13,9 @@ function read(): Allowed {
       youtube: stored.youtube === true,
       vimeo: stored.vimeo === true,
       google_calendar: stored.google_calendar === true,
+      excalidraw: stored.excalidraw === true,
+      figma: stored.figma === true,
+      notion: stored.notion === true,
     };
   } catch {
     return {};
