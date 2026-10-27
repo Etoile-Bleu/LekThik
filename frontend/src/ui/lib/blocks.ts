@@ -4,6 +4,7 @@ import type {
   CalendarConfig,
   CardSummary,
   ChartConfig,
+  ClocksConfig,
   CounterConfig,
   EmbedConfig,
   ImageConfig,
@@ -35,6 +36,7 @@ export const DEFAULT_SNIPPET: SnippetConfig = {
   code: '',
   line_numbers: false,
 };
+export const DEFAULT_CLOCKS: ClocksConfig = { size: 'normal', zones: [], place: null };
 export const DEFAULT_TABLE: TableConfig = {
   size: 'wide',
   header: true,
@@ -91,6 +93,14 @@ export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
 }
 
+export function clocksConfig(panel: BoardList): ClocksConfig {
+  const stored = panel.config as Partial<ClocksConfig>;
+  return {
+    size: stored.size ?? DEFAULT_CLOCKS.size,
+    zones: Array.isArray(stored.zones) ? stored.zones : [],
+    place: stored.place ?? null,
+  };
+}
 export function tableConfig(panel: BoardList): TableConfig {
   const stored = panel.config as Partial<TableConfig>;
   return {
@@ -161,6 +171,12 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
       'Cards by list, label, person or due date, as bars or a donut, with a table behind.',
   },
   {
+    kind: 'clocks',
+    label: 'Clocks',
+    description:
+      'The time in the places of your team, when everyone is at work, and the weather if you ask.',
+  },
+  {
     kind: 'table',
     label: 'Table',
     description: 'A small spreadsheet you edit in place. Paste cells or a CSV file, totals add up.',
@@ -202,6 +218,7 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   chart: 'Chart',
   snippet: 'Code',
   table: 'Table',
+  clocks: 'Clocks',
 };
 
 export const BLOCK_KIND_IDS: Array<Exclude<PanelKind, 'list'>> = BLOCK_KINDS.map(
