@@ -4,7 +4,9 @@ import type { EmbedProvider } from './boardsApi';
 
 const KEY = 'lekthik.embeds.v1';
 
-type Allowed = Partial<Record<EmbedProvider, boolean>>;
+export type ConsentKey = EmbedProvider | 'open_meteo';
+
+type Allowed = Partial<Record<ConsentKey, boolean>>;
 
 function read(): Allowed {
   try {
@@ -16,6 +18,7 @@ function read(): Allowed {
       excalidraw: stored.excalidraw === true,
       figma: stored.figma === true,
       notion: stored.notion === true,
+      open_meteo: stored.open_meteo === true,
     };
   } catch {
     return {};
@@ -33,9 +36,9 @@ function write(allowed: Allowed) {
 interface ConsentState {
   allowed: Allowed;
   /** Remember, on this device only, that content from this provider may be loaded without asking. */
-  allow: (provider: EmbedProvider) => void;
+  allow: (provider: ConsentKey) => void;
   /** Take the choice back. It is as easy to withdraw as it was to give. */
-  withdraw: (provider: EmbedProvider) => void;
+  withdraw: (provider: ConsentKey) => void;
   withdrawAll: () => void;
 }
 
