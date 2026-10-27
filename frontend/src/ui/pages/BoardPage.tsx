@@ -15,6 +15,7 @@ import { lookStyle } from '@lib/boardLooks';
 import {
   DEFAULT_AGENDA,
   DEFAULT_CALENDAR,
+  DEFAULT_CHART,
   DEFAULT_COUNTER,
   DEFAULT_NOTE,
   DEFAULT_OVERDUE,
@@ -69,7 +70,7 @@ function addDaysTo(day: string, amount: number): string {
   return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
 }
 
-type PlainBlockKind = 'calendar' | 'agenda' | 'note' | 'counter' | 'progress' | 'overdue';
+type PlainBlockKind = 'calendar' | 'agenda' | 'note' | 'counter' | 'progress' | 'overdue' | 'chart';
 
 export function BoardPage() {
   const { boardId = '' } = useParams();
@@ -242,6 +243,7 @@ export function BoardPage() {
     counter: DEFAULT_COUNTER,
     progress: DEFAULT_PROGRESS,
     overdue: DEFAULT_OVERDUE,
+    chart: DEFAULT_CHART,
   };
 
   function saveNote(blockId: string, text: string) {
@@ -336,6 +338,7 @@ export function BoardPage() {
   return (
     <BoardMetaProvider
       members={view.members}
+      labels={view.labels}
       meId={meId}
       today={today}
       display={cardDisplayFor(prefs, view.board.id)}
