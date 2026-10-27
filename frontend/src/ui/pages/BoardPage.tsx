@@ -20,6 +20,7 @@ import {
   DEFAULT_NOTE,
   DEFAULT_OVERDUE,
   DEFAULT_PROGRESS,
+  DEFAULT_SNIPPET,
   KIND_LABEL,
   guessDoneList,
   isCardList,
@@ -70,7 +71,7 @@ function addDaysTo(day: string, amount: number): string {
   return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
 }
 
-type PlainBlockKind = 'calendar' | 'agenda' | 'note' | 'counter' | 'progress' | 'overdue' | 'chart';
+type PlainBlockKind = Exclude<PanelKind, 'list' | 'image' | 'embed' | 'link'>;
 
 export function BoardPage() {
   const { boardId = '' } = useParams();
@@ -244,6 +245,7 @@ export function BoardPage() {
     progress: DEFAULT_PROGRESS,
     overdue: DEFAULT_OVERDUE,
     chart: DEFAULT_CHART,
+    snippet: DEFAULT_SNIPPET,
   };
 
   function saveNote(blockId: string, text: string) {
@@ -309,7 +311,7 @@ export function BoardPage() {
     if (!block) return;
     announce(`${KIND_LABEL[kind]} block added.`);
     // A counter needs to be pointed at something before it says anything useful.
-    if (kind === 'counter') setBlockSettingsId(block.id);
+    if (kind === 'counter' || kind === 'snippet') setBlockSettingsId(block.id);
     if (kind === 'progress' && !(config as { done_list_id: string | null }).done_list_id) {
       setBlockSettingsId(block.id);
     }
