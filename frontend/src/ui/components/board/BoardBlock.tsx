@@ -17,6 +17,7 @@ import {
   ChevronsLeftIcon,
   ChevronsRightIcon,
   ClockIcon,
+  CodeIcon,
   GripIcon,
   HashIcon,
   ImageIcon,
@@ -42,6 +43,7 @@ import { NoteBlock } from './blocks/NoteBlock';
 import { ChartBlock } from './blocks/ChartBlock';
 import { OverdueBlock } from './blocks/OverdueBlock';
 import { ProgressBlock } from './blocks/ProgressBlock';
+import { SnippetBlock } from './blocks/SnippetBlock';
 import './BoardBlock.css';
 
 interface BoardBlockProps {
@@ -87,6 +89,8 @@ export function KindIcon({ kind, size = 16 }: { kind: PanelKind; size?: number }
       return <AlertIcon size={size} />;
     case 'chart':
       return <BarsIcon size={size} />;
+    case 'snippet':
+      return <CodeIcon size={size} />;
     default:
       return null;
   }
@@ -280,6 +284,9 @@ export function BoardBlock({
         {block.kind === 'progress' && <ProgressBlock block={block} panels={panels} />}
         {block.kind === 'overdue' && <OverdueBlock panels={panels} onOpenCard={onOpenCard} />}
         {block.kind === 'chart' && <ChartBlock block={block} panels={panels} />}
+        {block.kind === 'snippet' && (
+          <SnippetBlock block={block} editable={!readOnly} onAddCode={onSettings} />
+        )}
         {block.kind === 'image' && (
           <ImageBlock block={block} editable={!readOnly} onAddPicture={onSettings} />
         )}
