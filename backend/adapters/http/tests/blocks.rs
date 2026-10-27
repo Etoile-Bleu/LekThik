@@ -701,6 +701,65 @@ async fn excalidraw_figma_and_notion_embeds_are_stored_as_identifiers_only() -> 
 }
 
 #[tokio::test]
+async fn a_clocks_block_keeps_zones_and_a_rounded_place_and_refuses_odd_ones() -> anyhow::Result<()>
+{
+    let (app, pool, _container) = spawn_app().await?;
+    let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
+    let (_, board_id, _) = create_workspace_board_list(&app, &alice).await?;
+    let uri = format!("/api/boards/{board_id}/blocks");
+
+    let (status, clocks) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "clocks", "name": "Team time",
+            "config": {
+                "zones": ["Europe/Paris", "Asia/Tokyo"],
+                "place": { "name": "Paris", "latitude_centi": 4886, "longitude_centi": 235 }
+            } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{clocks}");
+    assert_eq!(
+        clocks["config"]["zones"],
+        json!(["Europe/Paris", "Asia/Tokyo"])
+    );
+    assert_eq!(clocks["config"]["place"]["latitude_centi"], 4886);
+
+    let (status, bare) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "clocks", "name": "Empty" })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{bare}");
+    assert_eq!(bare["config"]["place"], serde_json::Value::Null);
+
+    for bad in [
+        json!({ "zones": ["Europe/Paris", "Europe/Paris"] }),
+        json!({ "zones": ["../etc/passwd"] }),
+        json!({ "zones": ["Europe/Paris\n"] }),
+        json!({ "place": { "name": "x", "latitude_centi": 9100, "longitude_centi": 0 } }),
+        json!({ "place": { "name": "x", "latitude_centi": 48.86, "longitude_centi": 2.35 } }),
+    ] {
+        let (status, _) = call(
+            &app,
+            "POST",
+            &uri,
+            Some(&alice),
+            Some(json!({ "kind": "clocks", "name": "Nope", "config": bad })),
+        )
+        .await?;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{bad}");
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn cards_only_live_in_lists() -> anyhow::Result<()> {
     let (app, pool, _container) = spawn_app().await?;
     let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
