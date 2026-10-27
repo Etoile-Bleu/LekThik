@@ -118,7 +118,7 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 | My late cards | The cards assigned to you that are past their date, most late first. Everyone who opens the board sees their own |
 | Note | Markdown text with checklists you can tick |
 | Picture | An image kept in LekThik's own database, with its metadata removed and a description as alternative text |
-| Video or calendar | YouTube, Vimeo or Google Calendar, loaded only after a person presses a button |
+| Embed | YouTube, Vimeo, Google Calendar, Excalidraw, Figma or a published Notion page, loaded only after a person presses a button that names who receives what |
 | Link | A plain link to a site, fetching nothing |
 
 **Cards** carry up to ten assignees, a due date that reads `Today`, `Yesterday` or a date with an icon and words rather than a colour, labels with a priority, and a description written in Markdown with GitHub tables, checklists, highlighted code, LaTeX formulas drawn by KaTeX (as HTML for the eye and MathML for screen readers) and Mermaid diagrams. Lists can carry a work in progress limit that warns without ever blocking.
@@ -198,7 +198,7 @@ LekThik is built and audited against WCAG 2.2 AA, and checked in a real browser 
 ## Privacy and security
 
 - **No tracking.** No analytics, no advertising, no cookies except the session cookie (`HttpOnly`, `Secure`, `SameSite=Lax`). Fonts are bundled with the app, so opening LekThik sends nobody's address to another company.
-- **Nothing is requested from a third party until a person asks.** A video or calendar block shows a placeholder that says who would receive what, and only loads after a press.
+- **Nothing is requested from a third party until a person asks.** An embed block shows a placeholder that says who would receive what, and only loads after a press.
 - **Passwords** are hashed with Argon2, verification and reset codes are stored hashed and expire in minutes, and sign in and sign up are rate limited.
 - **Uploads are rebuilt.** A picture is decoded and written again from its pixels, which drops every piece of metadata (GPS position, camera, time, author, hidden trailing data). Only real PNG, JPEG and WebP pass, judged by their bytes, never SVG.
 - **Text is never read as HTML.** Markdown goes through `react-markdown` without raw HTML, links keep only web and mail addresses, pictures from other sites are never fetched, Mermaid runs in strict mode with its output cleaned, and KaTeX runs with `trust` off.
