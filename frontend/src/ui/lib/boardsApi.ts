@@ -57,7 +57,16 @@ export interface CardSummary {
 }
 
 export type PanelKind =
-  'list' | 'calendar' | 'agenda' | 'note' | 'counter' | 'image' | 'embed' | 'link' | 'progress';
+  | 'list'
+  | 'calendar'
+  | 'agenda'
+  | 'note'
+  | 'counter'
+  | 'image'
+  | 'embed'
+  | 'link'
+  | 'progress'
+  | 'overdue';
 export type EmbedProvider = 'youtube' | 'vimeo' | 'google_calendar';
 export type BlockSize = 'normal' | 'wide';
 export type AgendaRange = 'today' | 'week';
@@ -84,6 +93,9 @@ export interface CounterConfig {
   done_list_id: string | null;
   /** `YYYY-MM-DD`, for the days left. */
   date: string | null;
+}
+export interface OverdueConfig {
+  size: BlockSize;
 }
 export type ProgressStyle = 'ring' | 'bar';
 export interface ProgressConfig {
@@ -120,7 +132,8 @@ export type PanelConfig =
   | AgendaConfig
   | NoteConfig
   | CounterConfig
-  | ProgressConfig;
+  | ProgressConfig
+  | OverdueConfig;
 
 /**
  * One panel of a board: a list of cards, or a block that shows something else.
