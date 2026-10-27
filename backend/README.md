@@ -113,7 +113,7 @@ emails) so a client can draw avatars without another request.
 | `PATCH /api/cards/{id}` with `due_date` | Set a day, send `null` to clear it, leave it out to keep it |
 | `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
 | `GET /api/users/me/cards` | Cards assigned to me across workspaces, soonest due first |
-| `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note or counter block |
+| `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note, counter or progress block |
 | `PUT /api/blocks/{id}/image` | Set the picture of an image block (the file as the body) |
 | `GET /api/blocks/{id}/image` | The picture of an image block, for members only |
 | `PUT /api/blocks/{id}/config` | Change the settings of a block, the kind must match |
@@ -137,6 +137,9 @@ The same object holds how a person lays out their boards: for each board a view 
 the properties and which are hidden, every property listed once). These are personal, so they never
 change what teammates see. At most 50 lists can be folded per board.
 
+A progress block (migration `013_add_progress_block.sql`) keeps a style (`ring` or `bar`), an optional
+label and the done list it measures, which must be a list of the same board, exactly like a counter.
+
 A list can carry a work in progress limit from 1 to 99 (`PUT /api/lists/{id}/wip-limit`, writers and
 above, `null` removes it). It is shared with the board, returned in the board view, and only warns:
 adding or moving cards past it still works. The field must be present, so an empty body can never
@@ -153,7 +156,7 @@ themselves. It is shared with everyone on the board and refreshed live like any 
 The `canvas` view is one more value of the per board view preference.
 
 A board holds panels in one row, and a panel is either a list of cards or a block that shows
-something about them: `calendar`, `agenda`, `note` or `counter`. Blocks live in the `lists` table with a
+something about them: `calendar`, `agenda`, `note`, `counter` or `progress`. Blocks live in the `lists` table with a
 `kind` and a JSON `config`, so moving, renaming, deleting, permissions, the 50 panel limit and live
 updates are the ones lists already have. `POST /api/boards/{id}/blocks` adds one and
 `PUT /api/blocks/{id}/config` changes its settings (writers and above). Settings are checked per kind
