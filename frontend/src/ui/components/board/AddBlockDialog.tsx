@@ -102,6 +102,31 @@ function Preview({ kind }: { kind: Exclude<PanelKind, 'list'> }) {
           <rect x="12" y="50" width="26" height="4" rx="2" className="add-block__accent" />
         </svg>
       );
+    case 'progress':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          <circle
+            cx="48"
+            cy="32"
+            r="21"
+            fill="none"
+            strokeWidth="8"
+            className="add-block__ring-track"
+          />
+          <circle
+            cx="48"
+            cy="32"
+            r="21"
+            fill="none"
+            strokeWidth="8"
+            strokeLinecap="round"
+            pathLength="100"
+            strokeDasharray="68 100"
+            transform="rotate(-90 48 32)"
+            className="add-block__ring-fill"
+          />
+        </svg>
+      );
     case 'counter':
       return (
         <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
