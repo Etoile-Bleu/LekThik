@@ -11,6 +11,7 @@ import {
   isCardList,
   linkConfig,
   noteConfig,
+  progressConfig,
 } from '@lib/blocks';
 import type {
   AgendaRange,
@@ -22,6 +23,8 @@ import type {
   ImageConfig,
   LinkConfig,
   PanelConfig,
+  ProgressConfig,
+  ProgressStyle,
 } from '@lib/boardsApi';
 import { parseEmbedUrl } from '@lib/embeds';
 import { PICTURE_TYPES, checkPicture, checkWebAddress } from '@lib/media';
@@ -52,6 +55,11 @@ const RANGES: Array<{ value: AgendaRange; label: string }> = [
   { value: 'week', label: 'Next 7 days' },
 ];
 
+const PROGRESS_STYLES: Array<{ value: ProgressStyle; label: string }> = [
+  { value: 'ring', label: 'Ring' },
+  { value: 'bar', label: 'Bar' },
+];
+
 const METRICS: Array<{ value: CounterMetric; label: string; hint: string }> = [
   { value: 'overdue', label: 'Overdue cards', hint: 'How many are past their due date.' },
   { value: 'done_percent', label: 'Share done', hint: 'Cards in the list that means done.' },
@@ -69,6 +77,8 @@ function initial(block: BoardList): PanelConfig {
       return noteConfig(block);
     case 'counter':
       return counterConfig(block);
+    case 'progress':
+      return progressConfig(block);
     case 'image':
       return imageConfig(block);
     case 'link':
@@ -121,6 +131,8 @@ export function BlockSettingsDialog({
   const size = (draft as { size?: BlockSize }).size ?? 'normal';
   const needsList = block.kind === 'counter' && counter.metric === 'done_percent';
   const needsDate = block.kind === 'counter' && counter.metric === 'days_left';
+  const progress = draft as ProgressConfig;
+  const progressMissing = block.kind === 'progress' && !progress.done_list_id;
   const image = draft as ImageConfig;
   const embed = draft as EmbedConfig;
   const link = draft as LinkConfig;
@@ -141,8 +153,8 @@ export function BlockSettingsDialog({
           ? checkWebAddress(link.url ?? '')
           : null;
   const missing =
-    (needsList && !counter.done_list_id) || (needsDate && !counter.date)
-      ? needsList
+    (needsList && !counter.done_list_id) || (needsDate && !counter.date) || progressMissing
+      ? needsList || progressMissing
         ? 'Choose the list that means done.'
         : 'Choose the date to count down to.'
       : mediaProblem;
@@ -272,6 +284,51 @@ export function BlockSettingsDialog({
                 maxLength={60}
                 value={counter.label}
                 placeholder="Days to launch"
+                autoComplete="off"
+                onChange={(event) => update({ label: event.target.value })}
+              />
+            </div>
+          </>
+        )}
+
+        {block.kind === 'progress' && (
+          <>
+            <div className="block-settings__field">
+              <span className="block-settings__label">Shape</span>
+              <Segmented<ProgressStyle>
+                label="Shape"
+                value={progress.style}
+                options={PROGRESS_STYLES}
+                onChange={(style) => update({ style })}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor={listId}>The list that means done</label>
+              <select
+                id={listId}
+                value={progress.done_list_id ?? ''}
+                aria-invalid={progressMissing || undefined}
+                onChange={(event) => update({ done_list_id: event.target.value || null })}
+              >
+                <option value="">Choose a list…</option>
+                {lists.map((list) => (
+                  <option key={list.id} value={list.id}>
+                    {list.name}
+                  </option>
+                ))}
+              </select>
+              <p className="block-settings__hint">
+                The ring shows the cards in this list out of all the cards of the board.
+              </p>
+            </div>
+            <div className="field">
+              <label htmlFor={labelId}>Name (optional)</label>
+              <input
+                id={labelId}
+                type="text"
+                maxLength={60}
+                value={progress.label ?? ''}
+                placeholder="Sprint 12"
                 autoComplete="off"
                 onChange={(event) => update({ label: event.target.value })}
               />
