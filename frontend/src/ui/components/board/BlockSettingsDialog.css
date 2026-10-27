@@ -33,6 +33,16 @@
   font-size: 0.84rem;
 }
 
+.block-settings__code {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow: auto;
+  tab-size: 2;
+}
+
 .block-settings__error {
   color: var(--color-danger-ink);
   font-size: 0.88rem;
