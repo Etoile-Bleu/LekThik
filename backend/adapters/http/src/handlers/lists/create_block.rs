@@ -15,7 +15,7 @@ use crate::state::AppState;
     path = "/boards/{id}/blocks",
     tag = "lists",
     summary = "Add a block",
-    description = "Appends a block (calendar, agenda, note, counter, progress, overdue, chart or snippet) after the existing panels. Blocks share the 50 panel limit with lists, and cards can only go in lists.",
+    description = "Appends a block (calendar, agenda, note, counter, progress, overdue, chart, snippet or table) after the existing panels. Blocks share the 50 panel limit with lists, and cards can only go in lists.",
     params(("id" = Uuid, Path, description = "Board id")),
     request_body = CreateBlockRequestDto,
     responses(
