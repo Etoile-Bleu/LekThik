@@ -1,0 +1,172 @@
+.overdue-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 0.2rem 0.6rem 0.8rem;
+}
+
+.overdue-block--clear {
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1.6rem 1rem 1.8rem;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+  animation: overdue-in var(--duration-slow) var(--ease-out);
+}
+
+.overdue-block--clear svg {
+  color: var(--color-accent-text);
+}
+
+.overdue-block__clear-title {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.overdue-block__figure {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding-inline: 0.25rem;
+  color: var(--color-danger-ink);
+}
+
+.overdue-block__figure svg {
+  align-self: center;
+}
+
+.overdue-block__count {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.overdue-block__caption {
+  color: var(--color-text-soft-on-light);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.overdue-block__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.overdue-block__list li {
+  --mark: 3px;
+  animation: overdue-in var(--duration-base) var(--ease-out) backwards;
+  animation-delay: calc(var(--row-index, 0) * 40ms);
+}
+
+.overdue-block__list li[data-severity='week'] {
+  --mark: 5px;
+}
+
+.overdue-block__list li[data-severity='long'] {
+  --mark: 7px;
+}
+
+.overdue-block__card {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 40px;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-left: var(--mark) solid var(--label-red-dot);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) ease,
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.overdue-block__card:hover {
+  border-color: var(--color-ink);
+  border-left-color: var(--label-red-dot);
+  transform: translateY(-1px);
+}
+
+.overdue-block__card:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.overdue-block__title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.overdue-block__meta {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.overdue-block__meta time {
+  color: var(--color-danger-ink);
+  font-weight: 600;
+}
+
+.overdue-block__list li[data-severity='long'] .overdue-block__meta time {
+  font-weight: 800;
+}
+
+.overdue-block__more {
+  align-self: flex-start;
+  min-height: 32px;
+  padding: 0.2rem 0.6rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-accent-text);
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+.overdue-block__more:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+@keyframes overdue-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overdue-block--clear,
+  .overdue-block__list li,
+  .overdue-block__card {
+    animation: none;
+    transition: none;
+  }
+}
+
+:root[data-motion='reduce'] .overdue-block--clear,
+:root[data-motion='reduce'] .overdue-block__list li,
+:root[data-motion='reduce'] .overdue-block__card {
+  animation: none;
+  transition: none;
+}
