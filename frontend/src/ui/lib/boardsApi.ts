@@ -70,7 +70,8 @@ export type PanelKind =
   | 'chart'
   | 'snippet'
   | 'table';
-export type EmbedProvider = 'youtube' | 'vimeo' | 'google_calendar';
+export type EmbedProvider =
+  'youtube' | 'vimeo' | 'google_calendar' | 'excalidraw' | 'figma' | 'notion';
 export type BlockSize = 'normal' | 'wide';
 export type AgendaRange = 'today' | 'week';
 export type CounterMetric = 'overdue' | 'done_percent' | 'days_left' | 'total_cards';
