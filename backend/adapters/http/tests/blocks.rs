@@ -515,6 +515,67 @@ async fn a_chart_block_keeps_what_it_counts_and_refuses_the_rest() -> anyhow::Re
 }
 
 #[tokio::test]
+async fn a_snippet_block_keeps_its_code_and_refuses_what_is_unsafe_or_too_big() -> anyhow::Result<()>
+{
+    let (app, pool, _container) = spawn_app().await?;
+    let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
+    let (_, board_id, _) = create_workspace_board_list(&app, &alice).await?;
+    let uri = format!("/api/boards/{board_id}/blocks");
+    let code = "<script>alert(1)</script>\n\tSELECT * FROM cards;\n";
+
+    let (status, snippet) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "snippet", "name": "Query",
+            "config": { "language": "sql", "filename": "cards.sql", "code": code, "line_numbers": true } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{snippet}");
+    assert_eq!(
+        snippet["config"]["code"], code,
+        "code is stored as plain text, untouched"
+    );
+    assert_eq!(snippet["config"]["language"], "sql");
+
+    let view = board_view(&app, &alice, &board_id).await?;
+    assert_eq!(view["lists"][1]["config"]["filename"], "cards.sql");
+
+    let id = id_of(&snippet)?;
+    let (status, changed) = call(
+        &app,
+        "PUT",
+        &format!("/api/blocks/{id}/config"),
+        Some(&alice),
+        Some(json!({ "kind": "snippet", "config": { "language": "rust", "code": "fn main() {}\r\n" } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::OK, "{changed}");
+    assert_eq!(changed["config"]["code"], "fn main() {}\n");
+
+    for bad in [
+        json!({ "code": "x".repeat(12_001) }),
+        json!({ "code": "a\n".repeat(501) }),
+        json!({ "code": "nul\u{0}" }),
+        json!({ "language": "brainfuck" }),
+        json!({ "execute": true }),
+    ] {
+        let (status, _) = call(
+            &app,
+            "POST",
+            &uri,
+            Some(&alice),
+            Some(json!({ "kind": "snippet", "name": "Nope", "config": bad })),
+        )
+        .await?;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{bad}");
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn cards_only_live_in_lists() -> anyhow::Result<()> {
     let (app, pool, _container) = spawn_app().await?;
     let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
