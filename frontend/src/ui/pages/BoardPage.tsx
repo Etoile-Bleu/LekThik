@@ -17,6 +17,7 @@ import {
   DEFAULT_CALENDAR,
   DEFAULT_COUNTER,
   DEFAULT_NOTE,
+  DEFAULT_OVERDUE,
   DEFAULT_PROGRESS,
   KIND_LABEL,
   guessDoneList,
@@ -68,7 +69,7 @@ function addDaysTo(day: string, amount: number): string {
   return `${next.getFullYear()}-${pad(next.getMonth() + 1)}-${pad(next.getDate())}`;
 }
 
-type PlainBlockKind = 'calendar' | 'agenda' | 'note' | 'counter' | 'progress';
+type PlainBlockKind = 'calendar' | 'agenda' | 'note' | 'counter' | 'progress' | 'overdue';
 
 export function BoardPage() {
   const { boardId = '' } = useParams();
@@ -240,6 +241,7 @@ export function BoardPage() {
     note: DEFAULT_NOTE,
     counter: DEFAULT_COUNTER,
     progress: DEFAULT_PROGRESS,
+    overdue: DEFAULT_OVERDUE,
   };
 
   function saveNote(blockId: string, text: string) {
