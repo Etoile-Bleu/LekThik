@@ -405,6 +405,52 @@ async fn a_progress_block_measures_a_done_list_of_its_own_board() -> anyhow::Res
 }
 
 #[tokio::test]
+async fn an_overdue_block_takes_a_size_and_nothing_that_names_a_person() -> anyhow::Result<()> {
+    let (app, pool, _container) = spawn_app().await?;
+    let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
+    let (_, board_id, _) = create_workspace_board_list(&app, &alice).await?;
+    let uri = format!("/api/boards/{board_id}/blocks");
+
+    let (status, plain) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "overdue", "name": "Late for me" })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{plain}");
+    assert_eq!(plain["config"], json!({ "size": "normal" }));
+
+    let (status, wide) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "overdue", "name": "Late", "config": { "size": "wide" } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{wide}");
+    assert_eq!(wide["config"]["size"], "wide");
+
+    let (status, _) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "overdue", "name": "Late", "config": { "user_id": "someone" } })),
+    )
+    .await?;
+    assert_eq!(
+        status,
+        StatusCode::BAD_REQUEST,
+        "the block follows whoever looks, it cannot be pointed at a person"
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn cards_only_live_in_lists() -> anyhow::Result<()> {
     let (app, pool, _container) = spawn_app().await?;
     let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
