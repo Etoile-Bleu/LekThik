@@ -23,6 +23,7 @@ import {
   DEFAULT_PROGRESS,
   DEFAULT_SNIPPET,
   DEFAULT_TABLE,
+  DEFAULT_TIMER,
   KIND_LABEL,
   guessDoneList,
   isCardList,
@@ -250,6 +251,7 @@ export function BoardPage() {
     snippet: DEFAULT_SNIPPET,
     table: DEFAULT_TABLE,
     clocks: DEFAULT_CLOCKS,
+    timer: DEFAULT_TIMER,
   };
 
   function saveNote(blockId: string, text: string) {
