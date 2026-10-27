@@ -106,6 +106,14 @@ html[data-theme='dark'] .shell {
   --label-pink-bg: #43212f;
   --label-pink-fg: #f9b4d0;
   --label-pink-dot: #ec6fa6;
+
+  --chart-1: #e69f00;
+  --chart-2: #56b4e9;
+  --chart-3: #009e73;
+  --chart-4: #f0e442;
+  --chart-5: #4c9be0;
+  --chart-6: #f07a33;
+  --chart-7: #e58ab8;
 }
 
 /* ---------- High contrast ---------- */
@@ -166,6 +174,14 @@ html[data-theme='contrast'] .shell {
   --label-pink-bg: #000000;
   --label-pink-fg: #ffa6cc;
   --label-pink-dot: #ffa6cc;
+
+  --chart-1: #ffb000;
+  --chart-2: #6cc8ff;
+  --chart-3: #2ed3a5;
+  --chart-4: #fff04d;
+  --chart-5: #8db8ff;
+  --chart-6: #ff8a4d;
+  --chart-7: #ff9fd0;
 }
 
 html[data-theme='contrast'] .shell :focus-visible {
