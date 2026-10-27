@@ -16,6 +16,7 @@ import {
   progressConfig,
   snippetConfig,
   tableConfig,
+  timerConfig,
 } from '@lib/blocks';
 import type {
   AgendaRange,
@@ -36,6 +37,7 @@ import type {
   SnippetConfig,
   SnippetLanguage,
   TableConfig,
+  TimerConfig,
 } from '@lib/boardsApi';
 import { PROVIDER_NAMES, parseEmbedUrl } from '@lib/embeds';
 import { CSV_MAX_BYTES, fitToLimits, parseDelimited } from '@lib/csv';
@@ -99,6 +101,12 @@ const METRICS: Array<{ value: CounterMetric; label: string; hint: string }> = [
   { value: 'total_cards', label: 'All cards', hint: 'How many cards are on the board.' },
 ];
 
+function durationProblem(value: number | undefined, max: number): string | null {
+  return Number.isInteger(value) && (value ?? 0) >= 1 && (value ?? 0) <= max
+    ? null
+    : `Use a whole number of minutes from 1 to ${max}.`;
+}
+
 function initial(block: BoardList): PanelConfig {
   switch (block.kind) {
     case 'calendar':
@@ -119,6 +127,8 @@ function initial(block: BoardList): PanelConfig {
       return tableConfig(block);
     case 'clocks':
       return clocksConfig(block);
+    case 'timer':
+      return timerConfig(block);
     case 'image':
       return imageConfig(block);
     case 'link':
@@ -178,6 +188,13 @@ export function BlockSettingsDialog({
   const snippet = draft as SnippetConfig;
   const table = draft as TableConfig;
   const clocks = draft as ClocksConfig;
+  const timer = draft as TimerConfig;
+  const timerProblem =
+    block.kind === 'timer'
+      ? (durationProblem(timer.focus_minutes, 120) ??
+        durationProblem(timer.short_minutes, 60) ??
+        durationProblem(timer.long_minutes, 120))
+      : null;
   const imported =
     block.kind === 'table' && pasted.trim() !== ''
       ? fitToLimits(parseDelimited(pasted.slice(0, CSV_MAX_BYTES)))
@@ -208,7 +225,7 @@ export function BlockSettingsDialog({
       ? needsList || progressMissing
         ? 'Choose the list that means done.'
         : 'Choose the date to count down to.'
-      : (mediaProblem ?? snippetProblem);
+      : (mediaProblem ?? snippetProblem ?? timerProblem);
 
   function update(changes: Partial<PanelConfig>) {
     setDraft((current) => ({ ...current, ...changes }) as PanelConfig);
@@ -234,6 +251,15 @@ export function BlockSettingsDialog({
           : { size: embed.size, provider: embed.provider, id: embed.id, title: embed.title.trim() };
     }
     if (block.kind === 'table' && imported) config = { ...table, rows: imported.rows };
+    if (block.kind === 'timer') {
+      config = {
+        ...timerConfig(block),
+        size: timer.size,
+        focus_minutes: timer.focus_minutes,
+        short_minutes: timer.short_minutes,
+        long_minutes: timer.long_minutes,
+      };
+    }
     onSave(block.id, block.kind, config);
     onClose();
   }
@@ -341,6 +367,34 @@ export function BlockSettingsDialog({
               />
             </div>
           </>
+        )}
+
+        {block.kind === 'timer' && (
+          <div className="block-settings__durations">
+            {(
+              [
+                ['focus_minutes', 'Focus', 120],
+                ['short_minutes', 'Short break', 60],
+                ['long_minutes', 'Long break', 120],
+              ] as const
+            ).map(([field, label, max]) => (
+              <div className="field" key={field}>
+                <label htmlFor={`${metricId}-${field}`}>{label} (minutes)</label>
+                <input
+                  id={`${metricId}-${field}`}
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={max}
+                  step={1}
+                  value={timer[field] ?? ''}
+                  aria-invalid={durationProblem(timer[field], max) ? true : undefined}
+                  onChange={(event) => update({ [field]: Number(event.target.value) })}
+                />
+              </div>
+            ))}
+            {timerProblem && <p className="block-settings__hint">{timerProblem}</p>}
+          </div>
         )}
 
         {block.kind === 'clocks' && (
