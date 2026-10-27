@@ -20,7 +20,7 @@ describe('AddBlockDialog', () => {
   it('offers every kind of block with what it shows', () => {
     render(<AddBlockDialog open onPick={vi.fn()} onClose={vi.fn()} />);
 
-    for (const name of ['Calendar', 'Agenda', 'Note', 'Counter']) {
+    for (const name of ['Calendar', 'Agenda', 'Note', 'Counter', 'Progress']) {
       expect(screen.getByRole('button', { name: new RegExp(`^${name}`) })).toBeInTheDocument();
     }
     expect(screen.getByText(/A month with a dot on every day/)).toBeInTheDocument();
@@ -39,6 +39,50 @@ describe('AddBlockDialog', () => {
 });
 
 describe('BlockSettingsDialog', () => {
+  it('sets the shape, the done list and the name of a progress block', () => {
+    const onSave = vi.fn();
+    render(
+      <BlockSettingsDialog
+        block={panel('p', 'Progress', 'progress', { done_list_id: 'todo' })}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Bar' }));
+    fireEvent.change(screen.getByLabelText('The list that means done'), {
+      target: { value: 'done' },
+    });
+    fireEvent.change(screen.getByLabelText(/Name \(optional\)/), {
+      target: { value: 'Sprint 12' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).toHaveBeenCalledWith('p', 'progress', {
+      size: 'normal',
+      style: 'bar',
+      label: 'Sprint 12',
+      done_list_id: 'done',
+    });
+  });
+
+  it('will not save a progress block until a list is chosen', () => {
+    const onSave = vi.fn();
+    render(
+      <BlockSettingsDialog
+        block={panel('p', 'Progress', 'progress', {})}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it('changes the width of any block', () => {
     const onSave = vi.fn();
     render(
