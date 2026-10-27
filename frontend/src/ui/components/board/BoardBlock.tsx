@@ -18,6 +18,7 @@ import {
   ChevronsRightIcon,
   ClockIcon,
   CodeIcon,
+  GlobeIcon,
   GripIcon,
   HashIcon,
   ImageIcon,
@@ -42,6 +43,7 @@ import { ImageBlock } from './blocks/ImageBlock';
 import { LinkBlock } from './blocks/LinkBlock';
 import { NoteBlock } from './blocks/NoteBlock';
 import { ChartBlock } from './blocks/ChartBlock';
+import { ClocksBlock } from './blocks/ClocksBlock';
 import { OverdueBlock } from './blocks/OverdueBlock';
 import { ProgressBlock } from './blocks/ProgressBlock';
 import { SnippetBlock } from './blocks/SnippetBlock';
@@ -96,6 +98,8 @@ export function KindIcon({ kind, size = 16 }: { kind: PanelKind; size?: number }
       return <CodeIcon size={size} />;
     case 'table':
       return <TableIcon size={size} />;
+    case 'clocks':
+      return <GlobeIcon size={size} />;
     default:
       return null;
   }
@@ -290,6 +294,9 @@ export function BoardBlock({
         {block.kind === 'progress' && <ProgressBlock block={block} panels={panels} />}
         {block.kind === 'overdue' && <OverdueBlock panels={panels} onOpenCard={onOpenCard} />}
         {block.kind === 'chart' && <ChartBlock block={block} panels={panels} />}
+        {block.kind === 'clocks' && (
+          <ClocksBlock block={block} editable={!readOnly} onSetup={onSettings} />
+        )}
         {block.kind === 'table' && (
           <TableBlock
             block={block}
