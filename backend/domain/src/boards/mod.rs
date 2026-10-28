@@ -5,6 +5,7 @@ mod comment;
 mod due_date;
 mod embed;
 mod error;
+mod field;
 mod image;
 mod invitation;
 mod label;
@@ -39,6 +40,11 @@ pub use comment::{
 pub use due_date::DueDate;
 pub use embed::{EmbedProvider, parse_embed_url};
 pub use error::BoardsError;
+pub use field::{
+    CardFieldValue, FIELD_NAME_MAX_CHARS, FIELD_TEXT_MAX_CHARS, Field, FieldKind, FieldName,
+    FieldOption, FieldPatch, FieldRepo, FieldValue, MAX_FIELDS_PER_BOARD, MAX_OPTIONS_PER_FIELD,
+    NewField, OPTION_NAME_MAX_CHARS, OptionName, normalise_number,
+};
 pub use image::{
     BlockImage, BlockImageRepo, IMAGE_MAX_EDGE, IMAGE_MAX_PIXELS, IMAGE_MAX_STORED_BYTES,
     IMAGE_MAX_UPLOAD_BYTES, ImageSanitizer,
@@ -73,6 +79,8 @@ pub use board::MockBoardRepo;
 pub use card::MockCardRepo;
 #[cfg(feature = "test-utils")]
 pub use comment::MockCommentRepo;
+#[cfg(feature = "test-utils")]
+pub use field::MockFieldRepo;
 #[cfg(feature = "test-utils")]
 pub use image::{MockBlockImageRepo, MockImageSanitizer};
 #[cfg(feature = "test-utils")]
