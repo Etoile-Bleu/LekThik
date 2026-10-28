@@ -58,4 +58,32 @@ describe('Toaster', () => {
 
     expect(screen.queryByText('Heads up')).not.toBeInTheDocument();
   });
+
+  it('offers an action, runs it once and clears the toast', () => {
+    render(<Toaster />);
+    const onClick = vi.fn();
+    act(() => useToastStore.getState().push('action', 'Card deleted.', { label: 'Undo', onClick }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(screen.queryByText('Card deleted.')).not.toBeInTheDocument();
+  });
+
+  it('gives an action toast the most time to decide', () => {
+    render(<Toaster />);
+    act(() =>
+      useToastStore.getState().push('action', 'Card deleted.', { label: 'Undo', onClick: vi.fn() })
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(TOAST_LIFETIME_MS.action - 100);
+    });
+    expect(screen.getByText('Card deleted.')).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(screen.queryByText('Card deleted.')).not.toBeInTheDocument();
+  });
 });
