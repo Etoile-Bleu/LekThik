@@ -213,6 +213,7 @@ impl BoardRepo for PgBoardRepo {
 
         let fields = crate::field_repo::fields_of_board(&mut transaction, board.id).await?;
         let field_values = crate::field_repo::values_of_board(&mut transaction, board.id).await?;
+        let polls = crate::poll_repo::tallies_of_board(&mut transaction, board.id, user_id).await?;
 
         transaction.commit().await.map_err(repository_error)?;
 
@@ -292,6 +293,7 @@ impl BoardRepo for PgBoardRepo {
             labels,
             fields,
             field_values,
+            polls,
         })
     }
 
