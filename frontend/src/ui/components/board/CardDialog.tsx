@@ -6,7 +6,9 @@ import { toggleTask } from '@lib/richText';
 import { findCard } from '@lib/boardModel';
 import { indexValues } from '@lib/fields';
 import { type CardDetail, fetchCard, updateCard } from '@lib/boardsApi';
+import { recordDescription } from '@lib/cardDescription';
 import { useBoardStore } from '@lib/boardStore';
+import { useHistoryStore } from '@lib/history';
 import { notifyError } from '@lib/toastStore';
 
 import { type CardProperty, normalizeDialogLayout } from '@lib/prefs';
@@ -70,6 +72,7 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
   const [editingDescription, setEditingDescription] = useState(false);
   const descriptionRef = useRef('');
   const detailRef = useRef<CardDetail | null>(null);
+  const revision = useHistoryStore((state) => state.revision);
 
   const editable = canEdit(view?.role);
   const location = view && cardId ? findCard(view.lists, cardId) : null;
@@ -108,6 +111,25 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
   }, [cardId]);
 
   useEffect(() => {
+    if (!cardId || revision === 0) return undefined;
+    let cancelled = false;
+    fetchCard(cardId)
+      .then((loaded) => {
+        const untouched = descriptionRef.current === detailRef.current?.description;
+        if (cancelled || !untouched) return;
+        setDetail(loaded);
+        detailRef.current = loaded;
+        setDescription(loaded.description);
+        descriptionRef.current = loaded.description;
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [revision]);
+
+  useEffect(() => {
     if (currentList && location) {
       setTargetListId(currentList.id);
       setTargetPosition(location.cardIndex + 1);
@@ -124,6 +146,7 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
     setSaveStatus('saving');
     try {
       const saved = await updateCard(loaded.id, { description: next });
+      recordDescription(loaded.id, loaded.description, saved.description);
       detailRef.current = saved;
       setDetail(saved);
       markHasDescription(saved.id, saved.description.trim() !== '');
