@@ -549,3 +549,21 @@ export function updateLabel(
 export function deleteLabel(id: string): Promise<void> {
   return sendWithoutResult(`/api/labels/${id}`, 'DELETE');
 }
+
+export interface Viewer {
+  user_id: string;
+  username: string;
+  /** The card this person has open, `null` when they are only on the board. */
+  card_id: string | null;
+}
+
+export function fetchPresence(boardId: string): Promise<{ viewers: Viewer[] }> {
+  return send<{ viewers: Viewer[] }>(`/api/boards/${boardId}/presence`, 'GET');
+}
+
+export function sendPresence(
+  boardId: string,
+  body: { client_id: string; card_id: string | null; present: boolean }
+): Promise<void> {
+  return sendWithoutResult(`/api/boards/${boardId}/presence`, 'PUT', body);
+}

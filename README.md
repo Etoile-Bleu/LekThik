@@ -171,6 +171,8 @@ flowchart LR
 
 ![Two people on the same board side by side: a tile moved with the keyboard on the left shows up on the right, then a card added from the palette appears there too](docs/assets/live.gif)
 
+**Who is here.** The avatars of the other people looking at a board appear in its header, and on the cards they have open, with a small spring when they arrive and a fade when they leave. A list names each one and the card they are looking at, and the card dialog says who else is on it. It is kept in the server's memory only, shown to members of the workspace, and a person can hide in the privacy settings.
+
 A page that lost its connection reconnects with backoff and catches up on what it missed, and the "Live" badge in the top bar says whether the stream is open. Changes you make yourself appear at once and are corrected if the server refuses them.
 
 ## Architecture

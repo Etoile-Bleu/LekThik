@@ -242,6 +242,7 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
         invitation_repo: Arc::new(PgInvitationRepo::new(pool.clone())),
         locator: Arc::new(PgLocator::new(pool.clone())),
         events: EventHub::new(),
+        presence: Arc::new(server::presence::PresenceHub::new()),
         app_base_url: "https://app.test".to_string(),
     };
 

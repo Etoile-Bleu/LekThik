@@ -34,6 +34,7 @@ use crate::state::AppState;
         (name = "members", description = "Members of a workspace and their roles"),
         (name = "invitations", description = "Email invitations to join a workspace"),
         (name = "events", description = "Live change notifications"),
+        (name = "presence", description = "Who is on a board and on which card, right now"),
         (name = "templates", description = "Ready made workspaces and boards to start from"),
     )
 )]
@@ -97,6 +98,7 @@ fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(get_board, rename_board, delete_board))
         .routes(routes!(set_board_look))
         .routes(routes!(set_board_layout))
+        .routes(routes!(put_presence, get_presence))
         .routes(routes!(create_list))
         .routes(routes!(create_label))
         .routes(routes!(rename_list, delete_list))

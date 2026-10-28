@@ -9,8 +9,9 @@ use adapters_db::{
 use adapters_image::ImageCrateSanitizer;
 use adapters_mail::{MailSender, SmtpMailer};
 use secrecy::SecretString;
-use server::events::EventHub;
+use server::events::{Change, EventHub};
 use server::jwt::JwtTokenIssuer;
+use server::presence::PresenceHub;
 use server::state::AppState;
 use server::{db, router};
 
@@ -61,8 +62,28 @@ async fn main() -> anyhow::Result<()> {
         invitation_repo: Arc::new(PgInvitationRepo::new(pool.clone())),
         locator: Arc::new(PgLocator::new(pool)),
         events: EventHub::new(),
+        presence: Arc::new(PresenceHub::new()),
         app_base_url: env_or("APP_BASE_URL", "http://localhost:5173"),
     };
+
+    // People who stopped reporting leave the board's crowd by themselves, and the board is told.
+    let presence = state.presence.clone();
+    let events = state.events.clone();
+    tokio::spawn(async move {
+        let mut tick = tokio::time::interval(std::time::Duration::from_secs(10));
+        loop {
+            tick.tick().await;
+            for item in presence.sweep(std::time::Instant::now()) {
+                events.publish(
+                    Change::Presence {
+                        workspace_id: item.workspace_id,
+                        board_id: item.board_id,
+                    },
+                    None,
+                );
+            }
+        }
+    });
 
     let app = router::build(state);
 

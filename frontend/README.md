@@ -122,6 +122,16 @@ in sync with the live stream.
   with switches, a preview follows, and each change is announced. Hidden properties stay one click
   away in the dialog.
 
+Presence (`lib/presenceStore.ts`, `components/collab/Presence*.tsx`). A board reports where it is every 20 seconds
+(`PUT /api/boards/{id}/presence`, with the card that is open) and leaves when the tab is hidden or the page goes
+away (a `keepalive` request). The server tells the workspace only that a board's crowd changed, over the same live
+stream as everything else, and each client reads who is there again. The header shows a stack of avatars with a
+ring and, for the first moments, two soft pulses (never an endless animation), the cards show who has them open, and
+the card dialog says who else is on it. Everything is also said in words: the stack's name is "Wen and Rita are on
+this board", the list says which card each person looks at, and arrivals are announced politely, once for a burst,
+and only to people who turned announcements on. Leaving items stay for a moment to fade out unless motion is
+reduced. Hiding is a privacy setting, read once per tab by the server, so nothing is recorded for someone who hides.
+
 Selecting, the hand and the right click (`hooks/useBackdropGestures.ts`, `lib/selectionStore.ts`,
 `components/ui/ContextMenu.tsx`). Dragging on the background of the board or the canvas draws a rectangle that picks
 the lists and blocks it touches, or the cards when it starts in the empty part of a list, with no text selected on the

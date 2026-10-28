@@ -15,6 +15,7 @@ import { type CardProperty, normalizeDialogLayout } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
 
+import { PresenceHere } from '../collab/PresenceOnCard';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Dialog } from '../ui/Dialog';
 import {
@@ -310,6 +311,7 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
             <p className="card-dialog__location">
               In list <strong>{currentList.name}</strong>
             </p>
+            <PresenceHere cardId={summary.id} />
           </header>
 
           <div className="card-dialog__props">
