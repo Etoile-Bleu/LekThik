@@ -16,7 +16,6 @@ import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
 
 import { PresenceHere } from '../collab/PresenceOnCard';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Dialog } from '../ui/Dialog';
 import {
   CalendarIcon,
@@ -67,7 +66,6 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [saves, setSaves] = useState(0);
   const meId = useAuthStore((state) => state.user?.id);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [targetListId, setTargetListId] = useState('');
   const [targetPosition, setTargetPosition] = useState(1);
   const [editingDescription, setEditingDescription] = useState(false);
@@ -442,7 +440,10 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
                 <button
                   type="button"
                   className="btn btn--ghost btn--sm card-dialog__delete"
-                  onClick={() => setConfirmingDelete(true)}
+                  onClick={() => {
+                    onClose();
+                    void deleteCard(summary.id);
+                  }}
                 >
                   <TrashIcon /> Delete card
                 </button>
@@ -463,19 +464,6 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
           )}
         </div>
       </Dialog>
-
-      <ConfirmDialog
-        open={confirmingDelete}
-        title="Delete this card?"
-        message={`“${summary.title}” will be removed for good. This cannot be undone.`}
-        confirmLabel="Delete card"
-        onCancel={() => setConfirmingDelete(false)}
-        onConfirm={() => {
-          setConfirmingDelete(false);
-          onClose();
-          void deleteCard(summary.id);
-        }}
-      />
     </>
   );
 }

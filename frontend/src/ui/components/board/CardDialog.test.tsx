@@ -202,19 +202,19 @@ describe('CardDialog', () => {
     });
   });
 
-  it('asks before deleting and then closes', async () => {
+  it('deletes at once, closes, and offers an undo', async () => {
     vi.mocked(api.deleteCard).mockResolvedValueOnce(undefined);
     const { onClose } = setup();
     await screen.findByRole('dialog', { name: 'Card Write the spec' });
 
     fireEvent.click(screen.getByRole('button', { name: /Delete card/ }));
-    expect(api.deleteCard).not.toHaveBeenCalled();
-
-    const confirm = screen.getByRole('dialog', { name: 'Delete this card?' });
-    fireEvent.click(within(confirm).getByRole('button', { name: 'Delete card' }));
 
     await waitFor(() => expect(api.deleteCard).toHaveBeenCalledWith('c1'));
     expect(onClose).toHaveBeenCalled();
+    expect(useToastStore.getState().toasts[0]).toMatchObject({
+      message: '“Write the spec” deleted.',
+      action: { label: 'Undo' },
+    });
   });
 
   it('hands over to the label manager', async () => {

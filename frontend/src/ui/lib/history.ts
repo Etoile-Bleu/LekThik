@@ -9,9 +9,14 @@ export interface HistoryEntry {
   redo: () => Promise<void>;
 }
 
+interface StoredEntry extends HistoryEntry {
+  id: number;
+}
+
 export const HISTORY_LIMIT = 100;
 
 let replaying = false;
+let nextEntryId = 1;
 const aliases = new Map<string, string>();
 
 export function isReplaying(): boolean {
@@ -33,21 +38,23 @@ export function resolveId(id: string): string {
 }
 
 interface HistoryState {
-  past: HistoryEntry[];
-  future: HistoryEntry[];
+  past: StoredEntry[];
+  future: StoredEntry[];
   busy: boolean;
   revision: number;
-  record: (entry: HistoryEntry) => void;
+  record: (entry: HistoryEntry) => number;
   undo: () => Promise<string | null>;
   redo: () => Promise<string | null>;
   clear: () => void;
+  /** Drops one entry by the id `record` gave it, without running its undo or redo. */
+  retire: (id: number) => void;
 }
 
 export const useHistoryStore = create<HistoryState>((set, get) => {
   async function replay(
-    take: (state: HistoryState) => HistoryEntry | undefined,
-    run: (entry: HistoryEntry) => Promise<void>,
-    land: (state: HistoryState, entry: HistoryEntry) => Partial<HistoryState>,
+    take: (state: HistoryState) => StoredEntry | undefined,
+    run: (entry: StoredEntry) => Promise<void>,
+    land: (state: HistoryState, entry: StoredEntry) => Partial<HistoryState>,
     stack: 'past' | 'future',
     failure: string
   ): Promise<string | null> {
@@ -81,11 +88,14 @@ export const useHistoryStore = create<HistoryState>((set, get) => {
     revision: 0,
 
     record: (entry) => {
-      if (replaying) return;
+      if (replaying) return 0;
+      const id = nextEntryId;
+      nextEntryId += 1;
       set((state) => ({
-        past: [...state.past, entry].slice(-HISTORY_LIMIT),
+        past: [...state.past, { ...entry, id }].slice(-HISTORY_LIMIT),
         future: [],
       }));
+      return id;
     },
 
     undo: () =>
@@ -116,11 +126,29 @@ export const useHistoryStore = create<HistoryState>((set, get) => {
       aliases.clear();
       set({ past: [], future: [], busy: false });
     },
+
+    retire: (id) => {
+      if (!id) return;
+      set((state) => ({
+        past: state.past.filter((candidate) => candidate.id !== id),
+        future: state.future.filter((candidate) => candidate.id !== id),
+        revision: state.revision + 1,
+      }));
+    },
   };
 });
 
-export function record(entry: HistoryEntry): void {
-  useHistoryStore.getState().record(entry);
+export function record(entry: HistoryEntry): number {
+  return useHistoryStore.getState().record(entry);
+}
+
+/**
+ * Drops a recorded change by the id `record` returned, without undoing or redoing it, because
+ * something else already reversed it, such as the Undo button on its toast. Safe to call with 0,
+ * the id a replay gives back for the change it does not record.
+ */
+export function retireEntry(id: number): void {
+  useHistoryStore.getState().retire(id);
 }
 
 export async function undoLast(): Promise<void> {
