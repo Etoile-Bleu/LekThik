@@ -11,7 +11,7 @@ pub use boards::{
     MoveCard, MoveList, NewOption, PanelPlacementInput, RemoveMember, RenameBoard, RenameList,
     RenameWorkspace, RespondToInvitation, RevokeInvitation, SetBlockConfig, SetBlockImage,
     SetBoardLayout, SetBoardLook, SetCardAssignees, SetCardField, SetCardLabels, SetListWipLimit,
-    UpdateCard, UpdateField, UpdateFieldOption, UpdateLabel,
+    UpdateCard, UpdateField, UpdateFieldOption, UpdateLabel, VoteInPoll, WithdrawVote,
 };
 pub use preferences::{GetPreferences, SavePreferences};
 pub use user::{

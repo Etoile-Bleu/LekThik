@@ -5,6 +5,7 @@ mod field;
 mod label;
 mod list;
 mod members;
+mod poll;
 mod workspace;
 
 pub use board::{
@@ -29,4 +30,5 @@ pub use members::{
     ChangeMemberRole, GetMyInvitation, InviteMember, ListMembers, ListMyInvitations,
     MembersOverview, RemoveMember, RespondToInvitation, RevokeInvitation,
 };
+pub use poll::{VoteInPoll, WithdrawVote};
 pub use workspace::{CreateWorkspace, DeleteWorkspace, ListWorkspaces, RenameWorkspace};
