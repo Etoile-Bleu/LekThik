@@ -46,7 +46,7 @@ impl<R: UserRepo> LoginUser<R> {
     }
 }
 
-fn verify_password(password: &str, password_hash: &str) -> Result<(), HashError> {
+pub(crate) fn verify_password(password: &str, password_hash: &str) -> Result<(), HashError> {
     let parsed_hash = PasswordHash::new(password_hash)?;
     Argon2::default().verify_password(password.as_bytes(), &parsed_hash)
 }
