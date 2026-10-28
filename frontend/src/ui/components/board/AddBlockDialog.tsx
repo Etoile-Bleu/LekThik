@@ -102,6 +102,25 @@ function Preview({ kind }: { kind: Exclude<PanelKind, 'list'> }) {
           <rect x="12" y="50" width="26" height="4" rx="2" className="add-block__accent" />
         </svg>
       );
+    case 'overdue':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          {[0, 1, 2].map((row) => (
+            <g key={row} transform={`translate(8 ${8 + row * 18})`}>
+              <rect width={7 - row * 2} height="13" rx="1.5" className="add-block__late" />
+              <rect
+                x="12"
+                y="1"
+                width={66 - row * 12}
+                height="4"
+                rx="2"
+                className="add-block__ink"
+              />
+              <rect x="12" y="8" width="26" height="3" rx="1.5" className="add-block__faint" />
+            </g>
+          ))}
+        </svg>
+      );
     case 'progress':
       return (
         <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">

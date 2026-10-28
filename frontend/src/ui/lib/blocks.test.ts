@@ -10,6 +10,9 @@ import {
   counterConfig,
   dueByDay,
   guessDoneList,
+  lateCardsOf,
+  lateLabel,
+  lateSeverity,
   noteConfig,
   progressConfig,
   readCounter,
@@ -333,5 +336,59 @@ describe('readProgress', () => {
 
     expect(readProgress({ ...config, done_list_id: 'ghost' }, panels).state).toBe('setup');
     expect(readProgress({ ...config, done_list_id: 'cal' }, [calendar]).state).toBe('setup');
+  });
+});
+
+describe('lateCardsOf', () => {
+  const board = [
+    list('doing', 'Doing', [
+      card('a', '2026-10-21', { assignee_ids: ['me'] }),
+      card('b', '2026-10-10', { assignee_ids: ['me', 'you'] }),
+      card('c', '2026-10-15', { assignee_ids: ['you'] }),
+      card('d', '2026-10-22', { assignee_ids: ['me'] }),
+      card('e', '2026-10-30', { assignee_ids: ['me'] }),
+      card('f', null, { assignee_ids: ['me'] }),
+      card('g', '2026-10-01', { assignee_ids: [] }),
+    ]),
+  ];
+
+  it('keeps only my cards that are past their day, the most late first', () => {
+    const late = lateCardsOf(board, 'me', today);
+
+    expect(late.map((entry) => entry.card.id)).toEqual(['b', 'a']);
+    expect(late.map((entry) => entry.daysLate)).toEqual([12, 1]);
+    expect(late[0].listName).toBe('Doing');
+  });
+
+  it('is empty for a person who is nobody, and for someone with no late card', () => {
+    expect(lateCardsOf(board, undefined, today)).toEqual([]);
+    expect(lateCardsOf(board, 'stranger', today)).toEqual([]);
+  });
+
+  it('shows each person their own cards from the same board', () => {
+    expect(lateCardsOf(board, 'you', today).map((entry) => entry.card.id)).toEqual(['b', 'c']);
+  });
+
+  it('skips blocks and steps the severity by days', () => {
+    const calendar: BoardList = {
+      id: 'cal',
+      name: 'Plan',
+      wip_limit: null,
+      kind: 'calendar',
+      config: {},
+      cards: [card('x', '2026-10-01', { assignee_ids: ['me'] })],
+    };
+
+    expect(lateCardsOf([calendar], 'me', today)).toEqual([]);
+    expect([1, 2, 3, 6, 7, 30].map(lateSeverity)).toEqual([
+      'recent',
+      'recent',
+      'week',
+      'week',
+      'long',
+      'long',
+    ]);
+    expect(lateLabel(1)).toBe('1 day late');
+    expect(lateLabel(3)).toBe('3 days late');
   });
 });
