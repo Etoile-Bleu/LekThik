@@ -126,8 +126,6 @@ export function BoardPage() {
   const meId = useAuthStore((state) => state.user?.id);
   const today = useToday();
   const [deletingBoard, setDeletingBoard] = useState(false);
-  const [deletingListId, setDeletingListId] = useState<string | null>(null);
-  const [bulkDelete, setBulkDelete] = useState<{ cards: string[]; panels: string[] } | null>(null);
   const [workArea, setWorkArea] = useState<HTMLDivElement | null>(null);
   const bulk = useBoardBulk();
   const pickedCards = useSelectionStore((state) => state.cards);
@@ -164,9 +162,12 @@ export function BoardPage() {
       .flatMap((list) => list.cards.map((card) => card.id));
   }
 
+  // A card or a list is restored at once from the Undo button its own toast gets; nothing here
+  // asks first, since nothing here is final.
   function askDeleteSelection() {
     const { cards, panels } = useSelectionStore.getState();
-    if (cards.length + panels.length > 0) setBulkDelete({ cards, panels });
+    if (cards.length > 0) void bulk.deleteCards(cards);
+    if (panels.length > 0) void bulk.deletePanels(panels);
   }
 
   useCanvasToolKeys({
@@ -253,7 +254,6 @@ export function BoardPage() {
     );
   }
 
-  const deletingList = view.lists.find((list) => list.id === deletingListId);
   const limitList = view.lists.find((list) => list.id === limitListId);
   const settingsBlock = view.lists.find((list) => list.id === blockSettingsId) ?? null;
   const positionPanel = view.lists.find((list) => list.id === positionId) ?? null;
@@ -395,7 +395,7 @@ export function BoardPage() {
             openLimit: setLimitListId,
             openBlockSettings: setBlockSettingsId,
             openPosition: setPositionId,
-            askDelete: setDeletingListId,
+            askDelete: (listId) => void deleteList(listId),
             askDeleteBoard: () => setDeletingBoard(true),
             addBlock: pickBlock,
             actions: {
@@ -514,11 +514,8 @@ export function BoardPage() {
             },
             select: (cards, panels) => useSelectionStore.getState().setSelection(cards, panels),
             clearSelection: () => useSelectionStore.getState().clear(),
-            askDeleteCards: (ids) => setBulkDelete({ cards: ids, panels: [] }),
-            askDeletePanels: (ids) =>
-              ids.length === 1
-                ? setDeletingListId(ids[0])
-                : setBulkDelete({ cards: [], panels: ids }),
+            askDeleteCards: (ids) => void bulk.deleteCards(ids),
+            askDeletePanels: (ids) => void bulk.deletePanels(ids),
             openLimit: setLimitListId,
             openBlockSettings: setBlockSettingsId,
             openPosition: setPositionId,
@@ -622,7 +619,7 @@ export function BoardPage() {
               onAddBlock={() => setPickingBlock(true)}
               onRenameList={(listId, name) => void renameList(listId, name)}
               onMoveList={(listId, index) => void moveList(listId, index)}
-              onDeleteList={(listId) => setDeletingListId(listId)}
+              onDeleteList={(listId) => void deleteList(listId)}
               onAddList={createList}
               onAddCard={createCard}
               onMoveCard={(cardId, listId, index) => void moveCard(cardId, listId, index)}
@@ -690,40 +687,6 @@ export function BoardPage() {
         />
 
         <ConfirmDialog
-          open={bulkDelete !== null}
-          title={
-            bulkDelete && bulkDelete.panels.length > 0
-              ? 'Delete the selection?'
-              : 'Delete these cards?'
-          }
-          message={
-            bulkDelete
-              ? `${[
-                  bulkDelete.cards.length > 0
-                    ? `${bulkDelete.cards.length} card${bulkDelete.cards.length === 1 ? '' : 's'}`
-                    : null,
-                  bulkDelete.panels.length > 0
-                    ? `${bulkDelete.panels.length} list${bulkDelete.panels.length === 1 ? '' : 's'} or block${bulkDelete.panels.length === 1 ? '' : 's'} with everything inside`
-                    : null,
-                ]
-                  .filter(Boolean)
-                  .join(' and ')} will be removed for good.`
-              : ''
-          }
-          confirmLabel="Delete"
-          onCancel={() => setBulkDelete(null)}
-          onConfirm={() => {
-            const chosen = bulkDelete;
-            setBulkDelete(null);
-            if (!chosen) return;
-            void (async () => {
-              if (chosen.cards.length > 0) await bulk.deleteCards(chosen.cards);
-              if (chosen.panels.length > 0) await bulk.deletePanels(chosen.panels);
-            })();
-          }}
-        />
-
-        <ConfirmDialog
           open={deletingBoard}
           title="Delete this board?"
           message={`“${view.board.name}” and all of its lists and cards will be removed for good.`}
@@ -734,28 +697,6 @@ export function BoardPage() {
             if (await deleteBoard()) {
               navigate('/dashboard');
             }
-          }}
-        />
-
-        <ConfirmDialog
-          open={deletingList !== undefined}
-          title={
-            deletingList && !isCardList(deletingList) ? 'Delete this block?' : 'Delete this list?'
-          }
-          message={
-            deletingList
-              ? isCardList(deletingList)
-                ? `“${deletingList.name}” and its ${deletingList.cards.length} card${deletingList.cards.length === 1 ? '' : 's'} will be removed for good.`
-                : `“${deletingList.name}” will be removed. The cards on this board are not affected.`
-              : ''
-          }
-          confirmLabel={deletingList && !isCardList(deletingList) ? 'Delete block' : 'Delete list'}
-          onCancel={() => setDeletingListId(null)}
-          onConfirm={() => {
-            if (deletingListId) {
-              void deleteList(deletingListId);
-            }
-            setDeletingListId(null);
           }}
         />
       </div>

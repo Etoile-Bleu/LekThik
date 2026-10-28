@@ -32,8 +32,8 @@ import { patchValues } from './fields';
 import * as pollApi from './pollApi';
 import { applyVote } from './polls';
 import { type Layout, toPlacements } from './grid';
-import { alias, isReplaying, record, resolveId, useHistoryStore } from './history';
-import { notifyError } from './toastStore';
+import { alias, isReplaying, record, resolveId, retireEntry, useHistoryStore } from './history';
+import { notifyError, notifyUndo } from './toastStore';
 import { useWorkspaceStore } from './workspaceStore';
 
 type BoardStatus = 'idle' | 'loading' | 'ready' | 'notfound' | 'error';
@@ -481,10 +481,15 @@ export const useBoardStore = create<BoardState>((set, get) => {
             : null;
         await api.deleteList(listId);
         if (snapshot && snapshot.panel.kind !== 'image') {
-          record({
+          const entryId = record({
             label: snapshot.panel.kind === 'list' ? 'Delete list' : 'Delete block',
             undo: () => recreatePanel(snapshot),
             redo: () => get().deleteList(resolveId(snapshot.panel.id)),
+          });
+          notifyUndo(`“${snapshot.panel.name}” deleted.`, () => {
+            recreatePanel(snapshot)
+              .then(() => retireEntry(entryId))
+              .catch((error) => notifyError(error, 'That could not be brought back.'));
           });
         }
       } catch (error) {
@@ -618,10 +623,15 @@ export const useBoardStore = create<BoardState>((set, get) => {
             : null;
         await api.deleteCard(cardId);
         if (snapshot) {
-          record({
+          const entryId = record({
             label: 'Delete card',
             undo: () => recreateCard(snapshot),
             redo: () => get().deleteCard(resolveId(snapshot.card.id)),
+          });
+          notifyUndo(`“${snapshot.card.title}” deleted.`, () => {
+            recreateCard(snapshot)
+              .then(() => retireEntry(entryId))
+              .catch((error) => notifyError(error, 'That card could not be brought back.'));
           });
         }
       } catch (error) {

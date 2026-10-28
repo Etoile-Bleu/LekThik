@@ -152,6 +152,31 @@ describe('useBoardStore', () => {
     expect(cardIds(0)).toEqual(['a', 'b']);
   });
 
+  it('deletes a card at once and offers to undo it, instead of asking first', async () => {
+    vi.mocked(api.deleteCard).mockResolvedValueOnce(undefined);
+
+    await useBoardStore.getState().deleteCard('a');
+
+    expect(cardIds(0)).toEqual(['b']);
+    const toast = useToastStore.getState().toasts[0];
+    expect(toast).toMatchObject({ message: '“A” deleted.', action: { label: 'Undo' } });
+
+    vi.mocked(api.createCard).mockResolvedValueOnce({
+      id: 'restored',
+      list_id: 'todo',
+      title: 'A',
+      has_description: false,
+      description_preview: '',
+      label_ids: [],
+      assignee_ids: [],
+      due_date: null,
+    });
+    vi.mocked(api.fetchBoard).mockResolvedValueOnce(sampleView());
+    toast.action?.onClick();
+
+    await vi.waitFor(() => expect(api.createCard).toHaveBeenCalledWith('todo', 'A'));
+  });
+
   it('strips a deleted label from the board and from every card', async () => {
     vi.mocked(api.deleteLabel).mockResolvedValueOnce(undefined);
 

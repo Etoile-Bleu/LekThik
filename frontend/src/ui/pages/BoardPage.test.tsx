@@ -198,20 +198,20 @@ describe('BoardPage', () => {
     expect(within(card as HTMLElement).getByText(/^Overdue, /)).toBeInTheDocument();
   });
 
-  it('confirms before deleting a list and removes it', async () => {
+  it('deletes a list at once and offers an undo', async () => {
     vi.mocked(api.deleteList).mockResolvedValueOnce(undefined);
     renderBoard();
     await screen.findByRole('heading', { level: 1, name: /Roadmap/ });
 
     fireEvent.click(screen.getByRole('button', { name: 'Actions for list Done' }));
     fireEvent.click(screen.getByRole('menuitem', { name: 'Delete list' }));
-    expect(api.deleteList).not.toHaveBeenCalled();
-
-    const dialog = screen.getByRole('dialog', { name: 'Delete this list?' });
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete list' }));
 
     await waitFor(() => expect(api.deleteList).toHaveBeenCalledWith('done'));
     expect(screen.queryByRole('heading', { level: 2, name: /Done/ })).not.toBeInTheDocument();
+    expect(useToastStore.getState().toasts[0]).toMatchObject({
+      message: '“Done” deleted.',
+      action: { label: 'Undo' },
+    });
   });
 
   it('deletes the board and goes back to the overview', async () => {
@@ -452,7 +452,8 @@ describe('BoardPage', () => {
       expect(screen.queryByRole('button', { name: /Actions for block/ })).not.toBeInTheDocument();
     });
 
-    it('words the deletion of a block differently from a list', async () => {
+    it('deletes a block at once from its own menu entry', async () => {
+      vi.mocked(api.deleteList).mockResolvedValueOnce(undefined);
       withBlock('calendar', { size: 'normal' });
       renderBoard();
       await screen.findByRole('heading', { level: 2, name: /Plan/ });
@@ -460,8 +461,11 @@ describe('BoardPage', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Actions for block Plan' }));
       fireEvent.click(screen.getByRole('menuitem', { name: /Delete block/ }));
 
-      const confirm = await screen.findByRole('dialog', { name: 'Delete this block?' });
-      expect(confirm).toHaveTextContent('The cards on this board are not affected.');
+      await waitFor(() => expect(api.deleteList).toHaveBeenCalled());
+      expect(useToastStore.getState().toasts[0]).toMatchObject({
+        message: '“Plan” deleted.',
+        action: { label: 'Undo' },
+      });
     });
 
     it('offers only lists, not blocks, when moving a card from its dialog', async () => {

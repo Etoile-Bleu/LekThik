@@ -29,6 +29,18 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       onBlur={() => setPaused(false)}
     >
       <p className="toast__message">{toast.message}</p>
+      {toast.action && (
+        <button
+          type="button"
+          className="toast__action"
+          onClick={() => {
+            toast.action?.onClick();
+            onDismiss(toast.id);
+          }}
+        >
+          {toast.action.label}
+        </button>
+      )}
       <button
         type="button"
         className="icon-button toast__close"
@@ -37,6 +49,14 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       >
         <CloseIcon size={16} />
       </button>
+      <div
+        className="toast__bar"
+        aria-hidden="true"
+        style={{
+          animationDuration: `${TOAST_LIFETIME_MS[toast.tone]}ms`,
+          animationPlayState: paused ? 'paused' : 'running',
+        }}
+      />
     </div>
   );
 }
