@@ -117,7 +117,6 @@ export function compareValues(
   }
 }
 
-/** Empty values come last whichever way the column is sorted. */
 export function sortByField<T>(
   rows: T[],
   field: Field,

@@ -265,7 +265,6 @@ export interface Field {
   options: FieldOption[];
 }
 
-/** A string for text, url, date, number (a decimal) and a choice (its id), a boolean for a checkbox. */
 export type FieldValue = string | boolean;
 
 export interface CardFieldValue {

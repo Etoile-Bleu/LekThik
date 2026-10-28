@@ -85,9 +85,7 @@ pub struct BoardViewDto {
     pub members: Vec<BoardMemberDto>,
     pub lists: Vec<ListWithCardsDto>,
     pub labels: Vec<LabelDto>,
-    /// The custom fields of the board, in order.
     pub fields: Vec<FieldDto>,
-    /// The values cards hold for those fields. A card with no row for a field has no value.
     pub field_values: Vec<CardFieldValueDto>,
 }
 
