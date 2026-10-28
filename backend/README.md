@@ -113,7 +113,7 @@ emails) so a client can draw avatars without another request.
 | `PATCH /api/cards/{id}` with `due_date` | Set a day, send `null` to clear it, leave it out to keep it |
 | `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
 | `GET /api/users/me/cards` | Cards assigned to me across workspaces, soonest due first |
-| `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note, counter, progress, overdue, chart, snippet or table block |
+| `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note, counter, progress, overdue, chart, snippet, table or clocks block |
 | `PUT /api/blocks/{id}/image` | Set the picture of an image block (the file as the body) |
 | `GET /api/blocks/{id}/image` | The picture of an image block, for members only |
 | `PUT /api/blocks/{id}/config` | Change the settings of a block, the kind must match |
@@ -139,6 +139,12 @@ change what teammates see. At most 50 lists can be folded per board.
 
 A progress block (migration `013_add_progress_block.sql`) keeps a style (`ring` or `bar`), an optional
 label and the done list it measures, which must be a list of the same board, exactly like a counter.
+
+A clocks block (migration `018_add_clocks_block.sql`) keeps up to six time zone names (checked for
+shape, no duplicates, 40 characters at most; the browser knows which ones exist) and an optional place
+for the weather: a name and a position in whole hundredths of a degree, so about a kilometre and
+never more precise. Integers rather than decimals keep the settings comparable and the position
+rounded by construction. The server never contacts a weather service, the browser does after a press.
 
 A table block (migration `017_add_table_block.sql`) keeps a header switch and its rows as plain text:
 at most 100 rows, 12 columns, 200 characters a cell and 40,000 bytes in all, control characters
@@ -174,7 +180,7 @@ themselves. It is shared with everyone on the board and refreshed live like any 
 The `canvas` view is one more value of the per board view preference.
 
 A board holds panels in one row, and a panel is either a list of cards or a block that shows
-something about them: `calendar`, `agenda`, `note`, `counter`, `progress`, `overdue`, `chart`, `snippet` or `table`. Blocks live in the `lists` table with a
+something about them: `calendar`, `agenda`, `note`, `counter`, `progress`, `overdue`, `chart`, `snippet`, `table` or `clocks`. Blocks live in the `lists` table with a
 `kind` and a JSON `config`, so moving, renaming, deleting, permissions, the 50 panel limit and live
 updates are the ones lists already have. `POST /api/boards/{id}/blocks` adds one and
 `PUT /api/blocks/{id}/config` changes its settings (writers and above). Settings are checked per kind

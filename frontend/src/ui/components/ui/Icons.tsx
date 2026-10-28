@@ -389,6 +389,32 @@ export function HashIcon(props: IconProps) {
   );
 }
 
+export function GlobeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10" cy="10" r="6.5" />
+      <path d="M3.5 10h13M10 3.5c-2 2-2.8 4.2-2.8 6.5s.8 4.5 2.8 6.5c2-2 2.8-4.2 2.8-6.5S12 5.5 10 3.5Z" />
+    </Base>
+  );
+}
+
+export function SunIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10" cy="10" r="3.2" />
+      <path d="M10 3v1.8M10 15.2V17M3 10h1.8M15.2 10H17M5.1 5.1l1.3 1.3M13.6 13.6l1.3 1.3M14.9 5.1l-1.3 1.3M6.4 13.6l-1.3 1.3" />
+    </Base>
+  );
+}
+
+export function MoonIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M16 11.6A6.2 6.2 0 0 1 8.4 4a6.2 6.2 0 1 0 7.6 7.6Z" />
+    </Base>
+  );
+}
+
 export function CodeIcon(props: IconProps) {
   return (
     <Base {...props}>

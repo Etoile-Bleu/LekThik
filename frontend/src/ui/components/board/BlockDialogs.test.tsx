@@ -28,6 +28,7 @@ describe('AddBlockDialog', () => {
       'Progress',
       'My late cards',
       'Chart',
+      'Clocks',
       'Table',
       'Code',
     ]) {
@@ -49,6 +50,28 @@ describe('AddBlockDialog', () => {
 });
 
 describe('BlockSettingsDialog', () => {
+  it('saves the zones of a clocks block', () => {
+    const onSave = vi.fn();
+    render(
+      <BlockSettingsDialog
+        block={panel('c', 'Team time', 'clocks', { zones: ['Asia/Tokyo'], place: null })}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('Time zone'), { target: { value: 'Europe/Paris' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).toHaveBeenCalledWith('c', 'clocks', {
+      size: 'normal',
+      zones: ['Asia/Tokyo', 'Europe/Paris'],
+      place: null,
+    });
+  });
+
   it('replaces a table with pasted cells and tells how many fit', () => {
     const onSave = vi.fn();
     render(

@@ -5,6 +5,7 @@ import {
   KIND_LABEL,
   agendaConfig,
   calendarConfig,
+  clocksConfig,
   counterConfig,
   embedConfig,
   imageConfig,
@@ -30,6 +31,7 @@ import type {
   ChartConfig,
   ChartSource,
   ChartStyle,
+  ClocksConfig,
   ProgressStyle,
   SnippetConfig,
   SnippetLanguage,
@@ -47,6 +49,7 @@ import {
 } from '@lib/snippet';
 
 import { Dialog } from '../ui/Dialog';
+import { ClocksSettings } from './ClocksSettings';
 import { UploadIcon } from '../ui/Icons';
 import { Segmented } from '../ui/Segmented';
 import { Switch } from '../ui/Switch';
@@ -114,6 +117,8 @@ function initial(block: BoardList): PanelConfig {
       return snippetConfig(block);
     case 'table':
       return tableConfig(block);
+    case 'clocks':
+      return clocksConfig(block);
     case 'image':
       return imageConfig(block);
     case 'link':
@@ -172,6 +177,7 @@ export function BlockSettingsDialog({
   const chart = draft as ChartConfig;
   const snippet = draft as SnippetConfig;
   const table = draft as TableConfig;
+  const clocks = draft as ClocksConfig;
   const imported =
     block.kind === 'table' && pasted.trim() !== ''
       ? fitToLimits(parseDelimited(pasted.slice(0, CSV_MAX_BYTES)))
@@ -335,6 +341,10 @@ export function BlockSettingsDialog({
               />
             </div>
           </>
+        )}
+
+        {block.kind === 'clocks' && (
+          <ClocksSettings value={clocks} onChange={(changes) => update(changes)} />
         )}
 
         {block.kind === 'table' && (
