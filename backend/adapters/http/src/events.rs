@@ -41,6 +41,9 @@ pub enum Change {
     Invitations { email: String },
     /// The list of workspaces of one user changed.
     User { user_id: Uuid },
+    /// Somebody arrived on a board or on a card, or left. Only the places are told, never what
+    /// the person is doing.
+    Presence { workspace_id: Uuid, board_id: Uuid },
 }
 
 #[derive(Debug, Clone)]
@@ -66,12 +69,17 @@ impl ChangeEvent {
             Change::Members { .. } => "members",
             Change::Invitations { .. } => "invitations",
             Change::User { .. } => "workspaces",
+            Change::Presence { .. } => "presence",
         }
     }
 
     fn payload(&self) -> Payload<'_> {
         let (workspace_id, board_id, user_id) = match &self.change {
             Change::Board {
+                workspace_id,
+                board_id,
+            }
+            | Change::Presence {
                 workspace_id,
                 board_id,
             } => (Some(*workspace_id), Some(*board_id), None),
@@ -171,6 +179,7 @@ impl Connection {
             Change::User { .. } => false,
             Change::Invitations { email } => *email == self.email,
             Change::Board { workspace_id, .. }
+            | Change::Presence { workspace_id, .. }
             | Change::Workspace { workspace_id }
             | Change::Members { workspace_id, .. } => self.workspaces.contains(workspace_id),
         }
