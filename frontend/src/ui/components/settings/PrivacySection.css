@@ -44,3 +44,10 @@
 .privacy__withdraw {
   margin: 0.5rem 0 0.4rem;
 }
+
+.privacy__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding-bottom: 0.6rem;
+}
