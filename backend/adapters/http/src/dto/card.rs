@@ -15,7 +15,6 @@ pub struct CardSummaryDto {
     pub assignee_ids: Vec<Uuid>,
     /// Calendar day, `YYYY-MM-DD`.
     pub due_date: Option<String>,
-    /// How many comments the card has.
     pub comment_count: i64,
 }
 

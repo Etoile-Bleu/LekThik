@@ -137,7 +137,6 @@ impl TimelineItem {
 #[cfg_attr(feature = "test-utils", mockall::automock)]
 #[async_trait]
 pub trait CommentRepo: Send + Sync {
-    /// What was said and what happened on a card, oldest first, the latest 200 at most.
     async fn timeline(
         &self,
         user_id: Uuid,
@@ -149,7 +148,6 @@ pub trait CommentRepo: Send + Sync {
         card_id: Uuid,
         body: CommentBody,
     ) -> Result<Comment, BoardsError>;
-    /// Only the author can edit.
     async fn edit(
         &self,
         user_id: Uuid,
@@ -157,7 +155,6 @@ pub trait CommentRepo: Send + Sync {
         comment_id: Uuid,
         body: CommentBody,
     ) -> Result<Comment, BoardsError>;
-    /// The author can delete, and so can an admin or an owner.
     async fn delete(
         &self,
         user_id: Uuid,
