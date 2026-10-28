@@ -43,6 +43,9 @@ const AUTH_RATE_LIMIT_MAX_REQUESTS: u32 = 10;
 const AUTH_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
 const BOARDS_RATE_LIMIT_MAX_REQUESTS: u32 = 600;
 const BOARDS_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
+const ACCOUNT_RATE_LIMIT_MAX_REQUESTS: u32 = 6;
+const ACCOUNT_RATE_LIMIT_WINDOW_SECONDS: u64 = 3600;
+const ACCOUNT_BODY_LIMIT_BYTES: usize = 8 * 1024;
 const BOARDS_BODY_LIMIT_BYTES: usize = 64 * 1024;
 
 const MEDIA_RATE_LIMIT_MAX_REQUESTS: u32 = 120;
@@ -60,6 +63,19 @@ fn media_router() -> OpenApiRouter<AppState> {
     OpenApiRouter::<AppState>::new()
         .routes(routes!(set_block_image, get_block_image))
         .layer(DefaultBodyLimit::max(MEDIA_BODY_LIMIT_BYTES))
+        .layer(middleware::from_fn_with_state(rate_limiter, rate_limit))
+}
+
+fn account_router() -> OpenApiRouter<AppState> {
+    let rate_limiter = Arc::new(RateLimiter::new(
+        ACCOUNT_RATE_LIMIT_MAX_REQUESTS,
+        Duration::from_secs(ACCOUNT_RATE_LIMIT_WINDOW_SECONDS),
+    ));
+
+    OpenApiRouter::<AppState>::new()
+        .routes(routes!(export_account))
+        .routes(routes!(delete_account))
+        .layer(DefaultBodyLimit::max(ACCOUNT_BODY_LIMIT_BYTES))
         .layer(middleware::from_fn_with_state(rate_limiter, rate_limit))
 }
 
@@ -137,7 +153,8 @@ pub fn build(state: AppState) -> Router {
     let api_router = with_api_security_headers(
         auth_router
             .merge(boards_router(state.clone()))
-            .merge(media_router()),
+            .merge(media_router())
+            .merge(account_router()),
     );
 
     let (router, api) = OpenApiRouter::<AppState>::with_openapi(ApiDoc::openapi())
