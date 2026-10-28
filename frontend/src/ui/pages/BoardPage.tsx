@@ -9,6 +9,7 @@ import { announce } from '@lib/announcer';
 import { notifyError } from '@lib/toastStore';
 import { useAuthStore } from '@lib/authStore';
 import { type CardFilter, EMPTY_FILTER, cardMatches } from '@lib/boardModel';
+import { indexValues } from '@lib/fields';
 import type { CardSummary } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { lookStyle } from '@lib/boardLooks';
@@ -55,13 +56,14 @@ import { TilePositionDialog } from '../components/board/TilePositionDialog';
 import { BoardCommandSource } from '../components/command/BoardCommandSource';
 import { CardDialog } from '../components/board/CardDialog';
 import { FilterBar } from '../components/board/FilterBar';
+import { FieldsDialog } from '../components/board/FieldsDialog';
 import { LabelsDialog } from '../components/board/LabelsDialog';
 import { ViewSwitcher } from '../components/board/ViewSwitcher';
 import { WipLimitDialog } from '../components/board/WipLimitDialog';
 import { DisplayMenu } from '../components/appearance/DisplayMenu';
 import { MembersDialog } from '../components/collab/MembersDialog';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { ArrowLeftIcon, TagIcon, TrashIcon, UsersIcon } from '../components/ui/Icons';
+import { ArrowLeftIcon, SlidersIcon, TagIcon, TrashIcon, UsersIcon } from '../components/ui/Icons';
 import { InlineEdit } from '../components/ui/InlineEdit';
 import { Menu } from '../components/ui/Menu';
 import './BoardPage.css';
@@ -112,6 +114,7 @@ export function BoardPage() {
 
   const [openCardId, setOpenCardId] = useState<string | null>(null);
   const [labelsOpen, setLabelsOpen] = useState(false);
+  const [fieldsOpen, setFieldsOpen] = useState(false);
   const [membersOpen, setMembersOpen] = useState(false);
   const [filter, setFilter] = useState<CardFilter>(EMPTY_FILTER);
   const meId = useAuthStore((state) => state.user?.id);
@@ -179,9 +182,10 @@ export function BoardPage() {
     [workspaces, view?.board.workspace_id]
   );
 
+  const fieldValueIndex = useMemo(() => indexValues(view?.field_values), [view?.field_values]);
   const matches = useCallback(
-    (card: CardSummary) => cardMatches(card, filter, { meId, today }),
-    [filter, meId, today]
+    (card: CardSummary) => cardMatches(card, filter, { meId, today, fieldValues: fieldValueIndex }),
+    [filter, meId, today, fieldValueIndex]
   );
 
   const counts = useMemo(() => {
@@ -349,6 +353,8 @@ export function BoardPage() {
     <BoardMetaProvider
       members={view.members}
       labels={view.labels}
+      fields={view.fields}
+      fieldValues={view.field_values}
       meId={meId}
       today={today}
       display={cardDisplayFor(prefs, view.board.id)}
@@ -427,6 +433,15 @@ export function BoardPage() {
               </button>
             )}
             {canManage(view.role) && (
+              <button
+                type="button"
+                className="btn btn--outline btn--sm"
+                onClick={() => setFieldsOpen(true)}
+              >
+                <SlidersIcon /> Fields
+              </button>
+            )}
+            {canManage(view.role) && (
               <Menu
                 label={`Actions for board ${view.board.name}`}
                 items={[
@@ -444,6 +459,7 @@ export function BoardPage() {
 
         <FilterBar
           labels={view.labels}
+          fields={view.fields}
           filter={filter}
           onChange={setFilter}
           matchCount={counts.matching}
@@ -639,6 +655,10 @@ export function BoardPage() {
           onClose={() => setLimitListId(null)}
         />
         <LabelsDialog open={labelsOpen && editable} onClose={() => setLabelsOpen(false)} />
+        <FieldsDialog
+          open={fieldsOpen && canManage(view.role)}
+          onClose={() => setFieldsOpen(false)}
+        />
         <MembersDialog
           workspace={membersOpen ? (workspace ?? null) : null}
           onClose={() => setMembersOpen(false)}

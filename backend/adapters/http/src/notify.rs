@@ -44,6 +44,11 @@ fn plan_for(method: &Method, path: &str) -> Option<Plan> {
             touches_workspace: true,
             touches_board: true,
         }),
+        ("boards", 3.., Some("fields")) => Some(Plan {
+            target: Target::Board(id),
+            touches_workspace: false,
+            touches_board: true,
+        }),
         ("boards", 3, Some("lists" | "labels" | "look" | "blocks" | "layout")) => Some(Plan {
             target: Target::Board(id),
             touches_workspace: false,
@@ -157,6 +162,13 @@ mod tests {
             format!("cards/{id}/duplicate"),
             format!("lists/{id}/duplicate"),
             format!("cards/{id}/assignees"),
+            format!("cards/{id}/comments"),
+            format!("cards/{id}/comments/{id}"),
+            format!("boards/{id}/fields"),
+            format!("boards/{id}/fields/{id}"),
+            format!("boards/{id}/fields/{id}/options"),
+            format!("boards/{id}/fields/{id}/options/{id}"),
+            format!("cards/{id}/fields/{id}"),
             format!("labels/{id}"),
         ] {
             let plan = plan_for(&Method::PATCH, &path(&rest)).expect(&rest);

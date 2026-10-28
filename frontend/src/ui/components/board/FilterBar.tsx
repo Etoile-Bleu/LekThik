@@ -1,7 +1,7 @@
 import { type ReactNode, useId } from 'react';
 
-import { type CardFilter, isFiltering } from '@lib/boardModel';
-import type { Label } from '@lib/boardsApi';
+import { type CardFilter, EMPTY_FILTER, isFiltering } from '@lib/boardModel';
+import type { Field, Label } from '@lib/boardsApi';
 
 import { CheckIcon } from '../ui/Icons';
 import { LabelChip } from './LabelChip';
@@ -9,6 +9,7 @@ import './FilterBar.css';
 
 interface FilterBarProps {
   labels: Label[];
+  fields?: Field[];
   filter: CardFilter;
   onChange: (filter: CardFilter) => void;
   matchCount: number;
@@ -36,6 +37,7 @@ function Pill({ pressed, onToggle, children }: PillProps) {
 
 export function FilterBar({
   labels,
+  fields = [],
   filter,
   onChange,
   matchCount,
@@ -50,6 +52,23 @@ export function FilterBar({
       labelIds: filter.labelIds.includes(labelId)
         ? filter.labelIds.filter((id) => id !== labelId)
         : [...filter.labelIds, labelId],
+    });
+  }
+
+  const selectFields = fields.filter(
+    (field) => field.kind === 'select' && field.options.length > 0
+  );
+
+  function toggleChoice(fieldId: string, optionId: string) {
+    const current = filter.choices?.[fieldId] ?? [];
+    onChange({
+      ...filter,
+      choices: {
+        ...filter.choices,
+        [fieldId]: current.includes(optionId)
+          ? current.filter((id) => id !== optionId)
+          : [...current, optionId],
+      },
     });
   }
 
@@ -92,6 +111,25 @@ export function FilterBar({
             </ul>
           </>
         )}
+        {selectFields.map((field) => (
+          <div key={field.id} className="filter-bar__field">
+            <span className="filter-bar__field-name">{field.name}</span>
+            <ul className="filter-bar__list" aria-label={`Filter by ${field.name}`}>
+              {field.options.map((option) => (
+                <li key={option.id}>
+                  <button
+                    type="button"
+                    className="filter-bar__toggle"
+                    aria-pressed={(filter.choices?.[field.id] ?? []).includes(option.id)}
+                    onClick={() => toggleChoice(field.id, option.id)}
+                  >
+                    <LabelChip name={option.name} color={option.color} priority="none" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
         {isFiltering(filter) && (
           <div className="filter-bar__summary">
             <span role="status" aria-live="polite">
@@ -100,7 +138,7 @@ export function FilterBar({
             <button
               type="button"
               className="btn btn--ghost btn--sm"
-              onClick={() => onChange({ labelIds: [], mine: false, overdue: false })}
+              onClick={() => onChange(EMPTY_FILTER)}
             >
               Clear
             </button>

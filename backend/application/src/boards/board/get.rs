@@ -38,6 +38,8 @@ mod tests {
             members: Vec::new(),
             lists: Vec::new(),
             labels: Vec::new(),
+            fields: Vec::new(),
+            field_values: Vec::new(),
         };
 
         let mut repo = MockBoardRepo::new();

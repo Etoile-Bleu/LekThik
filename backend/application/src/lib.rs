@@ -3,14 +3,15 @@ mod preferences;
 mod user;
 
 pub use boards::{
-    AddComment, ChangeMemberRole, CreateBlock, CreateBoard, CreateCard, CreateLabel, CreateList,
-    CreateWorkspace, DeleteBoard, DeleteCard, DeleteComment, DeleteLabel, DeleteList,
-    DeleteWorkspace, DuplicateCard, DuplicatePanel, EditComment, GetBlockImage, GetBoard, GetCard,
-    GetMyInvitation, GetTimeline, InviteMember, ListMembers, ListMyCards, ListMyInvitations,
-    ListWorkspaces, MembersOverview, MoveCard, MoveList, PanelPlacementInput, RemoveMember,
-    RenameBoard, RenameList, RenameWorkspace, RespondToInvitation, RevokeInvitation,
-    SetBlockConfig, SetBlockImage, SetBoardLayout, SetBoardLook, SetCardAssignees, SetCardLabels,
-    SetListWipLimit, UpdateCard, UpdateLabel,
+    AddComment, AddFieldOption, ChangeMemberRole, CreateBlock, CreateBoard, CreateCard,
+    CreateField, CreateLabel, CreateList, CreateWorkspace, DeleteBoard, DeleteCard, DeleteComment,
+    DeleteField, DeleteFieldOption, DeleteLabel, DeleteList, DeleteWorkspace, DuplicateCard,
+    DuplicatePanel, EditComment, GetBlockImage, GetBoard, GetCard, GetMyInvitation, GetTimeline,
+    InviteMember, ListMembers, ListMyCards, ListMyInvitations, ListWorkspaces, MembersOverview,
+    MoveCard, MoveList, NewOption, PanelPlacementInput, RemoveMember, RenameBoard, RenameList,
+    RenameWorkspace, RespondToInvitation, RevokeInvitation, SetBlockConfig, SetBlockImage,
+    SetBoardLayout, SetBoardLook, SetCardAssignees, SetCardField, SetCardLabels, SetListWipLimit,
+    UpdateCard, UpdateField, UpdateFieldOption, UpdateLabel,
 };
 pub use preferences::{GetPreferences, SavePreferences};
 pub use user::{

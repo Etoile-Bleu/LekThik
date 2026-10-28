@@ -1,5 +1,6 @@
 mod boards;
 mod cards;
+mod fields;
 mod forgot_password;
 mod invitations;
 mod labels;
@@ -18,6 +19,7 @@ mod workspaces;
 
 pub use boards::*;
 pub use cards::*;
+pub use fields::*;
 pub use forgot_password::*;
 pub use invitations::*;
 pub use labels::*;
