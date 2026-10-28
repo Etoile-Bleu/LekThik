@@ -10,26 +10,28 @@ export interface CurrentUser {
 
 export class ApiError extends Error {
   status: number;
+  body: unknown;
 
-  constructor(status: number, message: string) {
+  constructor(status: number, message: string, body?: unknown) {
     super(message);
     this.status = status;
+    this.body = body;
   }
 }
 
-async function parseError(response: Response): Promise<string> {
+async function parseError(response: Response): Promise<{ message: string; body?: unknown }> {
   try {
     const body: unknown = await response.json();
     if (body && typeof body === 'object' && 'message' in body) {
       const message = (body as { message: unknown }).message;
       if (typeof message === 'string') {
-        return message;
+        return { message, body };
       }
     }
   } catch {
     // Response had no JSON body, fall through to the generic message below.
   }
-  return `Request failed with status ${response.status}`;
+  return { message: `Request failed with status ${response.status}` };
 }
 
 export const API_URL = API_BASE;
@@ -80,7 +82,8 @@ export async function request(path: string, init?: RequestInit): Promise<Respons
     observeServerDate(response.headers.get('date'));
 
     if (!response.ok) {
-      throw new ApiError(response.status, await parseError(response));
+      const { message, body } = await parseError(response);
+      throw new ApiError(response.status, message, body);
     }
 
     return response;

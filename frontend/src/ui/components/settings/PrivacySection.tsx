@@ -4,6 +4,7 @@ import { PROVIDERS, PROVIDER_ORDER } from '@lib/embeds';
 import { WEATHER_PROVIDER } from '@lib/weather';
 
 import { Switch } from '../ui/Switch';
+import { YourDataSection } from './YourDataSection';
 import './PrivacySection.css';
 
 const POLICY_URL = 'https://github.com/Etoile-Bleu/LekThik/blob/main/docs/privacy.md';
@@ -138,15 +139,15 @@ export function PrivacySection() {
         </h3>
         <p className="privacy__hint">
           You can correct what you wrote and delete it, and deleting a block, board or workspace
-          removes its content for good. Exporting or deleting your whole account is not in the app
-          yet, ask whoever runs this LekThik to do it. The full account of what is stored, why and
-          for how long is in the{' '}
+          removes its content for good. The full account of what is stored, why and for how long is
+          in the{' '}
           <a href={POLICY_URL} target="_blank" rel="noopener noreferrer">
             privacy notes
             <span className="sr-only"> (opens in a new tab)</span>
           </a>
           .
         </p>
+        <YourDataSection />
       </section>
     </div>
   );

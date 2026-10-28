@@ -25,6 +25,7 @@ pub struct AppState {
     pub comment_repo: Arc<dyn CommentRepo>,
     pub field_repo: Arc<dyn FieldRepo>,
     pub poll_repo: Arc<dyn PollRepo>,
+    pub account_repo: Arc<dyn domain::AccountRepo>,
     pub label_repo: Arc<dyn LabelRepo>,
     pub member_repo: Arc<dyn MemberRepo>,
     pub preferences_repo: Arc<dyn PreferencesRepo>,
