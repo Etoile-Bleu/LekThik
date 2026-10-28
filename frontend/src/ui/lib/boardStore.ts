@@ -19,6 +19,8 @@ import { moveCard, moveList, patchCard, removeCard } from './boardModel';
 import * as fieldsApi from './fieldsApi';
 import type { NewFieldInput } from './fieldsApi';
 import { patchValues } from './fields';
+import * as pollApi from './pollApi';
+import { applyVote } from './polls';
 import { type Layout, toPlacements } from './grid';
 import { notifyError } from './toastStore';
 import { useWorkspaceStore } from './workspaceStore';
@@ -53,6 +55,7 @@ interface BoardState {
     kind: Exclude<PanelKind, 'list'>,
     config: PanelConfig
   ) => Promise<void>;
+  castVote: (listId: string, optionId: string | null) => Promise<boolean>;
   renameList: (listId: string, name: string) => Promise<void>;
   moveList: (listId: string, index: number) => Promise<void>;
   /** Saves where tiles sit on the free layout, showing the new places at once. */
@@ -242,6 +245,35 @@ export const useBoardStore = create<BoardState>((set, get) => {
         await api.setBlockConfig(blockId, kind, config);
       } catch (error) {
         await recoverFrom(error);
+      }
+    },
+
+    castVote: async (listId, optionId) => {
+      const before = get().view?.polls;
+      const place = (next: string | null) =>
+        update((current) => {
+          const polls = current.polls ?? [];
+          const tally = applyVote(
+            polls.find((entry) => entry.list_id === listId),
+            listId,
+            next
+          );
+          return {
+            ...current,
+            polls: [...polls.filter((entry) => entry.list_id !== listId), tally],
+          };
+        });
+      place(optionId);
+      try {
+        await (optionId === null
+          ? pollApi.withdrawVote(listId)
+          : pollApi.castVote(listId, optionId));
+        return true;
+      } catch (error) {
+        update((current) => ({ ...current, polls: before ?? [] }));
+        notifyError(error, 'The vote could not be saved.');
+        await get().refresh();
+        return false;
       }
     },
 

@@ -223,6 +223,7 @@ impl ListRepo for PgListRepo {
         }
 
         check_done_list(&mut transaction, board_id, &config).await?;
+        crate::poll_repo::apply_config_change(&mut transaction, id, &config).await?;
 
         let row = sqlx::query(
             "UPDATE lists SET config = $2::jsonb WHERE id = $1 \

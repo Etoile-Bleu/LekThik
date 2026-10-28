@@ -15,9 +15,11 @@ import type {
   ProgressConfig,
   SnippetConfig,
   TableConfig,
+  PollConfig,
   TimerConfig,
 } from './boardsApi';
 import { daysUntil, shortDue } from './dueDate';
+import { DEFAULT_POLL } from './polls';
 
 /** Only a list holds cards, every other kind of panel shows something about them. */
 export function isCardList(panel: BoardList): boolean {
@@ -105,6 +107,9 @@ export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
 }
 
+export function pollConfig(panel: BoardList): PollConfig {
+  return { ...DEFAULT_POLL, ...(panel.config as Partial<PollConfig>) };
+}
 export function timerConfig(panel: BoardList): TimerConfig {
   return { ...DEFAULT_TIMER, ...(panel.config as Partial<TimerConfig>) };
 }
@@ -147,6 +152,31 @@ export interface PanelKindInfo {
   /** One sentence on what it shows, for the picker. */
   description: string;
 }
+
+export type BlockGroup = 'Plan' | 'Track' | 'Write' | 'Media' | 'Team';
+
+export const BLOCK_GROUP_ORDER: BlockGroup[] = ['Plan', 'Track', 'Write', 'Media', 'Team'];
+
+export const BLOCK_GROUPS: Record<
+  Exclude<PanelKind, 'list'>,
+  { group: BlockGroup; keywords: string }
+> = {
+  calendar: { group: 'Plan', keywords: 'month dates deadlines schedule' },
+  agenda: { group: 'Plan', keywords: 'today week upcoming due late' },
+  overdue: { group: 'Plan', keywords: 'late mine assigned past due' },
+  timer: { group: 'Plan', keywords: 'focus pomodoro break countdown' },
+  clocks: { group: 'Plan', keywords: 'time zones weather world team hours' },
+  counter: { group: 'Track', keywords: 'number metric total percent days left' },
+  progress: { group: 'Track', keywords: 'ring bar done share percent' },
+  chart: { group: 'Track', keywords: 'graph bars donut statistics report' },
+  note: { group: 'Write', keywords: 'text rules reminders markdown' },
+  table: { group: 'Write', keywords: 'spreadsheet csv cells grid sheet' },
+  snippet: { group: 'Write', keywords: 'code command config query script' },
+  image: { group: 'Media', keywords: 'picture photo moodboard logo plan' },
+  embed: { group: 'Media', keywords: 'video youtube vimeo figma notion excalidraw frame' },
+  link: { group: 'Media', keywords: 'url website page bookmark card' },
+  poll: { group: 'Team', keywords: 'vote survey question decide choice' },
+};
 
 export const BLOCK_KINDS: PanelKindInfo[] = [
   {
@@ -222,6 +252,11 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
     label: 'Link',
     description: 'A card for a page, with its site shown and nothing fetched from it.',
   },
+  {
+    kind: 'poll',
+    label: 'Poll',
+    description: 'Ask the team a question. One vote each, anonymous unless you choose otherwise.',
+  },
 ];
 
 export const KIND_LABEL: Record<PanelKind, string> = {
@@ -240,6 +275,7 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   table: 'Table',
   clocks: 'Clocks',
   timer: 'Timer',
+  poll: 'Poll',
 };
 
 export const BLOCK_KIND_IDS: Array<Exclude<PanelKind, 'list'>> = BLOCK_KINDS.map(

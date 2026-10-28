@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use adapters_db::{
     PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgCommentRepo, PgFieldRepo, PgInvitationRepo,
-    PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo, PgPreferencesRepo, PgUserRepo,
+    PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo, PgPollRepo, PgPreferencesRepo, PgUserRepo,
     PgVerificationCodeRepo, PgWorkspaceRepo,
 };
 use adapters_image::ImageCrateSanitizer;
@@ -53,6 +53,7 @@ async fn main() -> anyhow::Result<()> {
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
         comment_repo: Arc::new(PgCommentRepo::new(pool.clone())),
         field_repo: Arc::new(PgFieldRepo::new(pool.clone())),
+        poll_repo: Arc::new(PgPollRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
         member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
         preferences_repo: Arc::new(PgPreferencesRepo::new(pool.clone())),

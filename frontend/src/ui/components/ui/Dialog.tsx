@@ -7,7 +7,7 @@ interface DialogProps {
   open: boolean;
   onClose: () => void;
   title: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'modal' | 'drawer';
   showClose?: boolean;
   children: ReactNode;

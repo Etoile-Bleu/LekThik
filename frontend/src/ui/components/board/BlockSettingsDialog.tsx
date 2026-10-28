@@ -13,6 +13,7 @@ import {
   linkConfig,
   noteConfig,
   chartConfig,
+  pollConfig,
   progressConfig,
   snippetConfig,
   tableConfig,
@@ -37,11 +38,14 @@ import type {
   SnippetConfig,
   SnippetLanguage,
   TableConfig,
+  PollConfig,
   TimerConfig,
 } from '@lib/boardsApi';
 import { PROVIDER_NAMES, parseEmbedUrl } from '@lib/embeds';
 import { CSV_MAX_BYTES, fitToLimits, parseDelimited } from '@lib/csv';
 import { PICTURE_TYPES, checkPicture, checkWebAddress } from '@lib/media';
+import { pollProblem } from '@lib/polls';
+import { useBoardStore } from '@lib/boardStore';
 import {
   FILENAME_MAX_CHARS,
   SNIPPET_LANGUAGES,
@@ -52,6 +56,7 @@ import {
 
 import { Dialog } from '../ui/Dialog';
 import { ClocksSettings } from './ClocksSettings';
+import { PollSettings } from './PollSettings';
 import { UploadIcon } from '../ui/Icons';
 import { Segmented } from '../ui/Segmented';
 import { Switch } from '../ui/Switch';
@@ -129,6 +134,8 @@ function initial(block: BoardList): PanelConfig {
       return clocksConfig(block);
     case 'timer':
       return timerConfig(block);
+    case 'poll':
+      return pollConfig(block);
     case 'image':
       return imageConfig(block);
     case 'link':
@@ -149,6 +156,9 @@ export function BlockSettingsDialog({
   onClose,
 }: BlockSettingsDialogProps) {
   const [draft, setDraft] = useState<PanelConfig>({});
+  const voted = useBoardStore(
+    (state) => (state.view?.polls?.find((entry) => entry.list_id === block?.id)?.total ?? 0) > 0
+  );
   const [address, setAddress] = useState('');
   const [pasted, setPasted] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -189,6 +199,8 @@ export function BlockSettingsDialog({
   const table = draft as TableConfig;
   const clocks = draft as ClocksConfig;
   const timer = draft as TimerConfig;
+  const poll = draft as PollConfig;
+  const pollIssue = block.kind === 'poll' ? pollProblem(poll) : null;
   const timerProblem =
     block.kind === 'timer'
       ? (durationProblem(timer.focus_minutes, 120) ??
@@ -225,7 +237,7 @@ export function BlockSettingsDialog({
       ? needsList || progressMissing
         ? 'Choose the list that means done.'
         : 'Choose the date to count down to.'
-      : (mediaProblem ?? snippetProblem ?? timerProblem);
+      : (mediaProblem ?? snippetProblem ?? timerProblem ?? pollIssue);
 
   function update(changes: Partial<PanelConfig>) {
     setDraft((current) => ({ ...current, ...changes }) as PanelConfig);
@@ -395,6 +407,15 @@ export function BlockSettingsDialog({
             ))}
             {timerProblem && <p className="block-settings__hint">{timerProblem}</p>}
           </div>
+        )}
+
+        {block.kind === 'poll' && (
+          <PollSettings
+            value={poll}
+            voted={voted}
+            problem={pollIssue}
+            onChange={(changes) => update(changes)}
+          />
         )}
 
         {block.kind === 'clocks' && (

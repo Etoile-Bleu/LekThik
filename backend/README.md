@@ -165,6 +165,16 @@ a `CHECK` makes exactly one column non null, and they are copied by a duplicated
 with the card or the field. The board answer carries `fields` and `field_values`. A stranger gets
 `404` for all of them.
 
+A poll block (migration `022_add_poll_block.sql`) keeps a question (200 characters), 2 to 10 options
+(each an id of 1 to 12 lowercase letters or digits and a text of 80 characters, no two alike), whether
+names are shown and whether it is closed in its settings. `PUT /api/lists/{id}/poll/vote` casts or moves
+the vote of the signed in member and `DELETE` withdraws it (`204`; `400` for an option the poll does
+not have, `409` once closed, `404` for a stranger or a block that is not a poll). Any member votes,
+readers included. Votes live in `poll_votes`, one row per person and poll, deleted with the account,
+the poll or the board. The board answer carries `polls`, the count of every option and the vote of the
+caller, and the names of the voters only for a poll that shows them. Saving the settings again removes
+the votes of options that went away, and refuses to change whether names are shown once someone voted.
+
 A timer block (migration `019_add_timer_block.sql`) is shared by the whole board. It keeps a mode (focus,
 short break or long break), the three lengths in minutes (1 to 120, 60 for the short break), a state
 and the count of finished focus sessions. A running timer stores its end as epoch milliseconds, never
