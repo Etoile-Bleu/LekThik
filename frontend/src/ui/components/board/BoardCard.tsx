@@ -4,6 +4,7 @@ import { type MouseEvent, memo } from 'react';
 
 import type { CardSummary, Label } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
+import { displayValue, optionOf, shownOnCard } from '@lib/fields';
 import { useSelectionStore } from '@lib/selectionStore';
 
 import { ChatIcon, GripIcon, TextLinesIcon } from '../ui/Icons';
@@ -24,8 +25,13 @@ interface BoardCardProps {
 }
 
 export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] }) {
-  const { display } = useBoardMeta();
+  const { display, fields, fieldValues } = useBoardMeta();
   const shownLabels = display.labels ? labels : [];
+  const cardValues = fieldValues.get(card.id);
+  const shownFields = shownOnCard(fields).filter((field) => {
+    const value = cardValues?.get(field.id);
+    return value !== undefined && value !== false;
+  });
   const showMarker = display.description_marker && card.has_description;
   const preview = display.description_preview ? card.description_preview.trim() : '';
   const showDue = display.due_date && card.due_date !== null;
@@ -36,6 +42,22 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
     <>
       <span className="board-card__title">{card.title}</span>
       {preview && <span className="board-card__preview">{preview}</span>}
+      {shownFields.length > 0 && (
+        <span className="board-card__fields">
+          {shownFields.map((field) => {
+            const value = cardValues?.get(field.id);
+            const chosen = field.kind === 'select' ? optionOf(field, value) : null;
+            return chosen ? (
+              <LabelChip key={field.id} name={chosen.name} color={chosen.color} priority="none" />
+            ) : (
+              <span key={field.id} className="board-card__field">
+                <span className="board-card__field-name">{field.name}</span>
+                {field.kind === 'checkbox' ? '' : displayValue(field, value)}
+              </span>
+            );
+          })}
+        </span>
+      )}
       {(shownLabels.length > 0 || showMarker) && (
         <span className="board-card__meta">
           {shownLabels.map((label) => (

@@ -56,6 +56,30 @@
   overflow-wrap: anywhere;
 }
 
+.board-card__fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem 0.4rem;
+}
+
+.board-card__field {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  max-width: 100%;
+  padding: 0.05rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-ink);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.board-card__field-name {
+  color: var(--color-text-muted);
+}
+
 .board-card__meta {
   display: flex;
   flex-wrap: wrap;
