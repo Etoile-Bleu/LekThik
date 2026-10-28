@@ -1,5 +1,6 @@
 mod board;
 mod card;
+mod comment;
 mod label;
 mod list;
 mod members;
@@ -13,6 +14,7 @@ pub use card::{
     CreateCard, DeleteCard, DuplicateCard, GetCard, ListMyCards, MoveCard, SetCardAssignees,
     SetCardLabels, UpdateCard,
 };
+pub use comment::{AddComment, DeleteComment, EditComment, GetTimeline};
 pub use label::{CreateLabel, DeleteLabel, UpdateLabel};
 pub use list::{
     CreateBlock, CreateList, DeleteList, DuplicatePanel, GetBlockImage, MoveList, RenameList,
