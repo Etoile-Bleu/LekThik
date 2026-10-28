@@ -1,0 +1,149 @@
+.progress-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.85rem 1.1rem;
+  animation: progress-in var(--duration-slow) var(--ease-out);
+}
+
+.progress-block__figure {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+}
+
+.progress-block__ring {
+  width: min(100%, 9.5rem);
+  height: auto;
+  transform: rotate(-90deg);
+}
+
+.progress-block__track,
+.progress-block__fill {
+  fill: none;
+  stroke-width: 11;
+}
+
+.progress-block__track {
+  stroke: color-mix(in srgb, var(--color-ink) 12%, transparent);
+}
+
+.progress-block__fill {
+  stroke: var(--color-accent-text);
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  transition: stroke-dashoffset 900ms var(--ease-spring, var(--ease-out));
+}
+
+.progress-block__value {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.progress-block[data-state='complete'] .progress-block__value {
+  color: var(--color-accent-text);
+}
+
+.progress-block__caption {
+  color: var(--color-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.progress-block__detail {
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.progress-block[data-style='bar'] {
+  align-items: stretch;
+}
+
+.progress-block[data-style='bar'] .progress-block__figure {
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  justify-items: start;
+}
+
+.progress-block[data-style='bar'] .progress-block__value {
+  position: static;
+  order: -1;
+  font-size: clamp(2.2rem, 5vw, 2.9rem);
+}
+
+.progress-block__bar {
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-ink) 12%, transparent);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+
+.progress-block__bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent-text);
+  transform-origin: left;
+  transition: transform 900ms var(--ease-spring, var(--ease-out));
+}
+
+.progress-block[data-style='bar'] .progress-block__caption,
+.progress-block[data-style='bar'] .progress-block__detail {
+  text-align: start;
+}
+
+.progress-block[data-state='setup'] .progress-block__fill,
+.progress-block[data-state='empty'] .progress-block__fill {
+  stroke-dashoffset: 100;
+}
+
+@keyframes progress-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (forced-colors: active) {
+  .progress-block__track {
+    stroke: GrayText;
+  }
+
+  .progress-block__fill {
+    stroke: Highlight;
+  }
+
+  .progress-block__bar span {
+    background: Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-block,
+  .progress-block__fill,
+  .progress-block__bar span {
+    animation: none;
+    transition: none;
+  }
+}
+
+:root[data-motion='reduce'] .progress-block,
+:root[data-motion='reduce'] .progress-block__fill,
+:root[data-motion='reduce'] .progress-block__bar span {
+  animation: none;
+  transition: none;
+}

@@ -57,7 +57,7 @@ export interface CardSummary {
 }
 
 export type PanelKind =
-  'list' | 'calendar' | 'agenda' | 'note' | 'counter' | 'image' | 'embed' | 'link';
+  'list' | 'calendar' | 'agenda' | 'note' | 'counter' | 'image' | 'embed' | 'link' | 'progress';
 export type EmbedProvider = 'youtube' | 'vimeo' | 'google_calendar';
 export type BlockSize = 'normal' | 'wide';
 export type AgendaRange = 'today' | 'week';
@@ -84,6 +84,13 @@ export interface CounterConfig {
   done_list_id: string | null;
   /** `YYYY-MM-DD`, for the days left. */
   date: string | null;
+}
+export type ProgressStyle = 'ring' | 'bar';
+export interface ProgressConfig {
+  size: BlockSize;
+  style: ProgressStyle;
+  label: string;
+  done_list_id: string | null;
 }
 /** A picture kept by LekThik. The description is required, it is what a screen reader says. */
 export interface ImageConfig {
@@ -112,7 +119,8 @@ export type PanelConfig =
   | CalendarConfig
   | AgendaConfig
   | NoteConfig
-  | CounterConfig;
+  | CounterConfig
+  | ProgressConfig;
 
 /**
  * One panel of a board: a list of cards, or a block that shows something else.

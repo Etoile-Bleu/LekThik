@@ -23,6 +23,7 @@ import {
   MoveIcon,
   NoteIcon,
   PlayIcon,
+  RingIcon,
   SettingsIcon,
   TrashIcon,
 } from '../ui/Icons';
@@ -36,6 +37,7 @@ import { EmbedBlock } from './blocks/EmbedBlock';
 import { ImageBlock } from './blocks/ImageBlock';
 import { LinkBlock } from './blocks/LinkBlock';
 import { NoteBlock } from './blocks/NoteBlock';
+import { ProgressBlock } from './blocks/ProgressBlock';
 import './BoardBlock.css';
 
 interface BoardBlockProps {
@@ -75,6 +77,8 @@ export function KindIcon({ kind, size = 16 }: { kind: PanelKind; size?: number }
       return <PlayIcon size={size} />;
     case 'link':
       return <LinkIcon size={size} />;
+    case 'progress':
+      return <RingIcon size={size} />;
     default:
       return null;
   }
@@ -265,6 +269,7 @@ export function BoardBlock({
           <AgendaBlock block={block} panels={panels} onOpenCard={onOpenCard} />
         )}
         {block.kind === 'counter' && <CounterBlock block={block} panels={panels} />}
+        {block.kind === 'progress' && <ProgressBlock block={block} panels={panels} />}
         {block.kind === 'image' && (
           <ImageBlock block={block} editable={!readOnly} onAddPicture={onSettings} />
         )}

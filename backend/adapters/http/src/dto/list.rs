@@ -12,7 +12,7 @@ pub struct ListResponseDto {
     pub name: String,
     /// Work in progress limit, `null` when the list has none.
     pub wip_limit: Option<u8>,
-    /// `list`, or the kind of block: `calendar`, `agenda`, `note` or `counter`.
+    /// `list`, or the kind of block: `calendar`, `agenda`, `note`, `counter` or `progress`.
     pub kind: String,
     /// The settings of a block, empty for a list.
     #[schema(value_type = Object)]
@@ -128,7 +128,7 @@ where
 #[derive(Deserialize, ToSchema)]
 #[serde(deny_unknown_fields)]
 pub struct CreateBlockRequestDto {
-    /// `calendar`, `agenda`, `note` or `counter`.
+    /// `calendar`, `agenda`, `note`, `counter` or `progress`.
     pub kind: String,
     pub name: String,
     /// Settings for the kind. Leave out for the defaults. Unknown settings are refused.

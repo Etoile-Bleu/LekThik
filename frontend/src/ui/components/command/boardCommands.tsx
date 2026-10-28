@@ -1,4 +1,4 @@
-import { KIND_LABEL, isCardList } from '@lib/blocks';
+import { BLOCK_KIND_IDS, KIND_LABEL, isCardList } from '@lib/blocks';
 import type { BoardView, PanelKind } from '@lib/boardsApi';
 import { type CardFilter, EMPTY_FILTER } from '@lib/boardModel';
 import { type Command, parseQuickDate } from '@lib/commandStore';
@@ -51,16 +51,6 @@ export interface BoardCommandContext {
     setCardAssignees: (cardId: string, userIds: string[]) => Promise<unknown>;
   };
 }
-
-const BLOCK_KINDS: Array<Exclude<PanelKind, 'list'>> = [
-  'calendar',
-  'agenda',
-  'note',
-  'counter',
-  'image',
-  'embed',
-  'link',
-];
 
 const VIEW_NAMES: Record<BoardViewKind, string> = {
   board: 'Board',
@@ -207,14 +197,24 @@ export function boardCommands(context: BoardCommandContext): Command[] {
       id: 'create:block',
       title: 'Add a block…',
       group: 'Create',
-      keywords: ['calendar', 'agenda', 'note', 'counter', 'picture', 'image', 'video', 'link'],
+      keywords: [
+        'calendar',
+        'agenda',
+        'note',
+        'counter',
+        'progress',
+        'picture',
+        'image',
+        'video',
+        'link',
+      ],
       icon: <PlusIcon size={16} />,
       steps: [
         {
           kind: 'choose',
           prompt: 'Which kind of block?',
           choices: () =>
-            BLOCK_KINDS.map((kind) => ({
+            BLOCK_KIND_IDS.map((kind) => ({
               id: kind,
               title: KIND_LABEL[kind],
               icon: <NoteIcon size={16} />,

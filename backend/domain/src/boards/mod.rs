@@ -23,7 +23,8 @@ mod workspace;
 pub use block::{
     ALT_MAX_CHARS, AgendaConfig, AgendaRange, BLOCK_TITLE_MAX_CHARS, BlockConfig, BlockSize,
     CAPTION_MAX_CHARS, COUNTER_LABEL_MAX_CHARS, CalendarConfig, CounterConfig, CounterMetric,
-    EmbedConfig, ImageConfig, LinkConfig, ListKind, NOTE_MAX_CHARS, NoteConfig,
+    EmbedConfig, ImageConfig, LinkConfig, ListKind, NOTE_MAX_CHARS, NoteConfig, ProgressConfig,
+    ProgressStyle,
 };
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};

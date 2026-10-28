@@ -441,7 +441,9 @@ export function BoardCanvas({
                 <button type="button" className="board-canvas__block" onClick={onAddBlock}>
                   <PlusIcon size={16} />
                   Add a block
-                  <span className="board-canvas__block-hint">Calendar, agenda, note, counter</span>
+                  <span className="board-canvas__block-hint">
+                    Calendar, agenda, note, counter, progress
+                  </span>
                 </button>
               </div>
             )}
