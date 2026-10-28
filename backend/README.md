@@ -120,6 +120,8 @@ emails) so a client can draw avatars without another request.
 | `PUT /api/lists/{id}/wip-limit` | Set a list's work in progress limit (1 to 99), or `null` to remove it |
 | `POST /api/cards/{id}/duplicate` | Copy a card right after the original, with its description, date, labels and assignees |
 | `POST /api/lists/{id}/duplicate` | Copy a list with its cards, or a block with its settings and picture |
+| `PUT /api/boards/{id}/presence` | Report where this tab is on the board (and the open card), or that it left |
+| `GET /api/boards/{id}/presence` | Who is on the board right now, one person each, with the card each has open |
 | `PUT /api/boards/{id}/layout` | Place lists and blocks on the free layout grid, shared with the board |
 
 ### Preferences and board look
@@ -211,6 +213,15 @@ A list can carry a work in progress limit from 1 to 99 (`PUT /api/lists/{id}/wip
 above, `null` removes it). It is shared with the board, returned in the board view, and only warns:
 adding or moving cards past it still works. The field must be present, so an empty body can never
 clear a limit by accident.
+
+Presence is not stored. `adapters/http/src/presence.rs` keeps, in memory behind one mutex, which tab (an identifier the
+browser invents) is on which board and card, with the time it last reported. A tab expires after 50 seconds, a sweep
+every 10 seconds forgets the silent ones, and the people on a board are listed once each however many tabs they have.
+A change of who is where publishes a `presence` event to the members of the workspace, carrying only the board, and
+clients read the crowd again, so authorization stays on the read endpoint. Only members can report or read (a stranger
+gets a 404, as everywhere), the card must belong to the board, the tab identifier is validated, a tab can only be ended
+by the person who opened it, and a person with `hide_presence` set in their preferences is never recorded. Running
+several servers would need the hub moved to a shared store, the same seam as the live events.
 
 The free layout of a board is stored on its panels: four nullable columns on `lists` (`grid_x`,
 `grid_y`, `grid_w`, `grid_h`, set together or not at all, with a check constraint, migration

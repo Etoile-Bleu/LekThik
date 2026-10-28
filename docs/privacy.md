@@ -25,9 +25,16 @@ whoever runs it. It describes how the code behaves today, so it changes with the
 | Pictures | Image blocks | Members of the workspace | Deleted with their block, board or workspace |
 | Votes in a poll (which option a member chose) | Deciding together | Counts for the members of the workspace; names only when the poll shows them | Until withdrawn, or deleted with the account, the poll or the board |
 | Embed identifiers (a video or calendar id) | Embed blocks | Members of the workspace | Deleted with their block |
+| Where you are right now (which board, which card) | Showing the others who is here | Members of the same workspace, while it lasts | Not stored: it lives in the server's memory and expires about a minute after you close the page |
 
 Not stored: what anyone reads, watches or clicks, device fingerprints, locations, or anything about
 use that is not part of the work.
+
+## Being seen on a board
+
+While a board is open, the people of the workspace see your avatar and which card you have open. The page tells the server where it is every 20 seconds and when it leaves. The server keeps that in memory only: it is never written to the database or to a log, it is forgotten about 50 seconds after the last report, and it is gone when the server restarts. Only members of the workspace can ask who is on a board, and a stranger cannot tell whether the board exists.
+
+You can hide yourself in Settings, Privacy, "Show when I am on a board or a card". Once you do, nothing is recorded, on this device or any other, and you still see who else is there. The page also leaves the board by itself when its tab is hidden.
 
 ## Comments and history
 

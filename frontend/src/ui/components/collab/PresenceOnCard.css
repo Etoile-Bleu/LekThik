@@ -1,0 +1,52 @@
+/* On a card: who has it open, as small avatars at the top, left of the drag handle. */
+.presence-card {
+  position: absolute;
+  top: 0.5rem;
+  right: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.presence-card__face {
+  display: inline-flex;
+}
+
+.presence-card__face + .presence-card__face {
+  margin-left: -0.3rem;
+}
+
+.presence-card__more {
+  margin-left: 0.3rem;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+/* The title makes room, so it never runs under the avatars. */
+.board-card:has(.presence-card) .board-card__title {
+  padding-right: 2.2rem;
+}
+
+/* In the card dialog: a quiet line under where the card lives. */
+.presence-here {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.15rem;
+  color: var(--color-text-soft-on-light);
+  font-size: 0.88rem;
+}
+
+.presence-here__faces {
+  display: inline-flex;
+  padding: 0.2rem;
+}
+
+.presence-here__face {
+  display: inline-flex;
+}
+
+.presence-here__face + .presence-here__face {
+  margin-left: -0.35rem;
+}

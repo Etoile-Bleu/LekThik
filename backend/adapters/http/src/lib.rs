@@ -6,6 +6,7 @@ pub mod events;
 pub mod handlers;
 pub mod jwt;
 pub mod notify;
+pub mod presence;
 pub mod rate_limit;
 pub mod router;
 pub mod security_headers;

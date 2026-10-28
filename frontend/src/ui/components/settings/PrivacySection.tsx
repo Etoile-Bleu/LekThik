@@ -1,4 +1,5 @@
 import { announce } from '@lib/announcer';
+import { usePrefsStore } from '@lib/prefsStore';
 import { useEmbedConsent } from '@lib/embedConsent';
 import { PROVIDERS, PROVIDER_ORDER } from '@lib/embeds';
 import { WEATHER_PROVIDER } from '@lib/weather';
@@ -19,6 +20,8 @@ export function PrivacySection() {
   const allow = useEmbedConsent((state) => state.allow);
   const withdraw = useEmbedConsent((state) => state.withdraw);
   const withdrawAll = useEmbedConsent((state) => state.withdrawAll);
+  const hidePresence = usePrefsStore((state) => state.prefs.hide_presence);
+  const updatePrefs = usePrefsStore((state) => state.update);
   const anyAllowed = [...PROVIDER_ORDER, 'open_meteo' as const].some(
     (provider) => allowed[provider]
   );
@@ -65,6 +68,35 @@ export function PrivacySection() {
             Deleting a picture&apos;s block, its board or its workspace deletes the picture with it.
           </li>
         </ul>
+      </section>
+
+      <section className="privacy__block" aria-labelledby="privacy-presence">
+        <h3 id="privacy-presence" className="settings-block__title">
+          Being seen on a board
+        </h3>
+        <p className="privacy__hint">
+          While a board or a card is open, the other people of the workspace see your avatar and
+          which card you have open. It lives in the server&apos;s memory only: it is never saved, it
+          expires on its own about a minute after you close the page, and it only reaches members of
+          the same workspace.
+        </p>
+        <div className="setting-row setting-row--toggle">
+          <Switch
+            label="Show when I am on a board or a card"
+            hint={
+              hidePresence
+                ? 'You are hidden. You still see who else is here.'
+                : 'The people of the workspace see you while you look.'
+            }
+            checked={!hidePresence}
+            onChange={(show) => {
+              updatePrefs({ hide_presence: !show });
+              announce(
+                show ? 'Others can see when you are on a board.' : 'You are hidden from others.'
+              );
+            }}
+          />
+        </div>
       </section>
 
       <section className="privacy__block" aria-labelledby="privacy-outside">
