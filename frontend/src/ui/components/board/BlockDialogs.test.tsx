@@ -29,6 +29,7 @@ describe('AddBlockDialog', () => {
       'My late cards',
       'Chart',
       'Clocks',
+      'Timer',
       'Table',
       'Code',
     ]) {
@@ -50,6 +51,57 @@ describe('AddBlockDialog', () => {
 });
 
 describe('BlockSettingsDialog', () => {
+  it('changes the lengths of a timer without touching what it is doing', () => {
+    const onSave = vi.fn();
+    const running = {
+      size: 'normal',
+      mode: 'focus',
+      focus_minutes: 25,
+      short_minutes: 5,
+      long_minutes: 15,
+      state: 'running',
+      ends_at_ms: 1_800_000_000_000,
+      remaining_ms: null,
+      cycle: 2,
+    };
+    render(
+      <BlockSettingsDialog
+        block={panel('t', 'Focus', 'timer', running)}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('Focus (minutes)'), { target: { value: '50' } });
+    fireEvent.change(screen.getByLabelText('Long break (minutes)'), { target: { value: '30' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).toHaveBeenCalledWith('t', 'timer', {
+      ...running,
+      focus_minutes: 50,
+      long_minutes: 30,
+    });
+  });
+
+  it('will not save a timer with a length the server would refuse', () => {
+    const onSave = vi.fn();
+    render(
+      <BlockSettingsDialog
+        block={panel('t', 'Focus', 'timer', {})}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText('Short break (minutes)'), { target: { value: '61' } });
+    expect(screen.getAllByText(/whole number of minutes from 1 to 60/).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
   it('saves the zones of a clocks block', () => {
     const onSave = vi.fn();
     render(

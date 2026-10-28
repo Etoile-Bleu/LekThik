@@ -113,6 +113,7 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 | Counter | One number: late cards, share done, days left to a date or total cards |
 | Progress | A ring or a bar for the share of the cards that sit in the list that means done, drawn once and written out in words |
 | Chart | Cards by list, label, person or due date as bars or a donut, in a colour blind safe palette, with the same numbers in a table behind it |
+| Timer | A focus and break timer the whole board follows. Whoever can edit starts, pauses, resets or adds five minutes, everyone sees the same time because it is kept as an end time and not as ticks |
 | Clocks | The time in up to six places, with summer time followed by the browser, who is awake, the hours when everyone is at work, and optionally the weather from Open-Meteo, requested only after a press |
 | Table | A small spreadsheet edited in place with the keyboard, up to 100 rows and 12 columns. Paste cells or a CSV file, number columns add up, and the CSV export neutralises formulas. Cells are text, never evaluated |
 | Code | A command, a config or a query in one of 16 languages, highlighted, with an optional file name, line numbers and a copy button. It is shown as text and never run |

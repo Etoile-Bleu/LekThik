@@ -1,3 +1,5 @@
+import { observeServerDate } from './serverClock';
+
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8080';
 
 export interface CurrentUser {
@@ -75,6 +77,7 @@ export async function request(path: string, init?: RequestInit): Promise<Respons
         ...init?.headers,
       },
     });
+    observeServerDate(response.headers.get('date'));
 
     if (!response.ok) {
       throw new ApiError(response.status, await parseError(response));

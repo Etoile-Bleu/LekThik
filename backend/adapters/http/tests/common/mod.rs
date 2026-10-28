@@ -193,6 +193,12 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
     .execute(&pool)
     .await?;
 
+    sqlx::raw_sql(include_str!(
+        "../../../../migrations/019_add_timer_block.sql"
+    ))
+    .execute(&pool)
+    .await?;
+
     let mailer = Arc::new(RecordingMailer::default());
 
     let state = AppState {

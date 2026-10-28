@@ -389,6 +389,15 @@ export function HashIcon(props: IconProps) {
   );
 }
 
+export function TimerIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <circle cx="10" cy="11" r="6" />
+      <path d="M10 11V7.8M8 2.8h4M15.2 5l1.1-1.1" />
+    </Base>
+  );
+}
+
 export function GlobeIcon(props: IconProps) {
   return (
     <Base {...props}>
