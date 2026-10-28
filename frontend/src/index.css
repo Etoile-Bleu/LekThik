@@ -59,6 +59,14 @@
   --duration-base: 200ms;
   --duration-slow: 320ms;
 
+  --chart-1: #b26b00;
+  --chart-2: #1f7fb8;
+  --chart-3: #00805f;
+  --chart-4: #8f7f00;
+  --chart-5: #0072b2;
+  --chart-6: #c24a00;
+  --chart-7: #a8527f;
+
   --z-sticky: 20;
   --z-drawer: 40;
   --z-popover: 70;

@@ -1,0 +1,243 @@
+.chart-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.2rem 0.75rem 0.9rem;
+}
+
+.chart-block--empty {
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1.6rem 1rem 1.8rem;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.chart-block__empty-title {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.chart-block__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.chart-block__title {
+  color: var(--color-text-soft-on-light);
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.chart-block__toggle {
+  min-height: 28px;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.chart-block__toggle:hover {
+  border-color: var(--color-ink);
+}
+
+.chart-block__toggle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.chart-block__bars,
+.chart-block__legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chart-block__bars li {
+  display: grid;
+  grid-template-columns: minmax(0, 7.5rem) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.chart-block__name {
+  overflow: hidden;
+  color: var(--color-ink);
+  font-size: 0.84rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-block__value {
+  min-width: 1.5ch;
+  color: var(--color-ink);
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-block__track {
+  height: 10px;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--color-ink) 9%, transparent);
+}
+
+.chart-block__fill {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--color-accent-text);
+  transform: scaleX(var(--share, 0));
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease-out);
+  animation: chart-grow 420ms var(--ease-out) backwards;
+  animation-delay: calc(var(--row-index, 0) * 30ms);
+}
+
+.chart-block__donut {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 8.5rem) minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.chart-block__donut svg {
+  grid-column: 1;
+  grid-row: 1;
+  width: 100%;
+  height: auto;
+  transform: rotate(-90deg);
+}
+
+.chart-block__ring,
+.chart-block__segment {
+  fill: none;
+  stroke-width: 14;
+}
+
+.chart-block__ring {
+  stroke: color-mix(in srgb, var(--color-ink) 9%, transparent);
+}
+
+.chart-block__segment {
+  transition:
+    stroke-dasharray var(--duration-base) var(--ease-out),
+    stroke-dashoffset var(--duration-base) var(--ease-out);
+  animation: donut-draw 600ms var(--ease-out) backwards;
+  animation-delay: calc(var(--row-index, 0) * 60ms);
+}
+
+.chart-block__centre {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(8.5rem, 50%);
+  transform: translateY(-50%);
+  color: var(--color-ink);
+  line-height: 1.05;
+}
+
+.chart-block__total {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-block__unit {
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+}
+
+.chart-block__legend {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.chart-block__legend li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chart-block__swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.chart-block__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.chart-block__table th,
+.chart-block__table td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.chart-block__table td {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes chart-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes donut-draw {
+  from {
+    stroke-dasharray: 0 100;
+  }
+}
+
+@media (forced-colors: active) {
+  .chart-block__fill {
+    background: Highlight;
+  }
+
+  .chart-block__segment {
+    stroke: Highlight;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chart-block__fill,
+  .chart-block__segment {
+    animation: none;
+    transition: none;
+  }
+}
+
+:root[data-motion='reduce'] .chart-block__fill,
+:root[data-motion='reduce'] .chart-block__segment {
+  animation: none;
+  transition: none;
+}

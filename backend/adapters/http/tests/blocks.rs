@@ -451,6 +451,70 @@ async fn an_overdue_block_takes_a_size_and_nothing_that_names_a_person() -> anyh
 }
 
 #[tokio::test]
+async fn a_chart_block_keeps_what_it_counts_and_refuses_the_rest() -> anyhow::Result<()> {
+    let (app, pool, _container) = spawn_app().await?;
+    let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
+    let (_, board_id, _) = create_workspace_board_list(&app, &alice).await?;
+    let uri = format!("/api/boards/{board_id}/blocks");
+
+    let (status, plain) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "chart", "name": "Where the work is" })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{plain}");
+    assert_eq!(
+        plain["config"],
+        json!({ "size": "normal", "source": "list", "style": "bars" })
+    );
+
+    let (status, donut) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "chart", "name": "Who has what",
+            "config": { "source": "assignee", "style": "donut" } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{donut}");
+    assert_eq!(donut["config"]["source"], "assignee");
+
+    let id = id_of(&donut)?;
+    let (status, changed) = call(
+        &app,
+        "PUT",
+        &format!("/api/blocks/{id}/config"),
+        Some(&alice),
+        Some(json!({ "kind": "chart", "config": { "source": "due", "style": "bars" } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::OK, "{changed}");
+    assert_eq!(changed["config"]["source"], "due");
+
+    for bad in [
+        json!({ "source": "priority" }),
+        json!({ "style": "pie" }),
+        json!({ "title": "x" }),
+    ] {
+        let (status, _) = call(
+            &app,
+            "POST",
+            &uri,
+            Some(&alice),
+            Some(json!({ "kind": "chart", "name": "Nope", "config": bad })),
+        )
+        .await?;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{bad}");
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn cards_only_live_in_lists() -> anyhow::Result<()> {
     let (app, pool, _container) = spawn_app().await?;
     let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;

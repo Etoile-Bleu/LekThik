@@ -26,6 +26,7 @@ pub enum ListKind {
     Link,
     Progress,
     Overdue,
+    Chart,
 }
 
 impl ListKind {
@@ -41,6 +42,7 @@ impl ListKind {
             Self::Link => "link",
             Self::Progress => "progress",
             Self::Overdue => "overdue",
+            Self::Chart => "chart",
         }
     }
 
@@ -56,6 +58,7 @@ impl ListKind {
             "link" => Ok(Self::Link),
             "progress" => Ok(Self::Progress),
             "overdue" => Ok(Self::Overdue),
+            "chart" => Ok(Self::Chart),
             _ => Err(BoardsError::Invalid(format!("unknown block kind {value}"))),
         }
     }
@@ -147,6 +150,32 @@ pub struct OverdueConfig {
     pub size: BlockSize,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ChartSource {
+    #[default]
+    List,
+    Label,
+    Assignee,
+    Due,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ChartStyle {
+    #[default]
+    Bars,
+    Donut,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct ChartConfig {
+    pub size: BlockSize,
+    pub source: ChartSource,
+    pub style: ChartStyle,
+}
+
 /// A picture kept by LekThik itself. Alternative text is required, not optional.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -199,6 +228,7 @@ pub enum BlockConfig {
     Link(LinkConfig),
     Progress(ProgressConfig),
     Overdue(OverdueConfig),
+    Chart(ChartConfig),
 }
 
 fn invalid(message: impl Into<String>) -> BoardsError {
@@ -231,6 +261,7 @@ impl BlockConfig {
             Self::Link(_) => ListKind::Link,
             Self::Progress(_) => ListKind::Progress,
             Self::Overdue(_) => ListKind::Overdue,
+            Self::Chart(_) => ListKind::Chart,
         }
     }
 
@@ -338,6 +369,7 @@ impl BlockConfig {
                 Ok(Self::Progress(progress))
             }
             ListKind::Overdue => Ok(Self::Overdue(serde_json::from_value(value).map_err(from)?)),
+            ListKind::Chart => Ok(Self::Chart(serde_json::from_value(value).map_err(from)?)),
         }
     }
 
@@ -353,6 +385,7 @@ impl BlockConfig {
             Self::Link(config) => serde_json::to_value(config),
             Self::Progress(config) => serde_json::to_value(config),
             Self::Overdue(config) => serde_json::to_value(config),
+            Self::Chart(config) => serde_json::to_value(config),
         };
         value.unwrap_or(Value::Null)
     }
@@ -393,6 +426,7 @@ mod tests {
             ListKind::Link,
             ListKind::Progress,
             ListKind::Overdue,
+            ListKind::Chart,
         ] {
             assert_eq!(ListKind::parse(kind.as_str()), Ok(kind));
         }
@@ -673,6 +707,44 @@ mod tests {
         ] {
             assert!(
                 BlockConfig::parse(ListKind::Progress, bad.clone()).is_err(),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_chart_starts_as_bars_of_cards_per_list() {
+        let config = BlockConfig::parse(ListKind::Chart, json!({})).expect("parse");
+
+        assert_eq!(config, BlockConfig::Chart(ChartConfig::default()));
+        assert_eq!(
+            config.to_value(),
+            json!({ "size": "normal", "source": "list", "style": "bars" })
+        );
+    }
+
+    #[test]
+    fn a_chart_keeps_what_it_counts_and_how_it_draws_it() {
+        for source in ["list", "label", "assignee", "due"] {
+            let stored = json!({ "size": "wide", "source": source, "style": "donut" });
+
+            let config = BlockConfig::parse(ListKind::Chart, stored.clone()).expect("parse");
+
+            assert_eq!(config.to_value(), stored);
+        }
+    }
+
+    #[test]
+    fn a_chart_refuses_unknown_sources_styles_and_fields() {
+        for bad in [
+            json!({ "source": "priority" }),
+            json!({ "style": "pie" }),
+            json!({ "colour": "red" }),
+            json!({ "source": 3 }),
+            json!([]),
+        ] {
+            assert!(
+                BlockConfig::parse(ListKind::Chart, bad.clone()).is_err(),
                 "{bad}"
             );
         }

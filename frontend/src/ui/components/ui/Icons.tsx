@@ -389,6 +389,14 @@ export function HashIcon(props: IconProps) {
   );
 }
 
+export function BarsIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 16V9M10 16V4M16 16v-5" />
+    </Base>
+  );
+}
+
 export function RingIcon(props: IconProps) {
   return (
     <Base {...props}>
