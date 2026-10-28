@@ -209,6 +209,7 @@ LekThik is built and audited against WCAG 2.2 AA, and checked in a real browser 
 
 - **Keyboard and screen reader**: every action has a keyboard path, focus is visible and never lost, dialogs are native `<dialog>` elements, and changes are announced through one polite live region. Dragging always has a non-dragging alternative.
 - **Nothing by colour alone**: due dates, limits, labels and priorities carry an icon, a shape or words as well.
+- **Errors are easy to undo, not easy to walk into.** Deleting a card or a list happens at once, with an Undo button on its own notice instead of an "Are you sure?" dialog someone has to read and remember to answer, following the W3C's [COGA](https://www.w3.org/TR/coga-usable/) guidance. Only what cannot be brought back, such as the board itself, still asks first.
 - **Appearance settings**: light, dark and high contrast themes, three densities, text up to 150%, a dyslexia friendly font, wider spacing, red-green and blue-yellow palettes, larger targets, a thick focus ring and a reduced motion mode.
 - **Responsive**: layouts use container queries measured in `rem`, so they give way as text grows, and the board stacks on a phone.
 
