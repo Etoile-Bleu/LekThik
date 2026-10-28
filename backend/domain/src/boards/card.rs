@@ -16,6 +16,7 @@ pub struct CardSummary {
     pub label_ids: Vec<Uuid>,
     pub assignee_ids: Vec<Uuid>,
     pub due_date: Option<String>,
+    pub comment_count: i64,
 }
 
 /// A card assigned to someone, with where it lives, for the "my cards" page.
