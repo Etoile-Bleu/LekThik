@@ -96,6 +96,30 @@ html[data-theme='contrast'] .rt-code {
   background: transparent;
 }
 
+.rt-code__file {
+  margin-right: 0.6rem;
+  color: var(--code-text);
+  font-weight: 600;
+  text-transform: none;
+}
+
+.rt-code pre:has(.rt-code__gutter) {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.rt-code__gutter {
+  flex: none;
+  color: var(--code-comment);
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  text-align: right;
+  white-space: pre;
+  user-select: none;
+  font-variant-numeric: tabular-nums;
+}
+
 .rt-code code {
   color: var(--code-text);
   font-family: var(--font-mono);

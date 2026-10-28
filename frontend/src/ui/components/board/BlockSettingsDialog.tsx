@@ -13,6 +13,7 @@ import {
   noteConfig,
   chartConfig,
   progressConfig,
+  snippetConfig,
 } from '@lib/blocks';
 import type {
   AgendaRange,
@@ -29,9 +30,18 @@ import type {
   ChartSource,
   ChartStyle,
   ProgressStyle,
+  SnippetConfig,
+  SnippetLanguage,
 } from '@lib/boardsApi';
 import { parseEmbedUrl } from '@lib/embeds';
 import { PICTURE_TYPES, checkPicture, checkWebAddress } from '@lib/media';
+import {
+  FILENAME_MAX_CHARS,
+  SNIPPET_LANGUAGES,
+  SNIPPET_MAX_CHARS,
+  checkSnippet,
+  lineCount,
+} from '@lib/snippet';
 
 import { Dialog } from '../ui/Dialog';
 import { UploadIcon } from '../ui/Icons';
@@ -97,6 +107,8 @@ function initial(block: BoardList): PanelConfig {
       return progressConfig(block);
     case 'chart':
       return chartConfig(block);
+    case 'snippet':
+      return snippetConfig(block);
     case 'image':
       return imageConfig(block);
     case 'link':
@@ -151,6 +163,7 @@ export function BlockSettingsDialog({
   const needsDate = block.kind === 'counter' && counter.metric === 'days_left';
   const progress = draft as ProgressConfig;
   const chart = draft as ChartConfig;
+  const snippet = draft as SnippetConfig;
   const progressMissing = block.kind === 'progress' && !progress.done_list_id;
   const image = draft as ImageConfig;
   const embed = draft as EmbedConfig;
@@ -171,12 +184,13 @@ export function BlockSettingsDialog({
         : block.kind === 'link'
           ? checkWebAddress(link.url ?? '')
           : null;
+  const snippetProblem = block.kind === 'snippet' ? checkSnippet(snippet.code ?? '') : null;
   const missing =
     (needsList && !counter.done_list_id) || (needsDate && !counter.date) || progressMissing
       ? needsList || progressMissing
         ? 'Choose the list that means done.'
         : 'Choose the date to count down to.'
-      : mediaProblem;
+      : (mediaProblem ?? snippetProblem);
 
   function update(changes: Partial<PanelConfig>) {
     setDraft((current) => ({ ...current, ...changes }) as PanelConfig);
@@ -306,6 +320,61 @@ export function BlockSettingsDialog({
                 autoComplete="off"
                 onChange={(event) => update({ label: event.target.value })}
               />
+            </div>
+          </>
+        )}
+
+        {block.kind === 'snippet' && (
+          <>
+            <div className="field">
+              <label htmlFor={metricId}>Language</label>
+              <select
+                id={metricId}
+                value={snippet.language ?? 'text'}
+                onChange={(event) => update({ language: event.target.value as SnippetLanguage })}
+              >
+                {SNIPPET_LANGUAGES.map((language) => (
+                  <option key={language.value} value={language.value}>
+                    {language.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor={labelId}>File name (optional)</label>
+              <input
+                id={labelId}
+                type="text"
+                maxLength={FILENAME_MAX_CHARS}
+                value={snippet.filename ?? ''}
+                placeholder="docker-compose.yml"
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(event) => update({ filename: event.target.value })}
+              />
+            </div>
+            <Switch
+              label="Line numbers"
+              checked={Boolean(snippet.line_numbers)}
+              onChange={(line_numbers) => update({ line_numbers })}
+            />
+            <div className="field">
+              <label htmlFor={listId}>Code</label>
+              <textarea
+                id={listId}
+                className="block-settings__code"
+                rows={10}
+                value={snippet.code ?? ''}
+                aria-invalid={snippetProblem ? true : undefined}
+                autoComplete="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                onChange={(event) => update({ code: event.target.value })}
+              />
+              <p className="block-settings__hint">
+                {snippetProblem ??
+                  `${lineCount(snippet.code ?? '')} lines, ${(snippet.code ?? '').length.toLocaleString()} of ${SNIPPET_MAX_CHARS.toLocaleString()} characters. It is shown as text and never run.`}
+              </p>
             </div>
           </>
         )}
