@@ -1,5 +1,6 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
+import { useAuthStore } from '@lib/authStore';
 import { isCardList } from '@lib/blocks';
 import { toggleTask } from '@lib/richText';
 import { findCard } from '@lib/boardModel';
@@ -9,7 +10,7 @@ import { notifyError } from '@lib/toastStore';
 
 import { type CardProperty, normalizeDialogLayout } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
-import { canEdit } from '@lib/roles';
+import { canEdit, canManage } from '@lib/roles';
 
 import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { Dialog } from '../ui/Dialog';
@@ -27,6 +28,7 @@ import { RichEditor } from '../richtext/RichEditor';
 import { RichText } from '../richtext/RichText';
 import { InlineEdit } from '../ui/InlineEdit';
 import { AssigneePicker } from './AssigneePicker';
+import { CardTimeline } from './CardTimeline';
 import { DueDateField } from './DueDateField';
 import { Pick } from '../ui/Pick';
 import { PropertyRow } from '../ui/PropertyRow';
@@ -58,6 +60,8 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
   const [detail, setDetail] = useState<CardDetail | null>(null);
   const [description, setDescription] = useState('');
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+  const [saves, setSaves] = useState(0);
+  const meId = useAuthStore((state) => state.user?.id);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [targetListId, setTargetListId] = useState('');
   const [targetPosition, setTargetPosition] = useState(1);
@@ -122,6 +126,7 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
       setDetail(saved);
       markHasDescription(saved.id, saved.description.trim() !== '');
       setSaveStatus('saved');
+      setSaves((count) => count + 1);
     } catch (error) {
       notifyError(error, 'Could not save the description.');
       setSaveStatus('idle');
@@ -376,6 +381,24 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
               </>
             )}
           </section>
+
+          <CardTimeline
+            key={summary.id}
+            cardId={summary.id}
+            signature={[
+              summary.title,
+              summary.list_id,
+              summary.due_date ?? '',
+              summary.label_ids.join(','),
+              summary.assignee_ids.join(','),
+              summary.comment_count ?? 0,
+              saves,
+            ].join('|')}
+            meId={meId}
+            members={view.members}
+            canComment={editable}
+            canModerate={canManage(view.role)}
+          />
 
           {(editable || onCustomize) && (
             <footer className="card-dialog__footer">
