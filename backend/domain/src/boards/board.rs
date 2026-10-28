@@ -7,6 +7,7 @@ use super::label::Label;
 use super::layout::PanelPlacement;
 use super::list::ListWithCards;
 use super::look::BoardLook;
+use super::poll::PollTally;
 use super::role::Role;
 use super::templates::BoardTemplate;
 use super::text::Title;
@@ -42,6 +43,7 @@ pub struct BoardView {
     pub labels: Vec<Label>,
     pub fields: Vec<Field>,
     pub field_values: Vec<CardFieldValue>,
+    pub polls: Vec<PollTally>,
 }
 
 #[cfg_attr(feature = "test-utils", mockall::automock)]
