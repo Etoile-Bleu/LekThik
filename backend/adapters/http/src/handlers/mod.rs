@@ -1,3 +1,4 @@
+mod account;
 mod boards;
 mod cards;
 mod fields;
@@ -18,6 +19,7 @@ mod templates;
 mod verify_email;
 mod workspaces;
 
+pub use account::*;
 pub use boards::*;
 pub use cards::*;
 pub use fields::*;

@@ -64,3 +64,12 @@ pub struct ResetPasswordRequestDto {
     #[validate(length(min = 8))]
     pub password: String,
 }
+
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct DeleteAccountRequestDto {
+    pub password: String,
+    pub confirmation: String,
+    #[serde(default)]
+    pub delete_owned_workspaces: bool,
+}

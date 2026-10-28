@@ -15,8 +15,8 @@ pub use boards::{
 };
 pub use preferences::{GetPreferences, SavePreferences};
 pub use user::{
-    GetCurrentUser, GetCurrentUserError, IssueVerificationCode, IssueVerificationCodeError,
-    LoginUser, LoginUserError, RegisterUser, RegisterUserError, RegisteredUser,
-    RequestPasswordReset, ResendEmailVerification, ResetPassword, ResetPasswordError, VerifyEmail,
-    VerifyEmailError,
+    DeleteAccount, ExportAccount, GetCurrentUser, GetCurrentUserError, IssueVerificationCode,
+    IssueVerificationCodeError, LoginUser, LoginUserError, RegisterUser, RegisterUserError,
+    RegisteredUser, RequestPasswordReset, ResendEmailVerification, ResetPassword,
+    ResetPasswordError, VerifyEmail, VerifyEmailError,
 };
