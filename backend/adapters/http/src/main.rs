@@ -2,8 +2,8 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use adapters_db::{
-    PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgInvitationRepo, PgLabelRepo, PgListRepo,
-    PgLocator, PgMemberRepo, PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo,
+    PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgCommentRepo, PgInvitationRepo, PgLabelRepo,
+    PgListRepo, PgLocator, PgMemberRepo, PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo,
     PgWorkspaceRepo,
 };
 use adapters_image::ImageCrateSanitizer;
@@ -51,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
         block_image_repo: Arc::new(PgBlockImageRepo::new(pool.clone())),
         image_sanitizer: Arc::new(ImageCrateSanitizer::new()),
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
+        comment_repo: Arc::new(PgCommentRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
         member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
         preferences_repo: Arc::new(PgPreferencesRepo::new(pool.clone())),
