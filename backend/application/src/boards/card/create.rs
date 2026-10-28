@@ -46,6 +46,7 @@ mod tests {
                     label_ids: Vec::new(),
                     assignee_ids: Vec::new(),
                     due_date: None,
+                    comment_count: 0,
                 })
             });
 
