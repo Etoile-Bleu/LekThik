@@ -21,6 +21,18 @@
   font-weight: 600;
 }
 
+.filter-bar__field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-bar__field-name {
+  color: var(--color-text-soft-on-light);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .filter-bar__list {
   display: flex;
   gap: 0.4rem;
