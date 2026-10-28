@@ -112,6 +112,7 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 | Agenda | What is due today or over seven days, late cards first, optionally only yours |
 | Counter | One number: late cards, share done, days left to a date or total cards |
 | Progress | A ring or a bar for the share of the cards that sit in the list that means done, drawn once and written out in words |
+| Chart | Cards by list, label, person or due date as bars or a donut, in a colour blind safe palette, with the same numbers in a table behind it |
 | My late cards | The cards assigned to you that are past their date, most late first. Everyone who opens the board sees their own |
 | Note | Markdown text with checklists you can tick |
 | Picture | An image kept in LekThik's own database, with its metadata removed and a description as alternative text |

@@ -3,6 +3,7 @@ import type {
   BoardList,
   CalendarConfig,
   CardSummary,
+  ChartConfig,
   CounterConfig,
   EmbedConfig,
   ImageConfig,
@@ -26,6 +27,7 @@ export const DEFAULT_NOTE: NoteConfig = { size: 'normal', text: '' };
 export const DEFAULT_IMAGE: ImageConfig = { size: 'wide', alt: '', caption: '' };
 export const DEFAULT_LINK: LinkConfig = { size: 'normal', url: '', title: '' };
 export const DEFAULT_OVERDUE: OverdueConfig = { size: 'normal' };
+export const DEFAULT_CHART: ChartConfig = { size: 'normal', source: 'list', style: 'bars' };
 export const DEFAULT_PROGRESS: ProgressConfig = {
   size: 'normal',
   style: 'ring',
@@ -71,6 +73,9 @@ export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
 }
 
+export function chartConfig(panel: BoardList): ChartConfig {
+  return { ...DEFAULT_CHART, ...(panel.config as Partial<ChartConfig>) };
+}
 export function overdueConfig(panel: BoardList): OverdueConfig {
   return { ...DEFAULT_OVERDUE, ...(panel.config as Partial<OverdueConfig>) };
 }
@@ -121,6 +126,12 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
     description: 'The cards assigned to you that are past their date. Everyone sees their own.',
   },
   {
+    kind: 'chart',
+    label: 'Chart',
+    description:
+      'Cards by list, label, person or due date, as bars or a donut, with a table behind.',
+  },
+  {
     kind: 'image',
     label: 'Picture',
     description: 'A moodboard, a plan or a logo, with a description for people who cannot see it.',
@@ -148,6 +159,7 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   link: 'Link',
   progress: 'Progress',
   overdue: 'My late cards',
+  chart: 'Chart',
 };
 
 export const BLOCK_KIND_IDS: Array<Exclude<PanelKind, 'list'>> = BLOCK_KINDS.map(
