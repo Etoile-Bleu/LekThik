@@ -57,7 +57,7 @@ Most boards force one shape: a row of columns. LekThik lets the board take the s
 5. **Talk about it.** Every card has a timeline: comments written in Markdown with `@` mentions, and a short history of who moved it, renamed it, dated it, labelled it or assigned it. Authors edit and delete their own comments, admins can delete any, and a new comment appears for everyone at once.
 6. **Add blocks.** A calendar, an agenda, a counter, a progress ring, a note, a picture, a video or a link sit beside the lists and draw on the cards of the board.
 7. **See it four ways.** The same cards as columns, on a free canvas, in a sortable table or in a calendar of due dates.
-8. **Do it from the keyboard.** `Ctrl+K` jumps to anything and adds, moves, assigns or schedules without touching the mouse.
+8. **Do it from the keyboard.** `Ctrl+K` jumps to anything and adds, moves, assigns or schedules without touching the mouse. `Ctrl+Z` undoes your last change on the board and `Ctrl+Y` (or `Ctrl+Shift+Z`) redoes it.
 9. **Work together.** Nothing needs a refresh: cards, layouts and members follow what others do, and a reconnection catches up on what was missed.
 
 ![A short tour: a tile is dragged to a new place with its dashed outline, another is resized from its corner, Fit arranges everything and Undo fit brings the previous layout back](docs/assets/layout.gif)
@@ -143,6 +143,17 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 ![The command palette: Ctrl+K, add a card to a list in three steps, then set a due date by typing friday](docs/assets/palette.gif)
 
 It is built as an ARIA combobox: focus stays in the field, `aria-activedescendant` follows the arrow keys, and the number of results is announced.
+
+### Undo and redo
+
+`Ctrl+Z` (`Cmd+Z` on a Mac) undoes the last change you made on the open board, and `Ctrl+Shift+Z` or `Ctrl+Y` redoes it. The two arrows in the board header and the palette do the same, and the arrow names the change it would undo ("Undo Move card"). A screen reader hears what was undone.
+
+- **Yours only.** The history belongs to you and to this tab. It never undoes what a teammate did, and it starts empty when you open a board, change board or reload the page. It keeps the latest 100 changes, and a new change clears what could be redone.
+- **Typing is left alone.** Inside a text field, the card description or a note, `Ctrl+Z` undoes the typing as the browser does. Once the description is saved, `Ctrl+Z` outside the field undoes the whole edit.
+- **What it covers.** Adding, renaming, moving, duplicating and deleting cards, lists and blocks, with a deleted list brought back with its cards. Labels, people, dates, custom field values and descriptions of a card. Block settings, list limits, the layout, the board name and look, labels (add, edit, delete), and your vote in a poll.
+- **What it does not cover.** Comments, the schema of custom fields, the shared timer, a picture in a picture block, deleting a board or an account, and anything done in another tab or by someone else.
+- **Restoring is a copy.** A deleted card or list comes back with its title, description, labels, people, date, field values and position, but with a new identity: its comments and history are not restored.
+- If a teammate changed or deleted the same thing in the meantime, an undo that can no longer apply says so and drops out of the history. An undo that does apply writes the old value back, like any other edit.
 
 ## Live updates
 
