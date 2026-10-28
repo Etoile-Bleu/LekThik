@@ -4,7 +4,7 @@ import { announce } from '@lib/announcer';
 import { embedConfig } from '@lib/blocks';
 import type { BoardList } from '@lib/boardsApi';
 import { useEmbedConsent } from '@lib/embedConsent';
-import { PROVIDERS, embedSrc } from '@lib/embeds';
+import { PROVIDERS, embedSrc, openSrc } from '@lib/embeds';
 
 import { ExternalLinkIcon, PlayIcon } from '../../ui/Icons';
 import './EmbedBlock.css';
@@ -30,20 +30,20 @@ export function EmbedBlock({ block }: EmbedBlockProps) {
   if (!config) {
     return (
       <div className="embed-block embed-block--empty">
-        <p>This embed has no video or calendar. Open its settings to choose one.</p>
+        <p>This embed shows nothing yet. Open its settings to choose what to show.</p>
       </div>
     );
   }
 
   const provider = PROVIDERS[config.provider];
   const src = embedSrc(config.provider, config.id);
+  const page = openSrc(config.provider, config.id);
   const showing = (loaded || allowed) && src !== null;
-  const isCalendar = config.provider === 'google_calendar';
 
   if (showing && src) {
     return (
       <div className="embed-block">
-        <div className="embed-block__frame" data-kind={isCalendar ? 'calendar' : 'video'}>
+        <div className="embed-block__frame" data-kind={provider.shape}>
           <iframe
             src={src}
             title={config.title}
@@ -57,6 +57,16 @@ export function EmbedBlock({ block }: EmbedBlockProps) {
         <div className="embed-block__foot">
           <span className="embed-block__source">
             From {provider.name}, loaded because you asked.
+            {page && (
+              <>
+                {' '}
+                <a href={page} target="_blank" rel="noopener noreferrer">
+                  Open it in a new tab
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>{' '}
+                if nothing shows.
+              </>
+            )}
           </span>
           {!allowed && (
             <button
@@ -77,7 +87,7 @@ export function EmbedBlock({ block }: EmbedBlockProps) {
 
   return (
     <div className="embed-block">
-      <div className="embed-block__facade" data-kind={isCalendar ? 'calendar' : 'video'}>
+      <div className="embed-block__facade" data-kind={provider.shape}>
         <span className="embed-block__badge" aria-hidden="true">
           <PlayIcon size={22} />
         </span>
@@ -96,7 +106,7 @@ export function EmbedBlock({ block }: EmbedBlockProps) {
             announce(`Loading ${provider.name} ${provider.what}.`);
           }}
         >
-          {isCalendar ? 'Show the calendar' : 'Play the video'}
+          {provider.action}
         </button>
         <div className="embed-block__remember">
           <input

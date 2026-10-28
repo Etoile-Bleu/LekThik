@@ -56,21 +56,29 @@ be withdrawn in Settings, Privacy, as easily as it was given, and it never reach
 
 ## Outside content
 
-Videos and calendars come from other companies. Loading one tells that company the reader's address,
-and may set cookies, which is why it needs the reader's say.
+Videos, calendars, drawings, designs and pages come from other companies. Loading one tells that
+company the reader's address, and may set cookies, which is why it needs the reader's say.
 
 - Until someone presses the button on the placeholder, nothing is requested: no frame, no thumbnail,
   no script, no font. The placeholder says who would receive what.
-- Only YouTube (through the `youtube-nocookie.com` address), Vimeo (with `dnt=1`) and Google Calendar
-  can be added. The server recognises an address and keeps only the provider and the identifier. The
-  address of the frame is built from those, so a stored value can never point somewhere else.
+- Only YouTube (through the `youtube-nocookie.com` address), Vimeo (with `dnt=1`), Google Calendar,
+  Excalidraw, Figma and Notion can be added. The server recognises an address and keeps only the
+  provider and the identifier. The address of the frame is built from those, so a stored value can
+  never point somewhere else. For Notion only a page published to the web at `notion.site` is
+  accepted, and for Excalidraw only a shared drawing or room link, whose key is kept with the block
+  and so is visible to the members of the workspace.
 - The frame is sandboxed, has a title for screen readers, and has no permission to navigate the page.
+  Next to it a plain link opens the same content in a new tab, since a provider may refuse to be
+  shown inside another page.
+- Choosing to load without asking is remembered per provider, in this browser only, and can be
+  withdrawn in Settings, Privacy.
 - Links are plain links: LekThik fetches nothing from the page, not a preview, not an icon.
 
 If LekThik is served with a Content Security Policy, allow only what the features need:
 
 ```
-frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://calendar.google.com;
+frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://calendar.google.com
+  https://excalidraw.com https://www.figma.com https://*.notion.site;
 img-src 'self' blob: data:;
 ```
 

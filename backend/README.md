@@ -191,7 +191,7 @@ caps the pixels and the stored size, and accepts only real PNG, JPEG and WebP ju
 SVG. The result is stored in `block_images` (a row per block, `ON DELETE CASCADE`, so it goes with its
 block, board or workspace), served only to members with the stored type and `nosniff`, and the board view
 carries an `image_version` so clients fetch it again only when it changes. Who may upload is checked
-before anything is decoded. `embed` keeps a provider (YouTube, Vimeo or Google Calendar) and an
+before anything is decoded. `embed` keeps a provider (YouTube, Vimeo, Google Calendar, Excalidraw, Figma or a published Notion page) and an
 identifier recognised from an address by `domain/src/boards/embed.rs`, never the address itself, so the
 frame built from it can only point at that provider. `link` keeps a plain `http` or `https` address
 (`web_url.rs`: no credentials, no odd hosts) and nothing is fetched from it. See `docs/privacy.md`.
