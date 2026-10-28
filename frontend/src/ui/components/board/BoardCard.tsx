@@ -6,7 +6,7 @@ import type { CardSummary, Label } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
 import { useSelectionStore } from '@lib/selectionStore';
 
-import { GripIcon, TextLinesIcon } from '../ui/Icons';
+import { ChatIcon, GripIcon, TextLinesIcon } from '../ui/Icons';
 import { useBoardMeta } from '@hooks/useBoardMeta';
 
 import { AssigneeStack } from './AssigneeStack';
@@ -30,6 +30,7 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
   const preview = display.description_preview ? card.description_preview.trim() : '';
   const showDue = display.due_date && card.due_date !== null;
   const showPeople = display.assignees && card.assignee_ids.length > 0;
+  const comments = card.comment_count ?? 0;
 
   return (
     <>
@@ -53,9 +54,18 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
           )}
         </span>
       )}
-      {(showDue || showPeople) && (
+      {(showDue || showPeople || comments > 0) && (
         <span className="board-card__foot">
           {showDue && card.due_date && <DueBadge day={card.due_date} />}
+          {comments > 0 && (
+            <span className="board-card__comments">
+              <ChatIcon size={14} />
+              <span aria-hidden="true">{comments}</span>
+              <span className="sr-only">
+                {comments} {comments === 1 ? 'comment' : 'comments'}
+              </span>
+            </span>
+          )}
           {showPeople && <AssigneeStack ids={card.assignee_ids} />}
         </span>
       )}
