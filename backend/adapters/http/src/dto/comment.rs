@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-/// Someone, as the name they had when the page was drawn. Absent when the account is gone.
 #[derive(Serialize, ToSchema)]
 pub struct PersonDto {
     pub id: Uuid,
@@ -23,11 +22,8 @@ impl From<Person> for PersonDto {
 pub struct CommentDto {
     pub id: Uuid,
     pub card_id: Uuid,
-    /// `null` once the author deleted their account.
     pub author: Option<PersonDto>,
-    /// Markdown, never HTML.
     pub body: String,
-    /// UTC, `YYYY-MM-DDTHH:MM:SSZ`.
     pub created_at: String,
     pub edited_at: Option<String>,
 }
@@ -45,15 +41,11 @@ impl From<Comment> for CommentDto {
     }
 }
 
-/// One line of what happened on a card.
 #[derive(Serialize, ToSchema)]
 pub struct ActivityDto {
     pub id: Uuid,
     pub actor: Option<PersonDto>,
-    /// `created`, `renamed`, `described`, `due_set`, `due_cleared`, `moved`, `label_added`,
-    /// `label_removed`, `assigned` or `unassigned`.
     pub kind: String,
-    /// Who was assigned or unassigned.
     pub subject: Option<PersonDto>,
     pub from: Option<String>,
     pub to: Option<String>,
@@ -92,7 +84,6 @@ impl From<TimelineItem> for TimelineItemDto {
 
 #[derive(Serialize, ToSchema)]
 pub struct TimelineResponseDto {
-    /// Oldest first, the latest 200 at most.
     pub items: Vec<TimelineItemDto>,
 }
 

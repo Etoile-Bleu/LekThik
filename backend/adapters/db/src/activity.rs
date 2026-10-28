@@ -58,9 +58,6 @@ fn clip(text: &str) -> String {
     text.chars().take(TEXT_MAX_CHARS).collect()
 }
 
-/// Writes one line of the history of a card, inside the transaction that changed it. Editing the
-/// description over and over writes a single line for ten minutes, and only the latest 200 lines
-/// of a card are kept.
 pub(crate) async fn record(
     connection: &mut PgConnection,
     card_id: Uuid,
