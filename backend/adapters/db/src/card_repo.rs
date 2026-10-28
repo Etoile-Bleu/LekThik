@@ -209,6 +209,18 @@ impl CardRepo for PgCardRepo {
         .await
         .map_err(repository_error)?;
 
+        sqlx::query(
+            "INSERT INTO card_field_values \
+                (card_id, field_id, text_value, number_value, date_value, bool_value, option_id) \
+                SELECT $1, field_id, text_value, number_value, date_value, bool_value, option_id \
+                FROM card_field_values WHERE card_id = $2",
+        )
+        .bind(new_id)
+        .bind(id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
         record(
             &mut transaction,
             new_id,
