@@ -15,6 +15,8 @@ pub struct CardSummaryDto {
     pub assignee_ids: Vec<Uuid>,
     /// Calendar day, `YYYY-MM-DD`.
     pub due_date: Option<String>,
+    /// How many comments the card has.
+    pub comment_count: i64,
 }
 
 impl From<CardSummary> for CardSummaryDto {
@@ -28,6 +30,7 @@ impl From<CardSummary> for CardSummaryDto {
             label_ids: card.label_ids,
             assignee_ids: card.assignee_ids,
             due_date: card.due_date,
+            comment_count: card.comment_count,
         }
     }
 }
