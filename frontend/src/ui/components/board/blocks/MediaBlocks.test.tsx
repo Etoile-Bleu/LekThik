@@ -258,8 +258,53 @@ describe('EmbedBlock', () => {
   it('says what to do when an embed has nothing to show', () => {
     render(<EmbedBlock block={block('embed', {})} />);
 
-    expect(screen.getByText(/has no video or calendar/)).toBeInTheDocument();
+    expect(screen.getByText(/shows nothing yet/)).toBeInTheDocument();
   });
+
+  it.each([
+    [
+      'excalidraw',
+      'json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk',
+      'Show the drawing',
+      'https://excalidraw.com/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk',
+      'https://excalidraw.com/#json=AbCdEf12345,Zx9Yw8Vu7Ts6Rq5Pn4Om3Lk',
+    ],
+    [
+      'figma',
+      'design/AbCdEf1234567890xyz',
+      'Show the design',
+      'https://www.figma.com/embed?embed_host=lekthik&url=https%3A%2F%2Fwww.figma.com%2Fdesign%2FAbCdEf1234567890xyz',
+      'https://www.figma.com/design/AbCdEf1234567890xyz',
+    ],
+    [
+      'notion',
+      'acme/0123456789abcdef0123456789abcdef',
+      'Show the page',
+      'https://acme.notion.site/ebd/0123456789abcdef0123456789abcdef',
+      'https://acme.notion.site/0123456789abcdef0123456789abcdef',
+    ],
+  ])(
+    'holds %s back until the button, then shows a sandboxed frame and a way to open it',
+    (provider, id, action, frame, page) => {
+      const { container } = render(
+        <EmbedBlock block={block('embed', { size: 'wide', provider, id, title: 'Outside' })} />
+      );
+
+      expect(container.querySelector('iframe')).toBeNull();
+      expect(screen.getByText(/will receive your IP address/)).toBeInTheDocument();
+
+      fireEvent.click(screen.getByRole('button', { name: action }));
+
+      const iframe = container.querySelector('iframe');
+      expect(iframe).toHaveAttribute('src', frame);
+      expect(iframe).toHaveAttribute('title', 'Outside');
+      expect(iframe?.getAttribute('sandbox')).not.toMatch(/allow-top-navigation|allow-forms/);
+      expect(screen.getByRole('link', { name: /Open it in a new tab/ })).toHaveAttribute(
+        'href',
+        page
+      );
+    }
+  );
 });
 
 describe('LinkBlock', () => {

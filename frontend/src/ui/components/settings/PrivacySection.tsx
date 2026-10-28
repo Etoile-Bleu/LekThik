@@ -65,12 +65,12 @@ export function PrivacySection() {
 
       <section className="privacy__block" aria-labelledby="privacy-outside">
         <h3 id="privacy-outside" className="settings-block__title">
-          Videos and calendars from other companies
+          Videos, calendars, drawings and pages from other companies
         </h3>
         <p className="privacy__hint">
-          A video or calendar block shows a placeholder and loads nothing until someone presses the
-          button on it. If you chose to remember that for a provider, it is listed here. The choice
-          is kept in this browser only, LekThik never sees it.
+          An embed block shows a placeholder and loads nothing until someone presses the button on
+          it. If you chose to remember that for a provider, it is listed here. The choice is kept in
+          this browser only, LekThik never sees it.
         </p>
         <div className="privacy__providers">
           {PROVIDER_ORDER.map((provider) => (

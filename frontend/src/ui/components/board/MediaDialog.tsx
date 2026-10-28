@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useId, useMemo, useRef, useState } from 'react';
 
 import type { BlockSize, PanelConfig, PanelKind } from '@lib/boardsApi';
-import { PROVIDERS, defaultTitle, parseEmbedUrl } from '@lib/embeds';
+import { PROVIDERS, PROVIDER_NAMES, defaultTitle, parseEmbedUrl } from '@lib/embeds';
 import { PICTURE_TYPES, checkPicture, checkWebAddress } from '@lib/media';
 
 import { Dialog } from '../ui/Dialog';
@@ -32,11 +32,11 @@ const SIZES: Array<{ value: BlockSize; label: string }> = [
 
 const TITLES: Record<MediaKind, string> = {
   image: 'Add a picture',
-  embed: 'Add a video or calendar',
+  embed: 'Add an embed',
   link: 'Add a link',
 };
 
-/** The form that adds a picture, a video or calendar, or a link, and says what it understood. */
+/** The form that adds a picture, an embed or a link, and says what it understood. */
 export function MediaDialog({ kind, onSubmit, onClose }: MediaDialogProps) {
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState('');
@@ -82,10 +82,10 @@ export function MediaDialog({ kind, onSubmit, onClose }: MediaDialogProps) {
   const urlProblem =
     kind === 'embed'
       ? url.trim() === ''
-        ? 'Paste the address of a video or calendar.'
+        ? 'Paste the address of what to embed.'
         : recognised
           ? null
-          : 'Only YouTube, Vimeo and Google Calendar addresses can be added.'
+          : `Only ${PROVIDER_NAMES} addresses can be added. A Notion page must be published to the web.`
       : kind === 'link'
         ? checkWebAddress(url)
         : null;
@@ -212,7 +212,7 @@ export function MediaDialog({ kind, onSubmit, onClose }: MediaDialogProps) {
         {(kind === 'embed' || kind === 'link') && (
           <div className="field">
             <label htmlFor={`${ids}-url`}>
-              {kind === 'embed' ? 'Address of the video or calendar' : 'Address of the page'}
+              {kind === 'embed' ? 'Address to embed' : 'Address of the page'}
             </label>
             <input
               id={`${ids}-url`}

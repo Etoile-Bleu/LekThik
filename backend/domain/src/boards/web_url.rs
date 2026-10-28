@@ -11,6 +11,8 @@ pub struct Parts<'a> {
     pub path: &'a str,
     /// Without the `?`.
     pub query: &'a str,
+    /// Without the `#`.
+    pub fragment: &'a str,
 }
 
 fn invalid() -> BoardsError {
@@ -71,7 +73,7 @@ pub fn split(url: &str) -> Result<Parts<'_>, BoardsError> {
         return Err(invalid());
     }
 
-    let before_fragment = after.split('#').next().unwrap_or("");
+    let (before_fragment, fragment) = after.split_once('#').unwrap_or((after, ""));
     let (path, query) = match before_fragment.split_once('?') {
         Some((path, query)) => (path, query),
         None => (before_fragment, ""),
@@ -82,6 +84,7 @@ pub fn split(url: &str) -> Result<Parts<'_>, BoardsError> {
         host,
         path,
         query,
+        fragment,
     })
 }
 
@@ -133,6 +136,18 @@ mod tests {
         assert_eq!(parts.host, "www.example.com");
         assert_eq!(parts.path, "/a/b");
         assert_eq!(parts.query, "x=1&y=2");
+        assert_eq!(parts.fragment, "top");
+    }
+
+    #[test]
+    fn keeps_the_fragment_apart_from_the_path_and_the_query() {
+        let parts = split("https://excalidraw.com/#json=abc,def").expect("split");
+
+        assert_eq!(
+            (parts.path, parts.query, parts.fragment),
+            ("/", "", "json=abc,def")
+        );
+        assert_eq!(split("https://example.com").expect("split").fragment, "");
     }
 
     #[test]
