@@ -1,6 +1,7 @@
 #[macro_use]
 mod scope;
 
+mod account_repo;
 mod activity;
 mod block_image_repo;
 mod board_repo;
@@ -20,6 +21,7 @@ mod user_repo;
 mod verification_code_repo;
 mod workspace_repo;
 
+pub use account_repo::PgAccountRepo;
 pub use block_image_repo::PgBlockImageRepo;
 pub use board_repo::PgBoardRepo;
 pub use card_repo::PgCardRepo;
