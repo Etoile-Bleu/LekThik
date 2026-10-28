@@ -23,6 +23,7 @@ whoever runs it. It describes how the code behaves today, so it changes with the
 | History of a card (who moved, renamed, dated, labelled or assigned it, and when) | Knowing how the work got here | Members of the workspace | The latest 200 lines of a card, or until the card is deleted |
 | Custom fields of a board and the values filled in on its cards (text, number, date, choice, checkbox, link) | Describing the work beyond title and labels | Members of the workspace | Values: until changed, or with the card or the field. Fields: until deleted by an admin |
 | Pictures | Image blocks | Members of the workspace | Deleted with their block, board or workspace |
+| Votes in a poll (which option a member chose) | Deciding together | Counts for the members of the workspace; names only when the poll shows them | Until withdrawn, or deleted with the account, the poll or the board |
 | Embed identifiers (a video or calendar id) | Embed blocks | Members of the workspace | Deleted with their block |
 
 Not stored: what anyone reads, watches or clicks, device fingerprints, locations, or anything about
