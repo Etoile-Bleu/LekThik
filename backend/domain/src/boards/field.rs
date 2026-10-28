@@ -160,7 +160,7 @@ pub fn normalise_number(raw: &str) -> Result<String, BoardsError> {
     let shaped = !whole.is_empty()
         && all_digits(whole)
         && all_digits(fraction)
-        && (digits.contains('.') == !fraction.is_empty());
+        && (digits.contains('.') != fraction.is_empty());
     if !shaped {
         return Err(invalid("a number looks like 12 or -3.5"));
     }
