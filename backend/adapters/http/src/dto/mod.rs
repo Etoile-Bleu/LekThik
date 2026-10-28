@@ -1,5 +1,6 @@
 mod board;
 mod card;
+mod comment;
 mod common;
 mod label;
 mod list;
@@ -14,6 +15,9 @@ pub use card::{
     AssignedCardDto, CardAssigneesResponseDto, CardLabelsResponseDto, CardResponseDto,
     CardSummaryDto, CreateCardRequestDto, MoveCardRequestDto, SetCardAssigneesRequestDto,
     SetCardLabelsRequestDto, UpdateCardRequestDto,
+};
+pub use comment::{
+    ActivityDto, CommentDto, CommentRequestDto, PersonDto, TimelineItemDto, TimelineResponseDto,
 };
 pub use common::ErrorResponseDto;
 pub use label::{CreateLabelRequestDto, LabelDto, UpdateLabelRequestDto};
