@@ -56,7 +56,7 @@ export function isFiltering(filter: CardFilter): boolean {
   );
 }
 
-/** Labels combine with OR, so do the choices of one field. Everything else narrows further. */
+/** Labels combine with OR, the other two narrow the result further. */
 export function cardMatches(
   card: CardSummary,
   filter: CardFilter,

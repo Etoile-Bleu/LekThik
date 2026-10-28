@@ -149,8 +149,6 @@ fn invalid(message: &str) -> BoardsError {
     BoardsError::Invalid(message.to_string())
 }
 
-/// A decimal number, written with a point, kept exactly as text: at most 12 digits before the point
-/// and 6 after, no exponent, no sign other than a leading minus. Leading and trailing zeros go.
 pub fn normalise_number(raw: &str) -> Result<String, BoardsError> {
     let text = raw.trim();
     let (negative, digits) = match text.strip_prefix('-') {
@@ -187,8 +185,6 @@ pub fn normalise_number(raw: &str) -> Result<String, BoardsError> {
 }
 
 impl FieldValue {
-    /// Reads the value sent for a field of this kind. `null` means no value, which clears it. A choice
-    /// is only checked to be an identifier here, the storage checks it belongs to the field.
     pub fn parse(kind: FieldKind, raw: &Value) -> Result<Option<Self>, BoardsError> {
         if raw.is_null() {
             return Ok(None);
@@ -244,7 +240,6 @@ impl FieldValue {
 #[cfg_attr(feature = "test-utils", mockall::automock)]
 #[async_trait]
 pub trait FieldRepo: Send + Sync {
-    /// Admins and owners only.
     async fn create(
         &self,
         user_id: Uuid,
@@ -281,7 +276,6 @@ pub trait FieldRepo: Send + Sync {
         name: Option<OptionName>,
         color: Option<LabelColor>,
     ) -> Result<Field, BoardsError>;
-    /// A card that had this choice loses its value.
     async fn delete_option(
         &self,
         user_id: Uuid,
@@ -289,14 +283,12 @@ pub trait FieldRepo: Send + Sync {
         field_id: Uuid,
         option_id: Uuid,
     ) -> Result<Field, BoardsError>;
-    /// The kind of a field of the board of a card, for a writer of that card. A kind never changes.
     async fn kind_of(
         &self,
         user_id: Uuid,
         card_id: Uuid,
         field_id: Uuid,
     ) -> Result<FieldKind, BoardsError>;
-    /// Writers and above. `None` clears the value.
     async fn set_value(
         &self,
         user_id: Uuid,
