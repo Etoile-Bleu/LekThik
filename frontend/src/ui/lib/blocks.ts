@@ -13,6 +13,7 @@ import type {
   PanelKind,
   ProgressConfig,
   SnippetConfig,
+  TableConfig,
 } from './boardsApi';
 import { daysUntil, shortDue } from './dueDate';
 
@@ -33,6 +34,15 @@ export const DEFAULT_SNIPPET: SnippetConfig = {
   filename: '',
   code: '',
   line_numbers: false,
+};
+export const DEFAULT_TABLE: TableConfig = {
+  size: 'wide',
+  header: true,
+  rows: [
+    ['Item', 'Value'],
+    ['', ''],
+    ['', ''],
+  ],
 };
 export const DEFAULT_OVERDUE: OverdueConfig = { size: 'normal' };
 export const DEFAULT_CHART: ChartConfig = { size: 'normal', source: 'list', style: 'bars' };
@@ -81,6 +91,14 @@ export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
 }
 
+export function tableConfig(panel: BoardList): TableConfig {
+  const stored = panel.config as Partial<TableConfig>;
+  return {
+    size: stored.size ?? DEFAULT_TABLE.size,
+    header: stored.header ?? DEFAULT_TABLE.header,
+    rows: Array.isArray(stored.rows) ? stored.rows : [],
+  };
+}
 export function snippetConfig(panel: BoardList): SnippetConfig {
   return { ...DEFAULT_SNIPPET, ...(panel.config as Partial<SnippetConfig>) };
 }
@@ -143,6 +161,11 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
       'Cards by list, label, person or due date, as bars or a donut, with a table behind.',
   },
   {
+    kind: 'table',
+    label: 'Table',
+    description: 'A small spreadsheet you edit in place. Paste cells or a CSV file, totals add up.',
+  },
+  {
     kind: 'snippet',
     label: 'Code',
     description: 'A command, a config or a query with its language, highlighted, ready to copy.',
@@ -177,6 +200,7 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   overdue: 'My late cards',
   chart: 'Chart',
   snippet: 'Code',
+  table: 'Table',
 };
 
 export const BLOCK_KIND_IDS: Array<Exclude<PanelKind, 'list'>> = BLOCK_KINDS.map(

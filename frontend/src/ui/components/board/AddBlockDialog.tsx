@@ -102,6 +102,23 @@ function Preview({ kind }: { kind: Exclude<PanelKind, 'list'> }) {
           <rect x="12" y="50" width="26" height="4" rx="2" className="add-block__accent" />
         </svg>
       );
+    case 'table':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          <rect x="10" y="10" width="76" height="44" rx="3" className="add-block__code-bg" />
+          <rect x="10" y="10" width="76" height="11" rx="3" className="add-block__faint" />
+          {[35, 60].map((x) => (
+            <rect key={x} x={x} y="10" width="1" height="44" className="add-block__rule" />
+          ))}
+          {[32, 43].map((y) => (
+            <rect key={y} x="10" y={y} width="76" height="1" className="add-block__rule" />
+          ))}
+          <rect x="14" y="14" width="14" height="3" rx="1.5" className="add-block__ink" />
+          <rect x="39" y="14" width="14" height="3" rx="1.5" className="add-block__ink" />
+          <rect x="64" y="14" width="14" height="3" rx="1.5" className="add-block__ink" />
+          <rect x="66" y="25" width="12" height="3" rx="1.5" className="add-block__accent" />
+        </svg>
+      );
     case 'snippet':
       return (
         <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">

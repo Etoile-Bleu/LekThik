@@ -28,6 +28,7 @@ describe('AddBlockDialog', () => {
       'Progress',
       'My late cards',
       'Chart',
+      'Table',
       'Code',
     ]) {
       expect(screen.getByRole('button', { name: new RegExp(`^${name}`) })).toBeInTheDocument();
@@ -48,6 +49,54 @@ describe('AddBlockDialog', () => {
 });
 
 describe('BlockSettingsDialog', () => {
+  it('replaces a table with pasted cells and tells how many fit', () => {
+    const onSave = vi.fn();
+    render(
+      <BlockSettingsDialog
+        block={panel('t', 'Budget', 'table', { header: true, rows: [['old']] })}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('switch', { name: /First row is a heading/ }));
+    fireEvent.change(screen.getByLabelText(/Replace the table with pasted cells/), {
+      target: { value: 'Name;Cost\nRent;800\n' },
+    });
+    expect(screen.getByText(/2 rows, 2 columns/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).toHaveBeenCalledWith('t', 'table', {
+      size: 'wide',
+      header: false,
+      rows: [
+        ['Name', 'Cost'],
+        ['Rent', '800'],
+      ],
+    });
+  });
+
+  it('keeps the table as it is when nothing is pasted', () => {
+    const onSave = vi.fn();
+    render(
+      <BlockSettingsDialog
+        block={panel('t', 'Budget', 'table', { header: true, rows: [['keep', 'me']] })}
+        panels={panels}
+        onSave={onSave}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSave).toHaveBeenCalledWith('t', 'table', {
+      size: 'wide',
+      header: true,
+      rows: [['keep', 'me']],
+    });
+  });
+
   it('saves the language, file name, line numbers and code of a snippet', () => {
     const onSave = vi.fn();
     render(

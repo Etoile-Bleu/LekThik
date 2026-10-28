@@ -4,7 +4,7 @@ import { useId } from 'react';
 
 import { useOpening } from '@hooks/useOpening';
 import { KIND_LABEL, noteConfig } from '@lib/blocks';
-import type { BoardList, PanelKind } from '@lib/boardsApi';
+import type { BoardList, PanelConfig, PanelKind } from '@lib/boardsApi';
 import { splitDragListeners } from '@lib/dragListeners';
 import { useSelectionStore } from '@lib/selectionStore';
 
@@ -28,6 +28,7 @@ import {
   PlayIcon,
   RingIcon,
   SettingsIcon,
+  TableIcon,
   TrashIcon,
 } from '../ui/Icons';
 import { InlineEdit } from '../ui/InlineEdit';
@@ -44,6 +45,7 @@ import { ChartBlock } from './blocks/ChartBlock';
 import { OverdueBlock } from './blocks/OverdueBlock';
 import { ProgressBlock } from './blocks/ProgressBlock';
 import { SnippetBlock } from './blocks/SnippetBlock';
+import { TableBlock } from './blocks/TableBlock';
 import './BoardBlock.css';
 
 interface BoardBlockProps {
@@ -60,6 +62,7 @@ interface BoardBlockProps {
   onDelete: (blockId: string) => void;
   onSettings: (blockId: string) => void;
   onSaveNote: (blockId: string, text: string) => void;
+  onSaveConfig: (blockId: string, kind: PanelKind, config: PanelConfig) => void;
   onOpenCard: (cardId: string) => void;
   readOnly?: boolean;
   /** Set when the block is a tile of the free layout, where the grip and the menu place it. */
@@ -91,6 +94,8 @@ export function KindIcon({ kind, size = 16 }: { kind: PanelKind; size?: number }
       return <BarsIcon size={size} />;
     case 'snippet':
       return <CodeIcon size={size} />;
+    case 'table':
+      return <TableIcon size={size} />;
     default:
       return null;
   }
@@ -113,6 +118,7 @@ export function BoardBlock({
   onDelete,
   onSettings,
   onSaveNote,
+  onSaveConfig,
   onOpenCard,
   readOnly = false,
   tile = null,
@@ -284,6 +290,13 @@ export function BoardBlock({
         {block.kind === 'progress' && <ProgressBlock block={block} panels={panels} />}
         {block.kind === 'overdue' && <OverdueBlock panels={panels} onOpenCard={onOpenCard} />}
         {block.kind === 'chart' && <ChartBlock block={block} panels={panels} />}
+        {block.kind === 'table' && (
+          <TableBlock
+            block={block}
+            editable={!readOnly}
+            onSave={(blockId, config) => onSaveConfig(blockId, 'table', config)}
+          />
+        )}
         {block.kind === 'snippet' && (
           <SnippetBlock block={block} editable={!readOnly} onAddCode={onSettings} />
         )}

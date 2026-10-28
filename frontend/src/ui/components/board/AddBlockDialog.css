@@ -125,6 +125,10 @@
   }
 }
 
+.add-block__rule {
+  fill: var(--color-border-strong);
+}
+
 .add-block__code-bg {
   fill: color-mix(in srgb, var(--color-ink) 7%, transparent);
   stroke: var(--color-border-strong);
