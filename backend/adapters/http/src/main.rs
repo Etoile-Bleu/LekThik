@@ -2,9 +2,9 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 
 use adapters_db::{
-    PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgCommentRepo, PgInvitationRepo, PgLabelRepo,
-    PgListRepo, PgLocator, PgMemberRepo, PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo,
-    PgWorkspaceRepo,
+    PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgCommentRepo, PgFieldRepo, PgInvitationRepo,
+    PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo, PgPreferencesRepo, PgUserRepo,
+    PgVerificationCodeRepo, PgWorkspaceRepo,
 };
 use adapters_image::ImageCrateSanitizer;
 use adapters_mail::{MailSender, SmtpMailer};
@@ -52,6 +52,7 @@ async fn main() -> anyhow::Result<()> {
         image_sanitizer: Arc::new(ImageCrateSanitizer::new()),
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
         comment_repo: Arc::new(PgCommentRepo::new(pool.clone())),
+        field_repo: Arc::new(PgFieldRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
         member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
         preferences_repo: Arc::new(PgPreferencesRepo::new(pool.clone())),

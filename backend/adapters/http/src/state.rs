@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use domain::boards::{
-    BlockImageRepo, BoardRepo, CardRepo, CommentRepo, ImageSanitizer, InvitationRepo, LabelRepo,
-    ListRepo, Locator, MemberRepo, WorkspaceRepo,
+    BlockImageRepo, BoardRepo, CardRepo, CommentRepo, FieldRepo, ImageSanitizer, InvitationRepo,
+    LabelRepo, ListRepo, Locator, MemberRepo, WorkspaceRepo,
 };
 use domain::{Mailer, PreferencesRepo, TokenIssuer, UserRepo, VerificationCodeRepo};
 
@@ -23,6 +23,7 @@ pub struct AppState {
     pub image_sanitizer: Arc<dyn ImageSanitizer>,
     pub card_repo: Arc<dyn CardRepo>,
     pub comment_repo: Arc<dyn CommentRepo>,
+    pub field_repo: Arc<dyn FieldRepo>,
     pub label_repo: Arc<dyn LabelRepo>,
     pub member_repo: Arc<dyn MemberRepo>,
     pub preferences_repo: Arc<dyn PreferencesRepo>,
