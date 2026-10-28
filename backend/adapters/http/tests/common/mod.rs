@@ -6,9 +6,9 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 use adapters_db::{
-    PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgCommentRepo, PgFieldRepo, PgInvitationRepo,
-    PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo, PgPollRepo, PgPreferencesRepo, PgUserRepo,
-    PgVerificationCodeRepo, PgWorkspaceRepo,
+    PgAccountRepo, PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgCommentRepo, PgFieldRepo,
+    PgInvitationRepo, PgLabelRepo, PgListRepo, PgLocator, PgMemberRepo, PgPollRepo,
+    PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo, PgWorkspaceRepo,
 };
 use adapters_image::ImageCrateSanitizer;
 use async_trait::async_trait;
@@ -235,6 +235,7 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
         comment_repo: Arc::new(PgCommentRepo::new(pool.clone())),
         field_repo: Arc::new(PgFieldRepo::new(pool.clone())),
         poll_repo: Arc::new(PgPollRepo::new(pool.clone())),
+        account_repo: Arc::new(PgAccountRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
         member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
         preferences_repo: Arc::new(PgPreferencesRepo::new(pool.clone())),
