@@ -1,3 +1,4 @@
+mod comments;
 mod create;
 mod delete;
 mod duplicate;
@@ -8,6 +9,7 @@ mod set_assignees;
 mod set_labels;
 mod update;
 
+pub use comments::*;
 pub use create::*;
 pub use delete::*;
 pub use duplicate::*;
