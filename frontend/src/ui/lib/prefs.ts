@@ -64,6 +64,8 @@ export interface Preferences {
   flat_backgrounds: boolean;
   /** Tell screen readers when teammates change the board. */
   announce_changes: boolean;
+  /** Do not show the others when I am on a board or a card. */
+  hide_presence: boolean;
   card_display: CardDisplay;
   card_dialog: CardDialogLayout;
   boards: Record<string, BoardPreferences>;
@@ -90,6 +92,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   large_targets: false,
   flat_backgrounds: false,
   announce_changes: false,
+  hide_presence: false,
   card_display: DEFAULT_CARD_DISPLAY,
   card_dialog: DEFAULT_CARD_DIALOG,
   boards: {},
