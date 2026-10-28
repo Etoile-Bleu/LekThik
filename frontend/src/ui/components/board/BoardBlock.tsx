@@ -14,6 +14,7 @@ import {
   ArrowRightIcon,
   BarsIcon,
   CalendarIcon,
+  CheckCircleIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
   ClockIcon,
@@ -47,6 +48,7 @@ import { ChartBlock } from './blocks/ChartBlock';
 import { ClocksBlock } from './blocks/ClocksBlock';
 import { OverdueBlock } from './blocks/OverdueBlock';
 import { ProgressBlock } from './blocks/ProgressBlock';
+import { PollBlock } from './blocks/PollBlock';
 import { SnippetBlock } from './blocks/SnippetBlock';
 import { TableBlock } from './blocks/TableBlock';
 import { TimerBlock } from './blocks/TimerBlock';
@@ -104,6 +106,8 @@ export function KindIcon({ kind, size = 16 }: { kind: PanelKind; size?: number }
       return <GlobeIcon size={size} />;
     case 'timer':
       return <TimerIcon size={size} />;
+    case 'poll':
+      return <CheckCircleIcon size={size} />;
     default:
       return null;
   }
@@ -305,6 +309,7 @@ export function BoardBlock({
             onSave={(blockId, config) => onSaveConfig(blockId, 'timer', config)}
           />
         )}
+        {block.kind === 'poll' && <PollBlock block={block} />}
         {block.kind === 'clocks' && (
           <ClocksBlock block={block} editable={!readOnly} onSetup={onSettings} />
         )}

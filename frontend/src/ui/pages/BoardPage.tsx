@@ -10,6 +10,7 @@ import { notifyError } from '@lib/toastStore';
 import { useAuthStore } from '@lib/authStore';
 import { type CardFilter, EMPTY_FILTER, cardMatches } from '@lib/boardModel';
 import { indexValues } from '@lib/fields';
+import { DEFAULT_POLL } from '@lib/polls';
 import type { CardSummary } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { lookStyle } from '@lib/boardLooks';
@@ -256,6 +257,7 @@ export function BoardPage() {
     table: DEFAULT_TABLE,
     clocks: DEFAULT_CLOCKS,
     timer: DEFAULT_TIMER,
+    poll: DEFAULT_POLL,
   };
 
   function saveNote(blockId: string, text: string) {
@@ -321,7 +323,7 @@ export function BoardPage() {
     if (!block) return;
     announce(`${KIND_LABEL[kind]} block added.`);
     // A counter needs to be pointed at something before it says anything useful.
-    if (kind === 'counter' || kind === 'snippet' || kind === 'clocks') {
+    if (kind === 'counter' || kind === 'snippet' || kind === 'clocks' || kind === 'poll') {
       setBlockSettingsId(block.id);
     }
     if (kind === 'progress' && !(config as { done_list_id: string | null }).done_list_id) {
