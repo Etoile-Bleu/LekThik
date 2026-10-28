@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
 
+use super::field::{CardFieldValueDto, FieldDto};
 use super::label::LabelDto;
 use super::list::ListWithCardsDto;
 
@@ -84,6 +85,10 @@ pub struct BoardViewDto {
     pub members: Vec<BoardMemberDto>,
     pub lists: Vec<ListWithCardsDto>,
     pub labels: Vec<LabelDto>,
+    /// The custom fields of the board, in order.
+    pub fields: Vec<FieldDto>,
+    /// The values cards hold for those fields. A card with no row for a field has no value.
+    pub field_values: Vec<CardFieldValueDto>,
 }
 
 impl From<BoardView> for BoardViewDto {
@@ -95,6 +100,8 @@ impl From<BoardView> for BoardViewDto {
             members: view.members.into_iter().map(Into::into).collect(),
             lists: view.lists.into_iter().map(Into::into).collect(),
             labels: view.labels.into_iter().map(Into::into).collect(),
+            fields: view.fields.into_iter().map(Into::into).collect(),
+            field_values: view.field_values.into_iter().map(Into::into).collect(),
         }
     }
 }

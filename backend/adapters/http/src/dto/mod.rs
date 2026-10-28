@@ -2,6 +2,7 @@ mod board;
 mod card;
 mod comment;
 mod common;
+mod field;
 mod label;
 mod list;
 mod members;
@@ -20,6 +21,11 @@ pub use comment::{
     ActivityDto, CommentDto, CommentRequestDto, PersonDto, TimelineItemDto, TimelineResponseDto,
 };
 pub use common::ErrorResponseDto;
+pub use field::{
+    CardFieldValueDto, CreateFieldRequestDto, FieldDto, FieldOptionDto, FieldValueResponseDto,
+    NewOptionDto, SetFieldValueRequestDto, UpdateFieldRequestDto, UpdateOptionRequestDto,
+    value_json,
+};
 pub use label::{CreateLabelRequestDto, LabelDto, UpdateLabelRequestDto};
 pub use list::{
     BlockImageResponseDto, CreateBlockRequestDto, ListResponseDto, ListWithCardsDto,
