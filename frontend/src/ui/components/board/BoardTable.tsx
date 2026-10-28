@@ -11,7 +11,8 @@ import {
   nextSort,
   sortRows,
 } from '@lib/boardViews';
-import type { BoardList, BoardMember, CardSummary, Label } from '@lib/boardsApi';
+import type { BoardList, BoardMember, CardSummary, Field, Label } from '@lib/boardsApi';
+import { displayValue, optionOf, sortByField } from '@lib/fields';
 import { withViewTransition } from '@lib/viewTransition';
 
 import { ArrowDownIcon, SortAscendingIcon, SortDescendingIcon, SortIcon } from '../ui/Icons';
@@ -40,6 +41,11 @@ const COLUMNS: Array<{ key: SortKey; label: string; className: string }> = [
   { key: 'assignees', label: 'Assignees', className: 'board-table__col-people' },
   { key: 'due', label: 'Due date', className: 'board-table__col-due' },
 ];
+
+interface FieldSort {
+  fieldId: string;
+  direction: 'asc' | 'desc';
+}
 
 const MAX_LABELS = 3;
 /** Animating every row costs more than it gives on a very long table. */
@@ -75,20 +81,49 @@ export function BoardTable({
   onOpenCard,
   onMoveCard,
 }: BoardTableProps) {
-  const { display } = useBoardMeta();
+  const { display, fields, fieldValues } = useBoardMeta();
   const [sort, setSort] = useState<Sort | null>(null);
+  const [fieldSort, setFieldSort] = useState<FieldSort | null>(null);
 
   const allRows = useMemo(() => buildRows(lists, labels, members), [lists, labels, members]);
-  const rows = useMemo(
-    () => sortRows(allRows, sort).filter((row) => matches(row.card)),
-    [allRows, sort, matches]
-  );
+  const rows = useMemo(() => {
+    const sortField = fieldSort ? fields.find((field) => field.id === fieldSort.fieldId) : null;
+    const ordered =
+      fieldSort && sortField
+        ? sortByField(allRows, sortField, fieldSort.direction, (row) =>
+            fieldValues.get(row.card.id)?.get(sortField.id)
+          )
+        : sortRows(allRows, sort);
+    return ordered.filter((row) => matches(row.card));
+  }, [allRows, sort, fieldSort, fields, fieldValues, matches]);
   const animate = rows.length <= MAX_ANIMATED_ROWS;
 
   function toggleSort(key: SortKey) {
     const next = nextSort(sort, key);
-    withViewTransition(() => setSort(next));
+    withViewTransition(() => {
+      setFieldSort(null);
+      setSort(next);
+    });
     announce(describeSort(next));
+  }
+
+  function toggleFieldSort(field: Field) {
+    const current = fieldSort?.fieldId === field.id ? fieldSort.direction : null;
+    const next: FieldSort | null =
+      current === null
+        ? { fieldId: field.id, direction: 'asc' }
+        : current === 'asc'
+          ? { fieldId: field.id, direction: 'desc' }
+          : null;
+    withViewTransition(() => {
+      setSort(null);
+      setFieldSort(next);
+    });
+    announce(
+      next
+        ? `Sorted by ${field.name.toLowerCase()}, ${next.direction === 'asc' ? 'ascending' : 'descending'}.`
+        : 'Back to board order.'
+    );
   }
 
   function moveTo(cardId: string, title: string, listId: string) {
@@ -136,12 +171,41 @@ export function BoardTable({
                 </button>
               </th>
             ))}
+            {fields.map((field) => {
+              const active = fieldSort?.fieldId === field.id ? fieldSort.direction : null;
+              return (
+                <th
+                  key={field.id}
+                  scope="col"
+                  className="board-table__col-field"
+                  aria-sort={active ? (active === 'asc' ? 'ascending' : 'descending') : undefined}
+                >
+                  <button
+                    type="button"
+                    className="board-table__sort"
+                    data-active={active !== null || undefined}
+                    onClick={() => toggleFieldSort(field)}
+                  >
+                    {field.name}
+                    <span className="board-table__glyph" aria-hidden="true">
+                      {active === 'asc' ? (
+                        <SortAscendingIcon size={14} />
+                      ) : active === 'desc' ? (
+                        <SortDescendingIcon size={14} />
+                      ) : (
+                        <SortIcon size={14} />
+                      )}
+                    </span>
+                  </button>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
           {rows.length === 0 && (
             <tr>
-              <td colSpan={COLUMNS.length} className="board-table__none">
+              <td colSpan={COLUMNS.length + fields.length} className="board-table__none">
                 No card matches the filter.
               </td>
             </tr>
@@ -244,6 +308,25 @@ export function BoardTable({
                   </span>
                 )}
               </td>
+              {fields.map((field) => {
+                const value = fieldValues.get(row.card.id)?.get(field.id);
+                const chosen = field.kind === 'select' ? optionOf(field, value) : null;
+                const text = displayValue(field, value);
+                return (
+                  <td key={field.id} className="board-table__col-field">
+                    {chosen ? (
+                      <LabelChip name={chosen.name} color={chosen.color} priority="none" />
+                    ) : text === '' ? (
+                      <span className="board-table__dash">
+                        <span aria-hidden="true">–</span>
+                        <span className="sr-only">No {field.name}</span>
+                      </span>
+                    ) : (
+                      text
+                    )}
+                  </td>
+                );
+              })}
             </tr>
           ))}
         </tbody>
