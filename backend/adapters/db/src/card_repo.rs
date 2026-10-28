@@ -1,12 +1,13 @@
 use async_trait::async_trait;
 use domain::boards::{
-    AssignedCard, BoardsError, Card, CardRepo, CardSummary, CardUpdate, Description,
+    ActivityKind, AssignedCard, BoardsError, Card, CardRepo, CardSummary, CardUpdate, Description,
     MAX_ASSIGNEES_PER_CARD, MAX_CARDS_PER_LIST, Title,
 };
 use sqlx::postgres::PgRow;
 use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
+use crate::activity::{Entry, record};
 use crate::ordering::{insert_at, renumber_cards};
 use crate::scope::{Kind, denial, repository_error};
 
@@ -63,7 +64,7 @@ impl CardRepo for PgCardRepo {
         let mut transaction = self.pool.begin().await.map_err(repository_error)?;
 
         let locked = sqlx::query(concat!(
-            "SELECT l.id, l.kind FROM ",
+            "SELECT l.id, l.kind, l.name FROM ",
             owned_list!(),
             " WHERE l.id = $1 AND ",
             writer_of!("$2"),
@@ -78,6 +79,7 @@ impl CardRepo for PgCardRepo {
             return Err(denial(&self.pool, Kind::List, user_id, list_id).await);
         };
         let kind: String = locked.try_get("kind").map_err(repository_error)?;
+        let list_name: String = locked.try_get("name").map_err(repository_error)?;
         if kind != "list" {
             return Err(BoardsError::Invalid(
                 "cards can only be added to lists".to_string(),
@@ -104,6 +106,15 @@ impl CardRepo for PgCardRepo {
         .await
         .map_err(repository_error)?;
 
+        let created_id: Uuid = row.try_get("id").map_err(repository_error)?;
+        record(
+            &mut transaction,
+            created_id,
+            user_id,
+            Entry::naming(ActivityKind::Created, &list_name),
+        )
+        .await?;
+
         transaction.commit().await.map_err(repository_error)?;
 
         Ok(CardSummary {
@@ -115,6 +126,7 @@ impl CardRepo for PgCardRepo {
             label_ids: Vec::new(),
             assignee_ids: Vec::new(),
             due_date: None,
+            comment_count: 0,
         })
     }
 
@@ -197,6 +209,14 @@ impl CardRepo for PgCardRepo {
         .await
         .map_err(repository_error)?;
 
+        record(
+            &mut transaction,
+            new_id,
+            user_id,
+            Entry::from(ActivityKind::Created, &title),
+        )
+        .await?;
+
         transaction.commit().await.map_err(repository_error)?;
 
         Ok(CardSummary {
@@ -208,6 +228,7 @@ impl CardRepo for PgCardRepo {
             label_ids: self.label_ids_of(new_id).await?,
             assignee_ids: self.assignee_ids_of(new_id).await?,
             due_date,
+            comment_count: 0,
         })
     }
 
@@ -268,6 +289,27 @@ impl CardRepo for PgCardRepo {
         id: Uuid,
         update: CardUpdate,
     ) -> Result<Card, BoardsError> {
+        let mut transaction = self.pool.begin().await.map_err(repository_error)?;
+
+        let Some(before) = sqlx::query(concat!(
+            "SELECT c.title, c.description, c.due_date::text AS due_date FROM ",
+            owned_card!(),
+            " WHERE c.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF c"
+        ))
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?
+        else {
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
+        };
+        let old_title: String = before.try_get("title").map_err(repository_error)?;
+        let old_description: String = before.try_get("description").map_err(repository_error)?;
+        let old_due: Option<String> = before.try_get("due_date").map_err(repository_error)?;
+
         let Some(row) = sqlx::query(concat!(
             "UPDATE cards c SET \
                 title = COALESCE($3, c.title), \
@@ -292,12 +334,43 @@ impl CardRepo for PgCardRepo {
                 .and_then(|day| day.as_ref())
                 .map(|day| day.as_str()),
         )
-        .fetch_optional(&self.pool)
+        .fetch_optional(&mut *transaction)
         .await
         .map_err(repository_error)?
         else {
             return Err(denial(&self.pool, Kind::Card, user_id, id).await);
         };
+
+        let new_title: String = row.try_get("title").map_err(repository_error)?;
+        let new_description: String = row.try_get("description").map_err(repository_error)?;
+        let new_due: Option<String> = row.try_get("due_date").map_err(repository_error)?;
+        if new_title != old_title {
+            record(
+                &mut transaction,
+                id,
+                user_id,
+                Entry::between(ActivityKind::Renamed, &old_title, &new_title),
+            )
+            .await?;
+        }
+        if new_description != old_description {
+            record(
+                &mut transaction,
+                id,
+                user_id,
+                Entry::plain(ActivityKind::Described),
+            )
+            .await?;
+        }
+        if new_due != old_due {
+            let entry = match &new_due {
+                Some(day) => Entry::naming(ActivityKind::DueSet, day),
+                None => Entry::plain(ActivityKind::DueCleared),
+            };
+            record(&mut transaction, id, user_id, entry).await?;
+        }
+
+        transaction.commit().await.map_err(repository_error)?;
 
         self.card_from_row(&row).await
     }
@@ -368,6 +441,33 @@ impl CardRepo for PgCardRepo {
         let ordered = insert_at(siblings, id, index);
         renumber_cards(&mut transaction, &ordered).await?;
 
+        if source_list_id != list_id {
+            let names: Vec<(Uuid, String)> =
+                sqlx::query_as("SELECT id, name FROM lists WHERE id = ANY($1)")
+                    .bind(vec![source_list_id, list_id])
+                    .fetch_all(&mut *transaction)
+                    .await
+                    .map_err(repository_error)?;
+            let name_of = |wanted: Uuid| {
+                names
+                    .iter()
+                    .find(|(found, _)| *found == wanted)
+                    .map(|(_, name)| name.as_str())
+                    .unwrap_or("")
+            };
+            record(
+                &mut transaction,
+                id,
+                user_id,
+                Entry::between(
+                    ActivityKind::Moved,
+                    name_of(source_list_id),
+                    name_of(list_id),
+                ),
+            )
+            .await?;
+        }
+
         transaction.commit().await.map_err(repository_error)?;
 
         Ok(())
@@ -434,6 +534,15 @@ impl CardRepo for PgCardRepo {
             }
         }
 
+        let before: Vec<(Uuid, String)> = sqlx::query_as(
+            "SELECT lb.id, lb.name FROM card_labels cl JOIN labels lb ON lb.id = cl.label_id \
+                WHERE cl.card_id = $1 ORDER BY lb.name",
+        )
+        .bind(id)
+        .fetch_all(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
         sqlx::query("DELETE FROM card_labels WHERE card_id = $1")
             .bind(id)
             .execute(&mut *transaction)
@@ -446,6 +555,36 @@ impl CardRepo for PgCardRepo {
             .execute(&mut *transaction)
             .await
             .map_err(repository_error)?;
+
+        let added_ids: Vec<Uuid> = label_ids
+            .iter()
+            .copied()
+            .filter(|label| !before.iter().any(|(kept, _)| kept == label))
+            .collect();
+        let added: Vec<(Uuid, String)> =
+            sqlx::query_as("SELECT id, name FROM labels WHERE id = ANY($1) ORDER BY name")
+                .bind(&added_ids)
+                .fetch_all(&mut *transaction)
+                .await
+                .map_err(repository_error)?;
+        for (_, name) in &added {
+            record(
+                &mut transaction,
+                id,
+                user_id,
+                Entry::naming(ActivityKind::LabelAdded, name),
+            )
+            .await?;
+        }
+        for (_, name) in before.iter().filter(|(kept, _)| !label_ids.contains(kept)) {
+            record(
+                &mut transaction,
+                id,
+                user_id,
+                Entry::naming(ActivityKind::LabelRemoved, name),
+            )
+            .await?;
+        }
 
         transaction.commit().await.map_err(repository_error)?;
 
@@ -497,6 +636,13 @@ impl CardRepo for PgCardRepo {
             }
         }
 
+        let before: Vec<Uuid> =
+            sqlx::query_scalar("SELECT user_id FROM card_assignees WHERE card_id = $1")
+                .bind(id)
+                .fetch_all(&mut *transaction)
+                .await
+                .map_err(repository_error)?;
+
         sqlx::query("DELETE FROM card_assignees WHERE card_id = $1 AND NOT (user_id = ANY($2))")
             .bind(id)
             .bind(&assignee_ids)
@@ -513,6 +659,31 @@ impl CardRepo for PgCardRepo {
         .execute(&mut *transaction)
         .await
         .map_err(repository_error)?;
+
+        for assignee in assignee_ids
+            .iter()
+            .filter(|person| !before.contains(person))
+        {
+            record(
+                &mut transaction,
+                id,
+                user_id,
+                Entry::about(ActivityKind::Assigned, *assignee),
+            )
+            .await?;
+        }
+        for assignee in before
+            .iter()
+            .filter(|person| !assignee_ids.contains(person))
+        {
+            record(
+                &mut transaction,
+                id,
+                user_id,
+                Entry::about(ActivityKind::Unassigned, *assignee),
+            )
+            .await?;
+        }
 
         transaction.commit().await.map_err(repository_error)?;
 
