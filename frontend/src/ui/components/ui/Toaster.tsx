@@ -32,7 +32,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number)
       {toast.action && (
         <button
           type="button"
-          className="btn btn--outline btn--sm toast__action"
+          className="toast__action"
           onClick={() => {
             toast.action?.onClick();
             onDismiss(toast.id);
