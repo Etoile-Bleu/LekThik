@@ -247,6 +247,33 @@ export interface BoardMember {
   username: string;
 }
 
+export type FieldKind = 'text' | 'number' | 'date' | 'select' | 'checkbox' | 'url';
+
+export interface FieldOption {
+  id: string;
+  name: string;
+  color: LabelColor;
+}
+
+export interface Field {
+  id: string;
+  board_id: string;
+  name: string;
+  kind: FieldKind;
+  position: number;
+  show_on_card: boolean;
+  options: FieldOption[];
+}
+
+/** A string for text, url, date, number (a decimal) and a choice (its id), a boolean for a checkbox. */
+export type FieldValue = string | boolean;
+
+export interface CardFieldValue {
+  card_id: string;
+  field_id: string;
+  value: FieldValue;
+}
+
 export interface BoardView {
   board: BoardSummary;
   role: Role;
@@ -254,6 +281,8 @@ export interface BoardView {
   members: BoardMember[];
   lists: BoardList[];
   labels: Label[];
+  fields?: Field[];
+  field_values?: CardFieldValue[];
 }
 
 export interface CardDetail {
