@@ -322,6 +322,89 @@ async fn a_counter_can_only_measure_a_list_of_its_own_board() -> anyhow::Result<
 }
 
 #[tokio::test]
+async fn a_progress_block_measures_a_done_list_of_its_own_board() -> anyhow::Result<()> {
+    let (app, pool, _container) = spawn_app().await?;
+    let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
+    let (workspace_id, board_id, list_id) = create_workspace_board_list(&app, &alice).await?;
+    let (_, other_board) = call(
+        &app,
+        "POST",
+        &format!("/api/workspaces/{workspace_id}/boards"),
+        Some(&alice),
+        Some(json!({ "name": "Elsewhere" })),
+    )
+    .await?;
+    let (_, other_list) = call(
+        &app,
+        "POST",
+        &format!("/api/boards/{}/lists", id_of(&other_board)?),
+        Some(&alice),
+        Some(json!({ "name": "Done" })),
+    )
+    .await?;
+    let uri = format!("/api/boards/{board_id}/blocks");
+
+    let (status, empty) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "progress", "name": "Sprint" })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{empty}");
+    assert_eq!(
+        empty["config"],
+        json!({ "size": "normal", "style": "ring", "label": "", "done_list_id": null }),
+        "no list chosen yet is allowed, the screen asks for it"
+    );
+
+    let (status, progress) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "progress", "name": "Sprint 12",
+            "config": { "style": "bar", "done_list_id": list_id } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{progress}");
+    assert_eq!(progress["config"]["style"], "bar");
+    assert_eq!(progress["config"]["done_list_id"], list_id);
+
+    let (status, _) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "progress", "name": "Sprint",
+            "config": { "done_list_id": id_of(&other_list)? } })),
+    )
+    .await?;
+    assert_eq!(
+        status,
+        StatusCode::BAD_REQUEST,
+        "a list of another board is refused"
+    );
+
+    let (status, _) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "progress", "name": "Sprint", "config": { "style": "pie" } })),
+    )
+    .await?;
+    assert_eq!(
+        status,
+        StatusCode::BAD_REQUEST,
+        "unknown styles are refused"
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn cards_only_live_in_lists() -> anyhow::Result<()> {
     let (app, pool, _container) = spawn_app().await?;
     let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;

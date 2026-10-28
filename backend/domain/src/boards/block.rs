@@ -24,6 +24,7 @@ pub enum ListKind {
     Image,
     Embed,
     Link,
+    Progress,
 }
 
 impl ListKind {
@@ -37,6 +38,7 @@ impl ListKind {
             Self::Image => "image",
             Self::Embed => "embed",
             Self::Link => "link",
+            Self::Progress => "progress",
         }
     }
 
@@ -50,6 +52,7 @@ impl ListKind {
             "image" => Ok(Self::Image),
             "embed" => Ok(Self::Embed),
             "link" => Ok(Self::Link),
+            "progress" => Ok(Self::Progress),
             _ => Err(BoardsError::Invalid(format!("unknown block kind {value}"))),
         }
     }
@@ -118,6 +121,23 @@ pub struct CounterConfig {
     pub date: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ProgressStyle {
+    #[default]
+    Ring,
+    Bar,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct ProgressConfig {
+    pub size: BlockSize,
+    pub style: ProgressStyle,
+    pub label: String,
+    pub done_list_id: Option<Uuid>,
+}
+
 /// A picture kept by LekThik itself. Alternative text is required, not optional.
 #[derive(Debug, Clone, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
@@ -168,6 +188,7 @@ pub enum BlockConfig {
     Image(ImageConfig),
     Embed(EmbedConfig),
     Link(LinkConfig),
+    Progress(ProgressConfig),
 }
 
 fn invalid(message: impl Into<String>) -> BoardsError {
@@ -198,6 +219,7 @@ impl BlockConfig {
             Self::Image(_) => ListKind::Image,
             Self::Embed(_) => ListKind::Embed,
             Self::Link(_) => ListKind::Link,
+            Self::Progress(_) => ListKind::Progress,
         }
     }
 
@@ -298,6 +320,12 @@ impl BlockConfig {
                 clean_text(&link.title, BLOCK_TITLE_MAX_CHARS, false)?;
                 Ok(Self::Link(link))
             }
+            ListKind::Progress => {
+                let mut progress: ProgressConfig = serde_json::from_value(value).map_err(from)?;
+                progress.label = progress.label.trim().to_string();
+                clean_text(&progress.label, COUNTER_LABEL_MAX_CHARS, false)?;
+                Ok(Self::Progress(progress))
+            }
         }
     }
 
@@ -311,6 +339,7 @@ impl BlockConfig {
             Self::Image(config) => serde_json::to_value(config),
             Self::Embed(config) => serde_json::to_value(config),
             Self::Link(config) => serde_json::to_value(config),
+            Self::Progress(config) => serde_json::to_value(config),
         };
         value.unwrap_or(Value::Null)
     }
@@ -319,6 +348,7 @@ impl BlockConfig {
     pub fn done_list(&self) -> Option<Uuid> {
         match self {
             Self::Counter(counter) => counter.done_list_id,
+            Self::Progress(progress) => progress.done_list_id,
             _ => None,
         }
     }
@@ -348,6 +378,7 @@ mod tests {
             ListKind::Image,
             ListKind::Embed,
             ListKind::Link,
+            ListKind::Progress,
         ] {
             assert_eq!(ListKind::parse(kind.as_str()), Ok(kind));
         }
@@ -575,6 +606,59 @@ mod tests {
         ] {
             assert!(
                 BlockConfig::parse(ListKind::Link, bad.clone()).is_err(),
+                "{bad}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_progress_block_starts_as_a_ring_with_no_list_chosen() {
+        let config = BlockConfig::parse(ListKind::Progress, json!({})).expect("parse");
+
+        assert_eq!(config, BlockConfig::Progress(ProgressConfig::default()));
+        assert_eq!(config.done_list(), None);
+        assert_eq!(
+            config.to_value(),
+            json!({ "size": "normal", "style": "ring", "label": "", "done_list_id": null })
+        );
+    }
+
+    #[test]
+    fn a_progress_block_keeps_its_style_label_and_done_list() {
+        let list = Uuid::new_v4();
+        let config = BlockConfig::parse(
+            ListKind::Progress,
+            json!({ "style": "bar", "label": "  Sprint 12  ", "done_list_id": list, "size": "wide" }),
+        )
+        .expect("parse");
+
+        assert_eq!(config.done_list(), Some(list));
+        assert_eq!(
+            config,
+            BlockConfig::Progress(ProgressConfig {
+                size: BlockSize::Wide,
+                style: ProgressStyle::Bar,
+                label: "Sprint 12".to_string(),
+                done_list_id: Some(list),
+            })
+        );
+        let again = BlockConfig::parse(ListKind::Progress, config.to_value()).expect("parse");
+        assert_eq!(config, again);
+    }
+
+    #[test]
+    fn a_progress_block_refuses_unknown_settings_and_odd_labels() {
+        let long = "x".repeat(COUNTER_LABEL_MAX_CHARS + 1);
+        for bad in [
+            json!({ "style": "pie" }),
+            json!({ "colour": "red" }),
+            json!({ "done_list_id": "not-an-id" }),
+            json!({ "label": long }),
+            json!({ "label": "two\nlines" }),
+            json!([]),
+        ] {
+            assert!(
+                BlockConfig::parse(ListKind::Progress, bad.clone()).is_err(),
                 "{bad}"
             );
         }

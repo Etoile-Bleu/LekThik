@@ -54,7 +54,7 @@ Most boards force one shape: a row of columns. LekThik lets the board take the s
 2. **Make a workspace**, invite people by email and give them a role: reader, writer, admin or owner. Start a board from a template (sprint planning, bug tracker, content calendar and more) or from nothing.
 3. **Lay it out.** Keep the classic row of columns, or switch to the **Canvas**, where lists and blocks are tiles on a 12 column grid. Drag them anywhere, one under another or side by side, resize them from the corner, or press **Fit** and let LekThik arrange them. The canvas layout is shared, so everyone sees the same one.
 4. **Write.** A card has assignees, a due date, coloured labels with a priority and a description in Markdown: tables, checklists, code, LaTeX formulas and Mermaid diagrams.
-5. **Add blocks.** A calendar, an agenda, a counter, a note, a picture, a video or a link sit beside the lists and draw on the cards of the board.
+5. **Add blocks.** A calendar, an agenda, a counter, a progress ring, a note, a picture, a video or a link sit beside the lists and draw on the cards of the board.
 6. **See it four ways.** The same cards as columns, on a free canvas, in a sortable table or in a calendar of due dates.
 7. **Do it from the keyboard.** `Ctrl+K` jumps to anything and adds, moves, assigns or schedules without touching the mouse.
 8. **Work together.** Nothing needs a refresh: cards, layouts and members follow what others do, and a reconnection catches up on what was missed.
@@ -111,6 +111,7 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 | Calendar | A small month with a dot on every day that has cards due, and the cards of the chosen day |
 | Agenda | What is due today or over seven days, late cards first, optionally only yours |
 | Counter | One number: late cards, share done, days left to a date or total cards |
+| Progress | A ring or a bar for the share of the cards that sit in the list that means done, drawn once and written out in words |
 | Note | Markdown text with checklists you can tick |
 | Picture | An image kept in LekThik's own database, with its metadata removed and a description as alternative text |
 | Video or calendar | YouTube, Vimeo or Google Calendar, loaded only after a person presses a button |

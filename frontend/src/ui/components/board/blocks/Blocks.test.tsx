@@ -8,6 +8,7 @@ import { AgendaBlock } from './AgendaBlock';
 import { CalendarBlock } from './CalendarBlock';
 import { CounterBlock } from './CounterBlock';
 import { NoteBlock } from './NoteBlock';
+import { ProgressBlock } from './ProgressBlock';
 
 function card(id: string, due: string | null, extra: Partial<CardSummary> = {}): CardSummary {
   return {
@@ -276,5 +277,43 @@ describe('CounterBlock', () => {
     inBoard(<CounterBlock block={block('counter', { metric: 'total_cards' })} panels={panels} />);
 
     expect(within(document.body).getByText(/Cards: 5/)).toBeInTheDocument();
+  });
+});
+
+describe('ProgressBlock', () => {
+  it('draws a ring and says the same thing in words', () => {
+    inBoard(
+      <ProgressBlock
+        block={block('progress', { style: 'ring', label: 'Sprint 12', done_list_id: 'done' })}
+        panels={panels}
+      />
+    );
+
+    const meter = screen.getByRole('progressbar', { name: 'Sprint 12' });
+    expect(meter).toHaveAttribute('aria-valuenow', '20');
+    expect(meter).toHaveAttribute('aria-valuetext', 'Sprint 12: 20 percent. 1 of 5 cards in Done.');
+    expect(document.querySelector('.progress-block__ring')).not.toBeNull();
+    expect(screen.getByText('1 of 5 cards in Done')).toBeInTheDocument();
+  });
+
+  it('can be a bar', () => {
+    inBoard(
+      <ProgressBlock
+        block={block('progress', { style: 'bar', done_list_id: 'done' })}
+        panels={panels}
+      />
+    );
+
+    expect(document.querySelector('.progress-block__bar')).not.toBeNull();
+    expect(document.querySelector('.progress-block__ring')).toBeNull();
+    expect(screen.getByRole('progressbar', { name: 'Done' })).toBeInTheDocument();
+  });
+
+  it('asks for a list instead of a false zero when none is chosen', () => {
+    inBoard(<ProgressBlock block={block('progress', {})} panels={panels} />);
+
+    const meter = screen.getByRole('progressbar');
+    expect(meter).not.toHaveAttribute('aria-valuenow');
+    expect(screen.getByText(/Choose the list that means done/)).toBeInTheDocument();
   });
 });

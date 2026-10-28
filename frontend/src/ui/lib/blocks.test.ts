@@ -9,8 +9,11 @@ import {
   cardsOf,
   counterConfig,
   dueByDay,
+  guessDoneList,
   noteConfig,
+  progressConfig,
   readCounter,
+  readProgress,
   sizeOf,
 } from './blocks';
 import type { BoardList, CardSummary } from './boardsApi';
@@ -254,5 +257,81 @@ describe('the calendar block', () => {
     expect(byDay.get('2026-10-22')?.map((c) => c.id)).toEqual(['today']);
     expect(byDay.has('2026-10-23')).toBe(false);
     expect([...byDay.values()].flat()).toHaveLength(5);
+  });
+});
+
+describe('guessDoneList', () => {
+  it('prefers a list named like done, in English or French', () => {
+    const named = [list('a', 'To do', []), list('b', 'Done', []), list('c', 'Backlog', [])];
+    const french = [list('a', 'A faire', []), list('b', 'Terminé', []), list('c', 'Idées', [])];
+
+    expect(guessDoneList(named)?.id).toBe('b');
+    expect(guessDoneList(french)?.id).toBe('b');
+  });
+
+  it('falls back to the last list, and ignores blocks and empty boards', () => {
+    const plain = [list('a', 'Ideas', []), list('b', 'Doing', []), list('c', 'Review', [])];
+    const withBlock: BoardList[] = [
+      list('a', 'Ideas', []),
+      { id: 'n', name: 'Done', wip_limit: null, kind: 'note', config: {}, cards: [] },
+    ];
+
+    expect(guessDoneList(plain)?.id).toBe('c');
+    expect(guessDoneList(withBlock)?.id).toBe('a');
+    expect(guessDoneList([])).toBeNull();
+  });
+});
+
+describe('readProgress', () => {
+  const config = { ...progressConfig({ ...list('p', 'P', []), config: {} }) };
+
+  it('starts as a ring with nothing chosen', () => {
+    expect(config).toEqual({ size: 'normal', style: 'ring', label: '', done_list_id: null });
+  });
+
+  it('asks for a done list instead of showing a false zero', () => {
+    const reading = readProgress(config, panels);
+
+    expect(reading.state).toBe('setup');
+    expect(reading.percent).toBe(0);
+    expect(reading.spoken).toMatch(/no done list chosen/);
+  });
+
+  it('is the share of the cards that sit in the done list', () => {
+    const board = [
+      list('todo', 'To do', [card('a', null), card('b', null), card('c', null)]),
+      list('done', 'Done', [card('d', null)]),
+    ];
+
+    const reading = readProgress({ ...config, done_list_id: 'done', label: 'Sprint 12' }, board);
+
+    expect(reading).toMatchObject({ percent: 25, done: 1, total: 4, state: 'running' });
+    expect(reading.caption).toBe('Sprint 12');
+    expect(reading.detail).toBe('1 of 4 cards in Done');
+    expect(reading.spoken).toBe('Sprint 12: 25 percent. 1 of 4 cards in Done.');
+  });
+
+  it('is complete when every card is done, and says so for an empty board', () => {
+    const finished = [list('todo', 'To do', []), list('done', 'Done', [card('a', null)])];
+    const empty = [list('todo', 'To do', []), list('done', 'Done', [])];
+
+    expect(readProgress({ ...config, done_list_id: 'done' }, finished).state).toBe('complete');
+    const none = readProgress({ ...config, done_list_id: 'done' }, empty);
+    expect(none.state).toBe('empty');
+    expect(none.percent).toBe(0);
+  });
+
+  it('treats a done list that is gone or is not a list as not set up', () => {
+    const calendar: BoardList = {
+      id: 'cal',
+      name: 'Plan',
+      wip_limit: null,
+      kind: 'calendar',
+      config: {},
+      cards: [],
+    };
+
+    expect(readProgress({ ...config, done_list_id: 'ghost' }, panels).state).toBe('setup');
+    expect(readProgress({ ...config, done_list_id: 'cal' }, [calendar]).state).toBe('setup');
   });
 });
