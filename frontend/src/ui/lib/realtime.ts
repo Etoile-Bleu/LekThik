@@ -7,6 +7,7 @@ import { useInvitationStore } from './invitationStore';
 import { useMembersStore } from './membersStore';
 import { myCardsAreWatched, useMyCardsStore } from './myCardsStore';
 import { usePrefsStore } from './prefsStore';
+import { refreshPresenceSoon } from './presenceStore';
 import { useWorkspaceStore } from './workspaceStore';
 
 export type LiveStatus = 'off' | 'connecting' | 'live' | 'reconnecting';
@@ -112,6 +113,12 @@ export function startRealtime(): () => void {
       scheduleBoardRefresh();
       tell('A teammate changed this board.');
     }
+  });
+
+  // Somebody arrived on a board or left it. Only the place is told, so the crowd is read again.
+  source.addEventListener('presence', (event) => {
+    const payload = parse(event);
+    if (payload?.board_id) refreshPresenceSoon(payload.board_id);
   });
 
   source.addEventListener('workspace', (event) => {
