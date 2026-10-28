@@ -137,8 +137,21 @@ address to a stranger.
 ## Rights
 
 People can correct what they wrote, and delete it. Deleting a block, a board or a workspace removes
-its content. Exporting or deleting a whole account is not in the app yet: until it is, whoever runs
-LekThik has to do it by hand in the database. This is a known gap, not a choice.
+its content.
+
+**Export.** Settings, Privacy, "Download my data" gives one JSON file with the profile (email, name,
+creation date), display preferences, workspace memberships, assigned cards, comments written and
+poll votes cast. It never holds the password hash, a session, a code or anything about other people
+beyond the titles of the cards and boards you worked on. The answer is not cached, and the route is
+limited to a few requests an hour.
+
+**Deletion.** Settings, Privacy, "Delete my account" asks for the password and for the username
+typed again. Then the login, preferences, memberships, assignments, poll votes and any invitations
+it sent are removed. Comments and history lines written stay for the team, without an author. A
+workspace you own alone is deleted with the account. A workspace you own that other people still use
+blocks the deletion until you choose to delete it too, because ownership cannot be transferred yet;
+the dialog lists them and asks. The session cookie is cleared, but a copy of a signed token stays
+accepted by the server until it expires, and it matches no account any more, so it opens nothing.
 
 ## Security measures
 
