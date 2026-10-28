@@ -1,4 +1,4 @@
-import type { BoardList, CardSummary, Label, Priority } from './boardsApi';
+import type { BoardList, CardSummary, FieldValue, Label, Priority } from './boardsApi';
 
 const PRIORITY_RANK: Record<Priority, number> = {
   none: 0,
@@ -41,22 +41,39 @@ export interface CardFilter {
   labelIds: string[];
   mine: boolean;
   overdue: boolean;
+  choices?: Record<string, string[]>;
 }
 
 export const EMPTY_FILTER: CardFilter = { labelIds: [], mine: false, overdue: false };
 
-export function isFiltering(filter: CardFilter): boolean {
-  return filter.labelIds.length > 0 || filter.mine || filter.overdue;
+function chosenFields(filter: CardFilter): Array<[string, string[]]> {
+  return Object.entries(filter.choices ?? {}).filter(([, optionIds]) => optionIds.length > 0);
 }
 
-/** Labels combine with OR, the other two narrow the result further. */
+export function isFiltering(filter: CardFilter): boolean {
+  return (
+    filter.labelIds.length > 0 || filter.mine || filter.overdue || chosenFields(filter).length > 0
+  );
+}
+
+/** Labels combine with OR, so do the choices of one field. Everything else narrows further. */
 export function cardMatches(
   card: CardSummary,
   filter: CardFilter,
-  context: { meId: string | undefined; today: string }
+  context: {
+    meId: string | undefined;
+    today: string;
+    fieldValues?: Map<string, Map<string, FieldValue>>;
+  }
 ): boolean {
   if (!matchesFilter(card, filter.labelIds)) {
     return false;
+  }
+  for (const [fieldId, optionIds] of chosenFields(filter)) {
+    const value = context.fieldValues?.get(card.id)?.get(fieldId);
+    if (typeof value !== 'string' || !optionIds.includes(value)) {
+      return false;
+    }
   }
   if (filter.mine && !(context.meId && card.assignee_ids.includes(context.meId))) {
     return false;

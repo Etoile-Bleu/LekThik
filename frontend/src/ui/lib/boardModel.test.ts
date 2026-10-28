@@ -5,6 +5,7 @@ import {
   cardMatches,
   findCard,
   highestPriority,
+  isFiltering,
   matchesFilter,
   moveCard,
   moveList,
@@ -166,5 +167,48 @@ describe('cardMatches', () => {
     expect(cardMatches(both, filter, ctx)).toBe(true);
     expect(cardMatches({ ...both, label_ids: ['z'] }, filter, ctx)).toBe(false);
     expect(cardMatches({ ...both, assignee_ids: [] }, filter, ctx)).toBe(false);
+  });
+
+  describe('custom field choices', () => {
+    const values = new Map([
+      ['a', new Map<string, string | boolean>([['env', 'prod']])],
+      ['b', new Map<string, string | boolean>([['env', 'staging']])],
+    ]);
+    const withValues = { ...ctx, fieldValues: values };
+    const prodOrStaging = { ...EMPTY_FILTER, choices: { env: ['prod', 'staging'] } };
+
+    it('keeps the cards holding one of the chosen options of a field', () => {
+      expect(cardMatches(card('a', 'todo'), prodOrStaging, withValues)).toBe(true);
+      expect(cardMatches(card('b', 'todo'), prodOrStaging, withValues)).toBe(true);
+      expect(
+        cardMatches(
+          card('a', 'todo'),
+          { ...EMPTY_FILTER, choices: { env: ['staging'] } },
+          withValues
+        )
+      ).toBe(false);
+    });
+
+    it('drops the cards that have no value for the field', () => {
+      expect(cardMatches(card('c', 'todo'), prodOrStaging, withValues)).toBe(false);
+      expect(cardMatches(card('a', 'todo'), prodOrStaging, ctx)).toBe(false);
+    });
+
+    it('ignores a field with no option picked', () => {
+      const idle = { ...EMPTY_FILTER, choices: { env: [] } };
+
+      expect(cardMatches(card('c', 'todo'), idle, withValues)).toBe(true);
+      expect(isFiltering(idle)).toBe(false);
+      expect(isFiltering(prodOrStaging)).toBe(true);
+    });
+
+    it('narrows further with the other filters', () => {
+      const filter = { ...prodOrStaging, mine: true };
+
+      expect(cardMatches(card('a', 'todo'), filter, withValues)).toBe(false);
+      expect(
+        cardMatches({ ...card('a', 'todo'), assignee_ids: ['u-me'] }, filter, withValues)
+      ).toBe(true);
+    });
   });
 });
