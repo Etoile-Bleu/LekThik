@@ -184,6 +184,8 @@ pub struct Preferences {
     pub flat_backgrounds: bool,
     /// Tell screen readers when teammates change the board you are looking at.
     pub announce_changes: bool,
+    /// Do not show the others when this person is on a board or a card. Off by default.
+    pub hide_presence: bool,
     pub card_display: CardDisplay,
     pub card_dialog: CardDialogLayout,
     pub boards: BTreeMap<Uuid, BoardPreferences>,
