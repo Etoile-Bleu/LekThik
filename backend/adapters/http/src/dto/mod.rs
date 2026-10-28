@@ -43,7 +43,7 @@ pub use template::{
     WorkspaceTemplateDto,
 };
 pub use user::{
-    ForgotPasswordRequestDto, LoginUserRequestDto, RegisterUserRequestDto,
+    DeleteAccountRequestDto, ForgotPasswordRequestDto, LoginUserRequestDto, RegisterUserRequestDto,
     RegisteredUserResponseDto, ResendVerificationRequestDto, ResetPasswordRequestDto,
     UserResponseDto, VerifyEmailRequestDto,
 };
