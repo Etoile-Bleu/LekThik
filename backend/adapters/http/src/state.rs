@@ -7,6 +7,7 @@ use domain::boards::{
 use domain::{Mailer, PreferencesRepo, TokenIssuer, UserRepo, VerificationCodeRepo};
 
 use crate::events::EventHub;
+use crate::presence::PresenceHub;
 
 pub const SESSION_COOKIE: &str = "session";
 
@@ -32,6 +33,8 @@ pub struct AppState {
     pub invitation_repo: Arc<dyn InvitationRepo>,
     pub locator: Arc<dyn Locator>,
     pub events: EventHub,
+    /// Who is looking at which board right now. In memory only, never stored.
+    pub presence: Arc<PresenceHub>,
     /// Public address of the web app, used in links sent by email.
     pub app_base_url: String,
 }
