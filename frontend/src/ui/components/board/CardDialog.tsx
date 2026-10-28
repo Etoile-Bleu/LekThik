@@ -4,6 +4,7 @@ import { useAuthStore } from '@lib/authStore';
 import { isCardList } from '@lib/blocks';
 import { toggleTask } from '@lib/richText';
 import { findCard } from '@lib/boardModel';
+import { indexValues } from '@lib/fields';
 import { type CardDetail, fetchCard, updateCard } from '@lib/boardsApi';
 import { useBoardStore } from '@lib/boardStore';
 import { notifyError } from '@lib/toastStore';
@@ -28,6 +29,7 @@ import { RichEditor } from '../richtext/RichEditor';
 import { RichText } from '../richtext/RichText';
 import { InlineEdit } from '../ui/InlineEdit';
 import { AssigneePicker } from './AssigneePicker';
+import { CardFields } from './CardFields';
 import { CardTimeline } from './CardTimeline';
 import { DueDateField } from './DueDateField';
 import { Pick } from '../ui/Pick';
@@ -291,6 +293,15 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
             {shown.map((property, position) => (
               <Fragment key={property}>{renderProperty(property, position)}</Fragment>
             ))}
+            {(view.fields ?? []).length > 0 && (
+              <CardFields
+                cardId={summary.id}
+                fields={view.fields ?? []}
+                values={indexValues(view.field_values).get(summary.id) ?? new Map()}
+                editable={editable}
+                startIndex={shown.length}
+              />
+            )}
           </div>
 
           {hiddenProperties.length > 0 && (

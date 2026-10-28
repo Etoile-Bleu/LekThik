@@ -7,6 +7,8 @@ import type {
   BoardList,
   BoardView,
   CardSummary,
+  Field,
+  FieldValue,
   Label,
   LabelColor,
   PanelConfig,
@@ -14,6 +16,9 @@ import type {
   Priority,
 } from './boardsApi';
 import { moveCard, moveList, patchCard, removeCard } from './boardModel';
+import * as fieldsApi from './fieldsApi';
+import type { NewFieldInput } from './fieldsApi';
+import { patchValues } from './fields';
 import { type Layout, toPlacements } from './grid';
 import { notifyError } from './toastStore';
 import { useWorkspaceStore } from './workspaceStore';
@@ -66,6 +71,21 @@ interface BoardState {
   setCardLabels: (cardId: string, labelIds: string[]) => Promise<void>;
   setCardAssignees: (cardId: string, userIds: string[]) => Promise<void>;
   setCardDueDate: (cardId: string, day: string | null) => Promise<void>;
+  setCardFieldValue: (
+    cardId: string,
+    fieldId: string,
+    value: FieldValue | null
+  ) => Promise<boolean>;
+  createField: (input: NewFieldInput) => Promise<Field | null>;
+  changeField: (
+    fieldId: string,
+    changes: { name?: string; show_on_card?: boolean; position?: number }
+  ) => Promise<boolean>;
+  removeField: (fieldId: string) => Promise<boolean>;
+  changeOptions: (
+    fieldId: string,
+    run: (boardId: string) => Promise<Field>
+  ) => Promise<Field | null>;
   createLabel: (input: LabelInput) => Promise<Label | null>;
   updateLabel: (labelId: string, changes: Partial<LabelInput>) => Promise<void>;
   deleteLabel: (labelId: string) => Promise<void>;
@@ -409,6 +429,96 @@ export const useBoardStore = create<BoardState>((set, get) => {
         await api.updateCard(cardId, { due_date: day });
       } catch (error) {
         await recoverFrom(error);
+      }
+    },
+
+    setCardFieldValue: async (cardId, fieldId, value) => {
+      const before = get().view?.field_values;
+      update((current) => ({
+        ...current,
+        field_values: patchValues(current.field_values, cardId, fieldId, value),
+      }));
+      try {
+        const saved = await fieldsApi.setFieldValue(cardId, fieldId, value);
+        update((current) => ({
+          ...current,
+          field_values: patchValues(current.field_values, cardId, fieldId, saved),
+        }));
+        return true;
+      } catch (error) {
+        update((current) => ({ ...current, field_values: before ?? [] }));
+        notifyError(error, 'The value could not be saved.');
+        return false;
+      }
+    },
+
+    createField: async (input) => {
+      const view = get().view;
+      if (!view) return null;
+      try {
+        const field = await fieldsApi.createField(view.board.id, input);
+        update((current) => ({ ...current, fields: [...(current.fields ?? []), field] }));
+        return field;
+      } catch (error) {
+        notifyError(error, 'The field could not be added.');
+        return null;
+      }
+    },
+
+    changeField: async (fieldId, changes) => {
+      const view = get().view;
+      if (!view) return false;
+      try {
+        await fieldsApi.updateField(view.board.id, fieldId, changes);
+        await get().refresh();
+        return true;
+      } catch (error) {
+        notifyError(error, 'The field could not be changed.');
+        return false;
+      }
+    },
+
+    removeField: async (fieldId) => {
+      const view = get().view;
+      if (!view) return false;
+      try {
+        await fieldsApi.deleteField(view.board.id, fieldId);
+        update((current) => ({
+          ...current,
+          fields: (current.fields ?? []).filter((field) => field.id !== fieldId),
+          field_values: (current.field_values ?? []).filter((entry) => entry.field_id !== fieldId),
+        }));
+        return true;
+      } catch (error) {
+        notifyError(error, 'The field could not be deleted.');
+        return false;
+      }
+    },
+
+    changeOptions: async (fieldId, run) => {
+      const view = get().view;
+      if (!view) return null;
+      try {
+        const field = await run(view.board.id);
+        const known = new Set(field.options.map((option) => option.id));
+        update((current) => ({
+          ...current,
+          fields: (current.fields ?? []).map((entry) => (entry.id === fieldId ? field : entry)),
+          field_values: (current.field_values ?? []).filter((entry) => {
+            const owner = (current.fields ?? []).find(
+              (candidate) => candidate.id === entry.field_id
+            );
+            return !(
+              entry.field_id === fieldId &&
+              owner?.kind === 'select' &&
+              !known.has(String(entry.value))
+            );
+          }),
+        }));
+        return field;
+      } catch (error) {
+        notifyError(error, 'The choices could not be changed.');
+        return null;
       }
     },
 

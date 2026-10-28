@@ -29,6 +29,7 @@ use crate::state::AppState;
         (name = "lists", description = "Lists inside a board"),
         (name = "cards", description = "Cards inside a list"),
         (name = "labels", description = "Colored priority labels of a board"),
+        (name = "fields", description = "Custom fields of a board and the values cards hold for them"),
         (name = "members", description = "Members of a workspace and their roles"),
         (name = "invitations", description = "Email invitations to join a workspace"),
         (name = "events", description = "Live change notifications"),
@@ -96,6 +97,11 @@ fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(get_card_timeline))
         .routes(routes!(add_card_comment))
         .routes(routes!(edit_card_comment, delete_card_comment))
+        .routes(routes!(create_field))
+        .routes(routes!(update_field, delete_field))
+        .routes(routes!(add_field_option))
+        .routes(routes!(update_field_option, delete_field_option))
+        .routes(routes!(set_card_field))
         .routes(routes!(update_label, delete_label))
         .routes(routes!(list_members))
         .routes(routes!(change_member_role, remove_member))

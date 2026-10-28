@@ -211,6 +211,9 @@ impl BoardRepo for PgBoardRepo {
         .await
         .map_err(repository_error)?;
 
+        let fields = crate::field_repo::fields_of_board(&mut transaction, board.id).await?;
+        let field_values = crate::field_repo::values_of_board(&mut transaction, board.id).await?;
+
         transaction.commit().await.map_err(repository_error)?;
 
         let mut labels_by_card: HashMap<Uuid, Vec<Uuid>> = HashMap::new();
@@ -287,6 +290,8 @@ impl BoardRepo for PgBoardRepo {
             members,
             lists,
             labels,
+            fields,
+            field_values,
         })
     }
 

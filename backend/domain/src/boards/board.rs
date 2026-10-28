@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use uuid::Uuid;
 
 use super::error::BoardsError;
+use super::field::{CardFieldValue, Field};
 use super::label::Label;
 use super::layout::PanelPlacement;
 use super::list::ListWithCards;
@@ -39,6 +40,8 @@ pub struct BoardView {
     pub members: Vec<BoardMember>,
     pub lists: Vec<ListWithCards>,
     pub labels: Vec<Label>,
+    pub fields: Vec<Field>,
+    pub field_values: Vec<CardFieldValue>,
 }
 
 #[cfg_attr(feature = "test-utils", mockall::automock)]

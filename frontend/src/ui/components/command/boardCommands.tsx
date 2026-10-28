@@ -1,6 +1,6 @@
 import { BLOCK_KIND_IDS, KIND_LABEL, isCardList } from '@lib/blocks';
 import type { BoardView, PanelKind } from '@lib/boardsApi';
-import { type CardFilter, EMPTY_FILTER } from '@lib/boardModel';
+import { type CardFilter, EMPTY_FILTER, isFiltering } from '@lib/boardModel';
 import { type Command, parseQuickDate } from '@lib/commandStore';
 import type { BoardViewKind } from '@lib/prefs';
 
@@ -141,7 +141,7 @@ export function boardCommands(context: BoardCommandContext): Command[] {
     }
   );
 
-  if (context.filter.mine || context.filter.overdue || context.filter.labelIds.length > 0) {
+  if (isFiltering(context.filter)) {
     commands.push({
       id: 'filter:clear',
       title: 'Clear filters',

@@ -152,6 +152,19 @@ assignees), so it cannot disagree with the card, and an unchanged field writes n
 and actor columns are `ON DELETE SET NULL`: a deleted account leaves its words and its lines of
 history behind, without a name.
 
+Custom fields (migration `021_add_custom_fields.sql`). `POST /api/boards/{id}/fields` creates a field
+(admins and owners; a name unique per board ignoring case, a kind among text, number, date, select,
+checkbox and url, up to 30 fields, 50 choices a field, answered `409` past the limits or on a
+duplicate name). `PATCH` and `DELETE /api/boards/{id}/fields/{field_id}` rename, show on the card,
+reorder or delete; the kind never changes. `POST /api/boards/{id}/fields/{field_id}/options` and
+`PATCH`/`DELETE` on `.../options/{option_id}` manage the choices of a select field, and deleting a
+choice clears it from the cards (`ON DELETE CASCADE`). `PUT /api/cards/{id}/fields/{field_id}` sets a
+value (writers and above, `{"value": null}` clears it); the value is checked against the kind, and
+numbers travel as exact decimal strings below 1e12. Values live in one typed row per card and field,
+a `CHECK` makes exactly one column non null, and they are copied by a duplicated card and deleted
+with the card or the field. The board answer carries `fields` and `field_values`. A stranger gets
+`404` for all of them.
+
 A timer block (migration `019_add_timer_block.sql`) is shared by the whole board. It keeps a mode (focus,
 short break or long break), the three lengths in minutes (1 to 120, 60 for the short break), a state
 and the count of finished focus sessions. A running timer stores its end as epoch milliseconds, never
