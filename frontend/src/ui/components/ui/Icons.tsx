@@ -389,6 +389,14 @@ export function HashIcon(props: IconProps) {
   );
 }
 
+export function ChatIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M4 5.5h12v7.5H9.2L6 15.8V13H4V5.5Z" />
+    </Base>
+  );
+}
+
 export function TimerIcon(props: IconProps) {
   return (
     <Base {...props}>
