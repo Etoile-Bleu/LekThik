@@ -19,11 +19,30 @@ whoever runs it. It describes how the code behaves today, so it changes with the
 | Verification and reset codes | Confirming an address, resetting a password | Nobody, they are stored hashed | Minutes, then useless |
 | Settings (theme, text size, layout, per board view) | Making the app fit the person | The person | Until the account is deleted |
 | Workspaces, boards, lists, cards, labels, notes, links | The work itself | Members of the workspace, by role | Until deleted by a member allowed to |
+| Comments on cards | Talking about the work | Members of the workspace | Until deleted by their author or an admin, or with the card |
+| History of a card (who moved, renamed, dated, labelled or assigned it, and when) | Knowing how the work got here | Members of the workspace | The latest 200 lines of a card, or until the card is deleted |
 | Pictures | Image blocks | Members of the workspace | Deleted with their block, board or workspace |
 | Embed identifiers (a video or calendar id) | Embed blocks | Members of the workspace | Deleted with their block |
 
 Not stored: what anyone reads, watches or clicks, device fingerprints, locations, or anything about
 use that is not part of the work.
+
+## Comments and history
+
+- A comment is plain text written in Markdown. It is never read as HTML, so a pasted `<script>` is
+  shown as the text it is. It holds at most 5000 characters, a card at most 500 comments, and one
+  person at most 20 a minute.
+- The history records the changes of a card (a rename with the old and new title, a move with the two
+  lists, a date, a label with its name, an assignment with the person). It does not record what was
+  read or looked at, the text of a description, nor the content of comments.
+- Editing a description over and over writes one line for ten minutes, and only the latest 200 lines
+  of a card are kept.
+- When an account is deleted, its comments and the lines of history it caused stay, because they are
+  part of other people's conversation, but they lose their author and are shown as written by a
+  deleted user. The database does this on its own (`ON DELETE SET NULL`), and it is tested.
+- A mention only highlights a name in the text. It sends nothing to the person.
+- A comment being written is kept as a draft in the browser (`lekthik.comment-draft.<card>`) so it is
+  not lost, and removed when the comment is posted. It never reaches the server before that.
 
 ## In the browser
 
@@ -33,6 +52,7 @@ LekThik uses the browser's own storage for three things, none of which is sent a
 | --- | --- | --- |
 | Session cookie | Keeping a person signed in | Yes, strictly necessary |
 | `lekthik.appearance.v1` | A copy of the appearance settings, so the page is drawn right the first time | Convenience, no personal data |
+| `lekthik.comment-draft.<card>` | A comment that was started and not posted yet | Convenience, removed when posted |
 | `lekthik.embeds.v1` | Which outside providers a person chose to load without asking | Only if they chose to |
 
 The choice about outside providers is a record of a consent, kept so it is not asked for again. It can
