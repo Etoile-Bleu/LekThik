@@ -7,6 +7,7 @@ import {
   record,
   redoLast,
   resolveId,
+  retireEntry,
   undoLast,
   useHistoryStore,
 } from './history';
@@ -122,6 +123,24 @@ describe('history', () => {
 
     useHistoryStore.getState().clear();
     expect(resolveId('a')).toBe('a');
+  });
+
+  it('drops a change by the id record gave it, without running it', async () => {
+    const log: string[] = [];
+    const id = record(entry('one', log));
+    record(entry('two', log));
+
+    retireEntry(id);
+
+    expect(useHistoryStore.getState().past.map((item) => item.label)).toEqual(['two']);
+    expect(await useHistoryStore.getState().undo()).toBe('two');
+    expect(log).toEqual(['undo two']);
+  });
+
+  it('does nothing when asked to retire an id that was never recorded', () => {
+    record(entry('one'));
+    expect(() => retireEntry(0)).not.toThrow();
+    expect(useHistoryStore.getState().past).toHaveLength(1);
   });
 
   it('tells screen readers what was undone and redone', async () => {
