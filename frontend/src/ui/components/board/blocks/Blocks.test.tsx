@@ -8,6 +8,7 @@ import { AgendaBlock } from './AgendaBlock';
 import { CalendarBlock } from './CalendarBlock';
 import { CounterBlock } from './CounterBlock';
 import { NoteBlock } from './NoteBlock';
+import { OverdueBlock } from './OverdueBlock';
 import { ProgressBlock } from './ProgressBlock';
 
 function card(id: string, due: string | null, extra: Partial<CardSummary> = {}): CardSummary {
@@ -315,5 +316,59 @@ describe('ProgressBlock', () => {
     const meter = screen.getByRole('progressbar');
     expect(meter).not.toHaveAttribute('aria-valuenow');
     expect(screen.getByText(/Choose the list that means done/)).toBeInTheDocument();
+  });
+});
+
+describe('OverdueBlock', () => {
+  const lateCards = (count: number): BoardList[] => [
+    {
+      id: 'doing',
+      name: 'Doing',
+      wip_limit: null,
+      kind: 'list',
+      config: {},
+      cards: Array.from({ length: count }, (_, index) =>
+        card(`c${index}`, `2026-10-${String(20 - index).padStart(2, '0')}`, {
+          assignee_ids: ['me'],
+          title: `Fix ${index}`,
+        })
+      ),
+    },
+  ];
+
+  it('lists my late cards with how late they are and opens one', () => {
+    const onOpenCard = vi.fn();
+    inBoard(<OverdueBlock panels={lateCards(2)} onOpenCard={onOpenCard} />);
+
+    expect(screen.getByRole('status')).toHaveTextContent('2 of your cards are late.');
+    expect(screen.getByText('2 days late')).toBeInTheDocument();
+    expect(screen.getByText('3 days late')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Fix 0/ }));
+
+    expect(onOpenCard).toHaveBeenCalledWith('c0');
+  });
+
+  it('shows five at first and the rest on request', () => {
+    inBoard(<OverdueBlock panels={lateCards(8)} onOpenCard={vi.fn()} />);
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    const more = screen.getByRole('button', { name: 'Show 3 more' });
+    expect(more).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(more);
+
+    expect(screen.getAllByRole('listitem')).toHaveLength(8);
+    expect(screen.getByRole('button', { name: 'Show fewer' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+  });
+
+  it('says calmly that nothing is late', () => {
+    inBoard(<OverdueBlock panels={panels} onOpenCard={vi.fn()} />);
+
+    expect(screen.getByText('Nothing is late')).toBeInTheDocument();
+    expect(screen.queryByRole('listitem')).toBeNull();
   });
 });

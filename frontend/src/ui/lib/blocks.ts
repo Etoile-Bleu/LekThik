@@ -8,6 +8,7 @@ import type {
   ImageConfig,
   LinkConfig,
   NoteConfig,
+  OverdueConfig,
   PanelKind,
   ProgressConfig,
 } from './boardsApi';
@@ -24,6 +25,7 @@ export const DEFAULT_NOTE: NoteConfig = { size: 'normal', text: '' };
 /** Pictures and videos want room, so they start wide. */
 export const DEFAULT_IMAGE: ImageConfig = { size: 'wide', alt: '', caption: '' };
 export const DEFAULT_LINK: LinkConfig = { size: 'normal', url: '', title: '' };
+export const DEFAULT_OVERDUE: OverdueConfig = { size: 'normal' };
 export const DEFAULT_PROGRESS: ProgressConfig = {
   size: 'normal',
   style: 'ring',
@@ -69,6 +71,9 @@ export function counterConfig(panel: BoardList): CounterConfig {
   return { ...DEFAULT_COUNTER, ...(panel.config as Partial<CounterConfig>) };
 }
 
+export function overdueConfig(panel: BoardList): OverdueConfig {
+  return { ...DEFAULT_OVERDUE, ...(panel.config as Partial<OverdueConfig>) };
+}
 export function progressConfig(panel: BoardList): ProgressConfig {
   return { ...DEFAULT_PROGRESS, ...(panel.config as Partial<ProgressConfig>) };
 }
@@ -111,6 +116,11 @@ export const BLOCK_KINDS: PanelKindInfo[] = [
     description: 'A ring or a bar for the share of cards that are done.',
   },
   {
+    kind: 'overdue',
+    label: 'My late cards',
+    description: 'The cards assigned to you that are past their date. Everyone sees their own.',
+  },
+  {
     kind: 'image',
     label: 'Picture',
     description: 'A moodboard, a plan or a logo, with a description for people who cannot see it.',
@@ -137,6 +147,7 @@ export const KIND_LABEL: Record<PanelKind, string> = {
   embed: 'Video or calendar',
   link: 'Link',
   progress: 'Progress',
+  overdue: 'My late cards',
 };
 
 export const BLOCK_KIND_IDS: Array<Exclude<PanelKind, 'list'>> = BLOCK_KINDS.map(
@@ -391,4 +402,43 @@ export function readProgress(config: ProgressConfig, panels: BoardList[]): Progr
     state: percent === 100 ? 'complete' : 'running',
     spoken: `${caption}: ${percent} percent. ${detail}.`,
   };
+}
+
+export type LateSeverity = 'recent' | 'week' | 'long';
+
+export interface LateCard {
+  card: CardSummary;
+  listName: string;
+  daysLate: number;
+  severity: LateSeverity;
+}
+
+export function lateSeverity(daysLate: number): LateSeverity {
+  if (daysLate >= 7) return 'long';
+  if (daysLate >= 3) return 'week';
+  return 'recent';
+}
+
+export function lateLabel(daysLate: number): string {
+  return `${plural(daysLate, 'day')} late`;
+}
+
+export function lateCardsOf(
+  panels: BoardList[],
+  meId: string | undefined,
+  today: string
+): LateCard[] {
+  if (!meId) return [];
+  const late: LateCard[] = [];
+  for (const panel of panels) {
+    if (!isCardList(panel)) continue;
+    for (const card of panel.cards) {
+      if (!card.due_date || !card.assignee_ids.includes(meId)) continue;
+      const daysLate = -daysUntil(card.due_date, today);
+      if (daysLate > 0) {
+        late.push({ card, listName: panel.name, daysLate, severity: lateSeverity(daysLate) });
+      }
+    }
+  }
+  return late.sort((a, b) => b.daysLate - a.daysLate || a.card.title.localeCompare(b.card.title));
 }

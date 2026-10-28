@@ -20,7 +20,7 @@ describe('AddBlockDialog', () => {
   it('offers every kind of block with what it shows', () => {
     render(<AddBlockDialog open onPick={vi.fn()} onClose={vi.fn()} />);
 
-    for (const name of ['Calendar', 'Agenda', 'Note', 'Counter', 'Progress']) {
+    for (const name of ['Calendar', 'Agenda', 'Note', 'Counter', 'Progress', 'My late cards']) {
       expect(screen.getByRole('button', { name: new RegExp(`^${name}`) })).toBeInTheDocument();
     }
     expect(screen.getByText(/A month with a dot on every day/)).toBeInTheDocument();
