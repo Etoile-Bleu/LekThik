@@ -38,6 +38,7 @@ const MIN_SIZE: Record<PanelKind, Size> = {
   table: { w: 3, h: 4 },
   clocks: { w: 3, h: 5 },
   timer: { w: 3, h: 7 },
+  poll: { w: 3, h: 5 },
 };
 
 /** The widest a tile of each kind gets when Fit stretches a row to fill the board. */
@@ -86,6 +87,10 @@ export function idealSize(panel: BoardList): Size {
       return { w: wide(panel) ? 6 : 4, h: 7 };
     case 'timer':
       return { w: wide(panel) ? 4 : 3, h: 8 };
+    case 'poll': {
+      const options = (panel.config as { options?: unknown[] }).options?.length ?? 2;
+      return { w: wide(panel) ? 5 : 4, h: clamp(4 + options * 2, 6, 16) };
+    }
     case 'clocks': {
       const config = panel.config as { zones?: string[]; place?: unknown };
       const zones = config.zones?.length ?? 0;
