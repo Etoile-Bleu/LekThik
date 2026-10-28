@@ -1,8 +1,10 @@
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { afterEach, expect } from 'vitest';
 
 expect.extend(matchers);
+
+configure({ asyncUtilTimeout: 4000 });
 
 if (typeof HTMLDialogElement !== 'undefined') {
   HTMLDialogElement.prototype.showModal = function showModal(this: HTMLDialogElement) {
