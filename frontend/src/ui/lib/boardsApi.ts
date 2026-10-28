@@ -72,7 +72,8 @@ export type PanelKind =
   | 'snippet'
   | 'table'
   | 'clocks'
-  | 'timer';
+  | 'timer'
+  | 'poll';
 export type EmbedProvider =
   'youtube' | 'vimeo' | 'google_calendar' | 'excalidraw' | 'figma' | 'notion';
 export type BlockSize = 'normal' | 'wide';
@@ -119,6 +120,24 @@ export interface TimerConfig {
   remaining_ms: number | null;
   /** Focus sessions finished so far. */
   cycle: number;
+}
+export interface PollOption {
+  id: string;
+  text: string;
+}
+export interface PollConfig {
+  size: BlockSize;
+  question: string;
+  options: PollOption[];
+  show_voters: boolean;
+  closed: boolean;
+}
+export interface PollTally {
+  list_id: string;
+  counts: Array<{ option_id: string; votes: number }>;
+  total: number;
+  mine: string | null;
+  voters: Array<{ option_id: string; user_ids: string[] }> | null;
 }
 export interface ClockPlace {
   name: string;
@@ -208,7 +227,8 @@ export type PanelConfig =
   | SnippetConfig
   | TableConfig
   | ClocksConfig
-  | TimerConfig;
+  | TimerConfig
+  | PollConfig;
 
 /**
  * One panel of a board: a list of cards, or a block that shows something else.
@@ -282,6 +302,7 @@ export interface BoardView {
   labels: Label[];
   fields?: Field[];
   field_values?: CardFieldValue[];
+  polls?: PollTally[];
 }
 
 export interface CardDetail {
