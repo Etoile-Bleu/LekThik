@@ -7,6 +7,7 @@ mod label;
 mod list;
 mod members;
 mod name;
+mod poll;
 mod template;
 mod user;
 mod workspace;
@@ -36,6 +37,7 @@ pub use members::{
     ChangeRoleRequestDto, InvitationDto, InviteMemberRequestDto, MemberDto, MembersResponseDto,
 };
 pub use name::{CreateNamedRequestDto, NameRequestDto};
+pub use poll::{PollCountDto, PollTallyDto, PollVotersDto, VoteRequestDto};
 pub use template::{
     BoardTemplateDto, TemplateCardDto, TemplateLabelDto, TemplateListDto, TemplatesResponseDto,
     WorkspaceTemplateDto,

@@ -6,6 +6,7 @@ use uuid::Uuid;
 use super::field::{CardFieldValueDto, FieldDto};
 use super::label::LabelDto;
 use super::list::ListWithCardsDto;
+use super::poll::PollTallyDto;
 
 #[derive(Serialize, ToSchema)]
 pub struct BoardResponseDto {
@@ -87,6 +88,7 @@ pub struct BoardViewDto {
     pub labels: Vec<LabelDto>,
     pub fields: Vec<FieldDto>,
     pub field_values: Vec<CardFieldValueDto>,
+    pub polls: Vec<PollTallyDto>,
 }
 
 impl From<BoardView> for BoardViewDto {
@@ -100,6 +102,7 @@ impl From<BoardView> for BoardViewDto {
             labels: view.labels.into_iter().map(Into::into).collect(),
             fields: view.fields.into_iter().map(Into::into).collect(),
             field_values: view.field_values.into_iter().map(Into::into).collect(),
+            polls: view.polls.into_iter().map(Into::into).collect(),
         }
     }
 }
