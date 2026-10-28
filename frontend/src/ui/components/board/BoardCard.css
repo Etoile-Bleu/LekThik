@@ -144,6 +144,16 @@
   margin-left: auto;
 }
 
+.board-card__comments {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .board-card__preview {
   display: -webkit-box;
   overflow: hidden;

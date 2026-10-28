@@ -1,6 +1,7 @@
 mod block;
 mod board;
 mod card;
+mod comment;
 mod due_date;
 mod embed;
 mod error;
@@ -31,6 +32,10 @@ pub use block::{
 };
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};
+pub use comment::{
+    Activity, ActivityKind, COMMENT_MAX_CHARS, Comment, CommentBody, CommentRepo,
+    MAX_COMMENTS_PER_CARD, MAX_COMMENTS_PER_MINUTE, Person, TIMELINE_LIMIT, TimelineItem,
+};
 pub use due_date::DueDate;
 pub use embed::{EmbedProvider, parse_embed_url};
 pub use error::BoardsError;
@@ -66,6 +71,8 @@ pub use workspace::{Workspace, WorkspaceRepo, WorkspaceWithBoards};
 pub use board::MockBoardRepo;
 #[cfg(feature = "test-utils")]
 pub use card::MockCardRepo;
+#[cfg(feature = "test-utils")]
+pub use comment::MockCommentRepo;
 #[cfg(feature = "test-utils")]
 pub use image::{MockBlockImageRepo, MockImageSanitizer};
 #[cfg(feature = "test-utils")]

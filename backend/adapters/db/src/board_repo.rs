@@ -162,7 +162,8 @@ impl BoardRepo for PgBoardRepo {
 
         let card_rows = sqlx::query(
             "SELECT c.id, c.list_id, c.title, c.description <> '' AS has_description, \
-                c.due_date::text AS due_date, left(c.description, 140) AS preview \
+                c.due_date::text AS due_date, left(c.description, 140) AS preview, \
+                (SELECT count(*) FROM card_comments cc WHERE cc.card_id = c.id) AS comment_count \
                 FROM cards c JOIN lists l ON l.id = c.list_id \
                 WHERE l.board_id = $1 ORDER BY c.position, c.created_at, c.id",
         )
@@ -267,6 +268,7 @@ impl BoardRepo for PgBoardRepo {
                 label_ids: labels_by_card.remove(&card_id).unwrap_or_default(),
                 assignee_ids: assignees_by_card.remove(&card_id).unwrap_or_default(),
                 due_date: row.try_get("due_date").map_err(repository_error)?,
+                comment_count: row.try_get("comment_count").map_err(repository_error)?,
             };
             if let Some(index) = list_positions.get(&list_id) {
                 lists[*index].cards.push(card);
