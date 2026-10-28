@@ -6,8 +6,8 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 
 use adapters_db::{
-    PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgInvitationRepo, PgLabelRepo, PgListRepo,
-    PgLocator, PgMemberRepo, PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo,
+    PgBlockImageRepo, PgBoardRepo, PgCardRepo, PgCommentRepo, PgInvitationRepo, PgLabelRepo,
+    PgListRepo, PgLocator, PgMemberRepo, PgPreferencesRepo, PgUserRepo, PgVerificationCodeRepo,
     PgWorkspaceRepo,
 };
 use adapters_image::ImageCrateSanitizer;
@@ -199,6 +199,12 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
     .execute(&pool)
     .await?;
 
+    sqlx::raw_sql(include_str!(
+        "../../../../migrations/020_add_card_comments_and_activity.sql"
+    ))
+    .execute(&pool)
+    .await?;
+
     let mailer = Arc::new(RecordingMailer::default());
 
     let state = AppState {
@@ -214,6 +220,7 @@ pub async fn spawn_app_with_mailer() -> anyhow::Result<(
         block_image_repo: Arc::new(PgBlockImageRepo::new(pool.clone())),
         image_sanitizer: Arc::new(ImageCrateSanitizer::new()),
         card_repo: Arc::new(PgCardRepo::new(pool.clone())),
+        comment_repo: Arc::new(PgCommentRepo::new(pool.clone())),
         label_repo: Arc::new(PgLabelRepo::new(pool.clone())),
         member_repo: Arc::new(PgMemberRepo::new(pool.clone())),
         preferences_repo: Arc::new(PgPreferencesRepo::new(pool.clone())),
