@@ -16,6 +16,7 @@ mod list;
 mod locator;
 mod look;
 mod members;
+mod poll;
 mod role;
 mod templates;
 mod text;
@@ -26,10 +27,11 @@ pub use block::{
     ALT_MAX_CHARS, AgendaConfig, AgendaRange, BLOCK_TITLE_MAX_CHARS, BlockConfig, BlockSize,
     CAPTION_MAX_CHARS, CLOCKS_MAX_ZONES, COUNTER_LABEL_MAX_CHARS, CalendarConfig, ChartConfig,
     ChartSource, ChartStyle, ClocksConfig, CounterConfig, CounterMetric, EmbedConfig, ImageConfig,
-    LinkConfig, ListKind, NOTE_MAX_CHARS, NoteConfig, OverdueConfig, PLACE_NAME_MAX_CHARS, Place,
-    ProgressConfig, ProgressStyle, SNIPPET_MAX_CHARS, SNIPPET_MAX_LINES, SnippetConfig,
-    SnippetLanguage, TABLE_CELL_MAX_CHARS, TABLE_MAX_BYTES, TABLE_MAX_COLUMNS, TABLE_MAX_ROWS,
-    TableConfig, TimerConfig, TimerMode, TimerState, ZONE_MAX_CHARS,
+    LinkConfig, ListKind, NOTE_MAX_CHARS, NoteConfig, OverdueConfig, PLACE_NAME_MAX_CHARS,
+    POLL_MAX_OPTIONS, POLL_MIN_OPTIONS, POLL_OPTION_MAX_CHARS, POLL_QUESTION_MAX_CHARS, Place,
+    PollConfig, PollOption, ProgressConfig, ProgressStyle, SNIPPET_MAX_CHARS, SNIPPET_MAX_LINES,
+    SnippetConfig, SnippetLanguage, TABLE_CELL_MAX_CHARS, TABLE_MAX_BYTES, TABLE_MAX_COLUMNS,
+    TABLE_MAX_ROWS, TableConfig, TimerConfig, TimerMode, TimerState, ZONE_MAX_CHARS,
 };
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};
@@ -64,6 +66,7 @@ pub use list::{List, ListRepo, ListWithCards, WipLimit};
 pub use locator::{Located, Locator, Target};
 pub use look::{BoardAccent, BoardBackground, BoardLook};
 pub use members::{Member, MemberRepo};
+pub use poll::{PollCount, PollRepo, PollTally, PollVoters};
 pub use role::Role;
 pub use templates::{
     BoardTemplate, TemplateCard, TemplateCategory, TemplateLabel, TemplateList, WorkspaceTemplate,
@@ -93,5 +96,7 @@ pub use list::MockListRepo;
 pub use locator::MockLocator;
 #[cfg(feature = "test-utils")]
 pub use members::MockMemberRepo;
+#[cfg(feature = "test-utils")]
+pub use poll::MockPollRepo;
 #[cfg(feature = "test-utils")]
 pub use workspace::MockWorkspaceRepo;

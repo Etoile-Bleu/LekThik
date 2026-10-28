@@ -40,6 +40,10 @@ body:has(dialog[open]) {
   width: min(780px, calc(100vw - 2rem));
 }
 
+.dialog--xl {
+  width: min(900px, calc(100vw - 2rem));
+}
+
 .dialog__close {
   position: absolute;
   top: 0.75rem;

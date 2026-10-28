@@ -33,9 +33,10 @@ describe('AddBlockDialog', () => {
       'Table',
       'Code',
     ]) {
-      expect(screen.getByRole('button', { name: new RegExp(`^${name}`) })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: new RegExp(`^${name}`) })).toBeInTheDocument();
     }
-    expect(screen.getByText(/A month with a dot on every day/)).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: /^Poll/ })).toBeInTheDocument();
+    expect(screen.getAllByText(/A month with a dot on every day/).length).toBeGreaterThan(0);
   });
 
   it('picks a kind and closes', () => {
@@ -43,10 +44,47 @@ describe('AddBlockDialog', () => {
     const onClose = vi.fn();
     render(<AddBlockDialog open onPick={onPick} onClose={onClose} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /^Agenda/ }));
+    fireEvent.click(screen.getByRole('option', { name: /^Agenda/ }));
 
     expect(onPick).toHaveBeenCalledWith('agenda');
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('filters the blocks as you type, by name, description or keyword', () => {
+    render(<AddBlockDialog open onPick={vi.fn()} onClose={vi.fn()} />);
+    const search = screen.getByRole('combobox', { name: 'Search blocks' });
+
+    fireEvent.change(search, { target: { value: 'vote' } });
+    expect(screen.getAllByRole('option')).toHaveLength(1);
+    expect(screen.getByRole('option', { name: /^Poll/ })).toBeInTheDocument();
+
+    fireEvent.change(search, { target: { value: 'spreadsheet' } });
+    expect(screen.getByRole('option', { name: /^Table/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /^Poll/ })).not.toBeInTheDocument();
+  });
+
+  it('says so when nothing matches', () => {
+    render(<AddBlockDialog open onPick={vi.fn()} onClose={vi.fn()} />);
+
+    fireEvent.change(screen.getByRole('combobox', { name: 'Search blocks' }), {
+      target: { value: 'zzzz' },
+    });
+
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    expect(screen.getByRole('status')).toHaveTextContent(/No block matches/);
+  });
+
+  it('moves with the arrow keys and adds with Enter', () => {
+    const onPick = vi.fn();
+    render(<AddBlockDialog open onPick={onPick} onClose={vi.fn()} />);
+    const search = screen.getByRole('combobox', { name: 'Search blocks' });
+
+    expect(screen.getByRole('option', { selected: true })).toHaveTextContent(/^Calendar/);
+    fireEvent.keyDown(search, { key: 'ArrowDown' });
+    expect(screen.getByRole('option', { selected: true })).toHaveTextContent(/^Agenda/);
+    fireEvent.keyDown(search, { key: 'Enter' });
+
+    expect(onPick).toHaveBeenCalledWith('agenda');
   });
 });
 

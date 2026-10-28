@@ -370,7 +370,7 @@ describe('BoardPage', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /Add a block/ }));
       const picker = await screen.findByRole('dialog', { name: 'Add a block' });
-      fireEvent.click(within(picker).getByRole('button', { name: /^Calendar/ }));
+      fireEvent.click(within(picker).getByRole('option', { name: /^Calendar/ }));
 
       await waitFor(() =>
         expect(api.createBlock).toHaveBeenCalledWith('b1', 'calendar', 'Calendar', {
@@ -397,7 +397,7 @@ describe('BoardPage', () => {
 
       fireEvent.click(screen.getByRole('button', { name: /Add a block/ }));
       fireEvent.click(
-        within(await screen.findByRole('dialog', { name: 'Add a block' })).getByRole('button', {
+        within(await screen.findByRole('dialog', { name: 'Add a block' })).getByRole('option', {
           name: /^Counter/,
         })
       );
