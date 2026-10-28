@@ -223,6 +223,7 @@ The OpenAPI description is served by the backend: Swagger UI at `/swagger-ui` an
 | Cards | `POST /api/lists/{id}/cards`, `PATCH /api/cards/{id}`, `PUT /api/cards/{id}/assignees`, `GET /api/users/me/cards` |
 | Live | `GET /api/events` (Server-Sent Events) |
 | Preferences | `GET` and `PUT /api/users/me/preferences` |
+| Your data | `GET /api/users/me/export` (one JSON file, never a secret), `DELETE /api/users/me` (password and username again, a workspace you own with other members needs `delete_owned_workspaces`) |
 
 Endpoint details and limits are in [backend/README.md](backend/README.md).
 
@@ -299,7 +300,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the git workflow, commit conventions 
 LekThik is built as part of the Simulated Professional Work program, to show that [ZamSync](https://github.com/Etoile-Bleu/ZamSync), an offline-first replication engine, can be added to a finished application. These are the honest edges today:
 
 - **Offline use and multi-site replication are not in yet.** That is what ZamSync is meant to add, and the backend is shaped to allow it.
-- **Exporting and deleting a whole account is not in the app.** [docs/privacy.md](docs/privacy.md) says so.
 - **No notifications other than the live updates and invitation emails.** A mention highlights a name in a comment, it does not send anything to the person yet.
 - **Ownership of a workspace cannot be transferred**, and a username cannot be edited.
 - **Searching is done from the command palette** over what is loaded: the open board, your assigned cards and your boards. There is no search across every card of every workspace.
