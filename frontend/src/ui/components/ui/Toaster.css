@@ -11,16 +11,18 @@
 }
 
 .toast {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
-  padding: 0.75rem 0.5rem 0.75rem 1rem;
+  padding: 0.75rem 0.5rem 0.9rem 1rem;
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-md);
   background: var(--color-ink);
   color: var(--color-on-ink);
   box-shadow: var(--shadow-popover);
   pointer-events: auto;
+  overflow: hidden;
   animation: toast-in var(--duration-base) var(--ease-out);
 }
 
@@ -32,11 +34,27 @@
   border-color: var(--color-accent);
 }
 
+.toast--action {
+  border-color: var(--color-accent);
+}
+
 .toast__message {
   flex: 1;
   padding-top: 0.45rem;
   font-size: 0.92rem;
   line-height: 1.4;
+}
+
+.toast__action {
+  flex-shrink: 0;
+  margin-top: 0.3rem;
+  border-color: color-mix(in srgb, var(--color-on-ink) 35%, transparent);
+  color: var(--color-on-ink);
+}
+
+.toast__action:hover {
+  background: color-mix(in srgb, var(--color-on-ink) 14%, transparent);
+  border-color: color-mix(in srgb, var(--color-on-ink) 55%, transparent);
 }
 
 .toast__close {
@@ -49,9 +67,51 @@
   color: var(--color-on-ink);
 }
 
+/* A quiet sign of how long is left, never the only one: the message always says what happened
+   and the action, when there is one, always says in words what it will do. */
+.toast__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  transform-origin: left;
+  background: color-mix(in srgb, var(--color-on-ink) 45%, transparent);
+  animation-name: toast-bar;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;
     transform: translateY(8px);
   }
+}
+
+@keyframes toast-bar {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    animation: none;
+  }
+
+  .toast__bar {
+    display: none;
+  }
+}
+
+:root[data-motion='reduce'] .toast {
+  animation: none;
+}
+
+:root[data-motion='reduce'] .toast__bar {
+  display: none;
 }
