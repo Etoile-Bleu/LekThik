@@ -140,6 +140,18 @@ change what teammates see. At most 50 lists can be folded per board.
 A progress block (migration `013_add_progress_block.sql`) keeps a style (`ring` or `bar`), an optional
 label and the done list it measures, which must be a list of the same board, exactly like a counter.
 
+Comments and history (migration `020_add_card_comments_and_activity.sql`). `GET /api/cards/{id}/timeline`
+returns the comments and the history lines of a card merged, oldest first, the latest 200 at most, to
+any member including readers. `POST /api/cards/{id}/comments` adds a comment (writers and above, 5000
+characters, control characters refused, 500 a card, 20 a minute for one person, answered `409` past
+the limits). `PATCH` and `DELETE /api/cards/{id}/comments/{comment_id}` are for the author, and an
+admin or owner can also delete. A stranger gets `404` for all of them. The board answer carries a
+`comment_count` on every card. The history is written by the server inside the transaction of the
+change it describes (create, duplicate, rename, description, due date, move between lists, labels,
+assignees), so it cannot disagree with the card, and an unchanged field writes nothing. The author
+and actor columns are `ON DELETE SET NULL`: a deleted account leaves its words and its lines of
+history behind, without a name.
+
 A timer block (migration `019_add_timer_block.sql`) is shared by the whole board. It keeps a mode (focus,
 short break or long break), the three lengths in minutes (1 to 120, 60 for the short break), a state
 and the count of finished focus sessions. A running timer stores its end as epoch milliseconds, never
