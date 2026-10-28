@@ -760,6 +760,111 @@ async fn a_clocks_block_keeps_zones_and_a_rounded_place_and_refuses_odd_ones() -
 }
 
 #[tokio::test]
+async fn a_timer_block_is_started_and_paused_by_writers_and_only_in_states_that_can_be_true()
+-> anyhow::Result<()> {
+    let (app, pool, _container) = spawn_app().await?;
+    let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;
+    let wen = signed_in_cookie(&app, &pool, "wen@example.com", "wen").await?;
+    let rita = signed_in_cookie(&app, &pool, "rita@example.com", "rita").await?;
+    let (workspace_id, board_id, _) = create_workspace_board_list(&app, &alice).await?;
+    join_as(&pool, &workspace_id, "wen@example.com", "writer").await?;
+    join_as(&pool, &workspace_id, "rita@example.com", "reader").await?;
+    let uri = format!("/api/boards/{board_id}/blocks");
+
+    let (status, timer) = call(
+        &app,
+        "POST",
+        &uri,
+        Some(&alice),
+        Some(json!({ "kind": "timer", "name": "Sprint focus" })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::CREATED, "{timer}");
+    assert_eq!(timer["config"]["state"], "idle");
+    assert_eq!(timer["config"]["focus_minutes"], 25);
+
+    let config_uri = format!("/api/blocks/{}/config", id_of(&timer)?);
+    let (status, running) = call(
+        &app,
+        "PUT",
+        &config_uri,
+        Some(&alice),
+        Some(json!({ "kind": "timer", "config": { "state": "running", "ends_at_ms": 1_800_000_000_000_i64, "cycle": 1 } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::OK, "{running}");
+    assert_eq!(running["config"]["ends_at_ms"], 1_800_000_000_000_i64);
+
+    let seen = board_view(&app, &rita, &board_id).await?;
+    assert_eq!(
+        seen["lists"][1]["config"]["ends_at_ms"], 1_800_000_000_000_i64,
+        "a reader gets the same end time as the writer who started it"
+    );
+    let (status, _) = call(
+        &app,
+        "PUT",
+        &config_uri,
+        Some(&rita),
+        Some(json!({ "kind": "timer", "config": { "state": "idle" } })),
+    )
+    .await?;
+    assert_eq!(
+        status,
+        StatusCode::FORBIDDEN,
+        "a reader cannot stop the timer"
+    );
+    let (status, _) = call(
+        &app,
+        "PUT",
+        &config_uri,
+        Some(&wen),
+        Some(json!({ "kind": "timer", "config": { "state": "idle" } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::OK, "another writer can");
+    let (status, _) = call(
+        &app,
+        "PUT",
+        &config_uri,
+        Some(&alice),
+        Some(json!({ "kind": "timer", "config": { "state": "running", "ends_at_ms": 1_800_000_000_000_i64, "cycle": 1 } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::OK);
+
+    let (status, paused) = call(
+        &app,
+        "PUT",
+        &config_uri,
+        Some(&alice),
+        Some(json!({ "kind": "timer", "config": { "state": "paused", "remaining_ms": 600_000, "cycle": 1 } })),
+    )
+    .await?;
+    assert_eq!(status, StatusCode::OK, "{paused}");
+    assert_eq!(paused["config"]["ends_at_ms"], serde_json::Value::Null);
+
+    for bad in [
+        json!({ "state": "running" }),
+        json!({ "state": "paused", "ends_at_ms": 1_800_000_000_000_i64 }),
+        json!({ "state": "idle", "remaining_ms": 5 }),
+        json!({ "focus_minutes": 0 }),
+        json!({ "mode": "nap" }),
+    ] {
+        let (status, _) = call(
+            &app,
+            "PUT",
+            &config_uri,
+            Some(&alice),
+            Some(json!({ "kind": "timer", "config": bad })),
+        )
+        .await?;
+        assert_eq!(status, StatusCode::BAD_REQUEST, "{bad}");
+    }
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn cards_only_live_in_lists() -> anyhow::Result<()> {
     let (app, pool, _container) = spawn_app().await?;
     let alice = signed_in_cookie(&app, &pool, "alice@example.com", "alice").await?;

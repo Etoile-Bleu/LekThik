@@ -113,7 +113,7 @@ emails) so a client can draw avatars without another request.
 | `PATCH /api/cards/{id}` with `due_date` | Set a day, send `null` to clear it, leave it out to keep it |
 | `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
 | `GET /api/users/me/cards` | Cards assigned to me across workspaces, soonest due first |
-| `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note, counter, progress, overdue, chart, snippet, table or clocks block |
+| `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note, counter, progress, overdue, chart, snippet, table, clocks or timer block |
 | `PUT /api/blocks/{id}/image` | Set the picture of an image block (the file as the body) |
 | `GET /api/blocks/{id}/image` | The picture of an image block, for members only |
 | `PUT /api/blocks/{id}/config` | Change the settings of a block, the kind must match |
@@ -139,6 +139,14 @@ change what teammates see. At most 50 lists can be folded per board.
 
 A progress block (migration `013_add_progress_block.sql`) keeps a style (`ring` or `bar`), an optional
 label and the done list it measures, which must be a list of the same board, exactly like a counter.
+
+A timer block (migration `019_add_timer_block.sql`) is shared by the whole board. It keeps a mode (focus,
+short break or long break), the three lengths in minutes (1 to 120, 60 for the short break), a state
+and the count of finished focus sessions. A running timer stores its end as epoch milliseconds, never
+a number of ticks, so every device works out the same time left from the same value. A paused one
+stores the time left, an idle one neither, and any other combination is refused, as are an end
+before 2001 or after 2100. Starting, pausing or resetting is a `PUT /api/blocks/{id}/config` from
+someone who can edit, which the live stream carries to everyone else. The last write wins.
 
 A clocks block (migration `018_add_clocks_block.sql`) keeps up to six time zone names (checked for
 shape, no duplicates, 40 characters at most; the browser knows which ones exist) and an optional place
@@ -180,7 +188,7 @@ themselves. It is shared with everyone on the board and refreshed live like any 
 The `canvas` view is one more value of the per board view preference.
 
 A board holds panels in one row, and a panel is either a list of cards or a block that shows
-something about them: `calendar`, `agenda`, `note`, `counter`, `progress`, `overdue`, `chart`, `snippet`, `table` or `clocks`. Blocks live in the `lists` table with a
+something about them: `calendar`, `agenda`, `note`, `counter`, `progress`, `overdue`, `chart`, `snippet`, `table`, `clocks` or `timer`. Blocks live in the `lists` table with a
 `kind` and a JSON `config`, so moving, renaming, deleting, permissions, the 50 panel limit and live
 updates are the ones lists already have. `POST /api/boards/{id}/blocks` adds one and
 `PUT /api/blocks/{id}/config` changes its settings (writers and above). Settings are checked per kind

@@ -30,6 +30,7 @@ import {
   RingIcon,
   SettingsIcon,
   TableIcon,
+  TimerIcon,
   TrashIcon,
 } from '../ui/Icons';
 import { InlineEdit } from '../ui/InlineEdit';
@@ -48,6 +49,7 @@ import { OverdueBlock } from './blocks/OverdueBlock';
 import { ProgressBlock } from './blocks/ProgressBlock';
 import { SnippetBlock } from './blocks/SnippetBlock';
 import { TableBlock } from './blocks/TableBlock';
+import { TimerBlock } from './blocks/TimerBlock';
 import './BoardBlock.css';
 
 interface BoardBlockProps {
@@ -100,6 +102,8 @@ export function KindIcon({ kind, size = 16 }: { kind: PanelKind; size?: number }
       return <TableIcon size={size} />;
     case 'clocks':
       return <GlobeIcon size={size} />;
+    case 'timer':
+      return <TimerIcon size={size} />;
     default:
       return null;
   }
@@ -294,6 +298,13 @@ export function BoardBlock({
         {block.kind === 'progress' && <ProgressBlock block={block} panels={panels} />}
         {block.kind === 'overdue' && <OverdueBlock panels={panels} onOpenCard={onOpenCard} />}
         {block.kind === 'chart' && <ChartBlock block={block} panels={panels} />}
+        {block.kind === 'timer' && (
+          <TimerBlock
+            block={block}
+            editable={!readOnly}
+            onSave={(blockId, config) => onSaveConfig(blockId, 'timer', config)}
+          />
+        )}
         {block.kind === 'clocks' && (
           <ClocksBlock block={block} editable={!readOnly} onSetup={onSettings} />
         )}
