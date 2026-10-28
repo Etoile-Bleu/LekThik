@@ -1,0 +1,110 @@
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.composer__field {
+  position: relative;
+}
+
+.composer__text {
+  display: block;
+  width: 100%;
+  min-height: 4.6rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.composer__text:hover {
+  border-color: var(--color-ink);
+}
+
+.composer__text:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.composer__list {
+  position: absolute;
+  inset-inline: 0.5rem;
+  top: calc(100% + 4px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-paper-card);
+  box-shadow: var(--shadow-popover);
+  list-style: none;
+  animation: composer-in var(--duration-fast) var(--ease-out);
+}
+
+.composer__list li {
+  display: flex;
+  align-items: center;
+  gap: 0.1rem;
+  min-height: 32px;
+  padding: 0 0.6rem;
+  border-radius: var(--radius-sm);
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.composer__list li span {
+  color: var(--color-text-muted);
+}
+
+.composer__list li[data-active] {
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+}
+
+.composer__list li[data-active] span {
+  color: inherit;
+}
+
+.composer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.75rem;
+}
+
+.composer__hint {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.composer__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+@keyframes composer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .composer__list {
+    animation: none;
+  }
+}
+
+:root[data-motion='reduce'] .composer__list {
+  animation: none;
+}
