@@ -37,6 +37,7 @@ import { type BoardViewKind, boardPrefsFor, cardDisplayFor } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
 import { useCanvasToolStore } from '@lib/canvasToolStore';
+import { setPresenceCard, startPresence, stopPresence } from '@lib/presenceStore';
 import { useCommandStore } from '@lib/commandStore';
 import { useFullscreenStore } from '@lib/fullscreenStore';
 import { useSelectionStore } from '@lib/selectionStore';
@@ -53,6 +54,7 @@ import { BoardCanvas } from '../components/board/BoardCanvas';
 import { BoardContextHost } from '../components/board/BoardContextHost';
 import { CanvasTools } from '../components/board/CanvasTools';
 import { SelectionBar } from '../components/board/SelectionBar';
+import { PresenceStack } from '../components/collab/PresenceStack';
 import { BoardTable } from '../components/board/BoardTable';
 import { TilePositionDialog } from '../components/board/TilePositionDialog';
 import { BoardCommandSource } from '../components/command/BoardCommandSource';
@@ -144,6 +146,17 @@ export function BoardPage() {
   useEffect(() => {
     useSelectionStore.getState().clear();
   }, [boardKey, viewKind]);
+
+  // Being on the board: the others see this person, and the card they have open.
+  useEffect(() => {
+    if (!boardKey || !meId) return undefined;
+    startPresence(boardKey, meId);
+    return () => stopPresence();
+  }, [boardKey, meId]);
+
+  useEffect(() => {
+    setPresenceCard(openCardId);
+  }, [openCardId]);
 
   function allCardIds(): string[] {
     return (view?.lists ?? [])
@@ -414,6 +427,12 @@ export function BoardPage() {
           <div className="board-header__actions">
             {!editable && <span className="board-header__readonly">View only</span>}
             <UndoRedoButtons />
+            <PresenceStack
+              cardTitle={(cardId) =>
+                view.lists.flatMap((list) => list.cards).find((card) => card.id === cardId)?.title
+              }
+              onOpenCard={setOpenCardId}
+            />
             <DisplayMenu
               boardId={view.board.id}
               look={view.look}
