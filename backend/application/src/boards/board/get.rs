@@ -40,6 +40,7 @@ mod tests {
             labels: Vec::new(),
             fields: Vec::new(),
             field_values: Vec::new(),
+            polls: Vec::new(),
         };
 
         let mut repo = MockBoardRepo::new();
