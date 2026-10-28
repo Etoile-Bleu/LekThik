@@ -44,6 +44,7 @@ export interface Label {
 }
 
 export interface CardSummary {
+  comment_count?: number;
   id: string;
   list_id: string;
   title: string;

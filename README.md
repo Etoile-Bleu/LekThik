@@ -54,10 +54,11 @@ Most boards force one shape: a row of columns. LekThik lets the board take the s
 2. **Make a workspace**, invite people by email and give them a role: reader, writer, admin or owner. Start a board from a template (sprint planning, bug tracker, content calendar and more) or from nothing.
 3. **Lay it out.** Keep the classic row of columns, or switch to the **Canvas**, where lists and blocks are tiles on a 12 column grid. Drag them anywhere, one under another or side by side, resize them from the corner, or press **Fit** and let LekThik arrange them. The canvas layout is shared, so everyone sees the same one.
 4. **Write.** A card has assignees, a due date, coloured labels with a priority and a description in Markdown: tables, checklists, code, LaTeX formulas and Mermaid diagrams.
-5. **Add blocks.** A calendar, an agenda, a counter, a progress ring, a note, a picture, a video or a link sit beside the lists and draw on the cards of the board.
-6. **See it four ways.** The same cards as columns, on a free canvas, in a sortable table or in a calendar of due dates.
-7. **Do it from the keyboard.** `Ctrl+K` jumps to anything and adds, moves, assigns or schedules without touching the mouse.
-8. **Work together.** Nothing needs a refresh: cards, layouts and members follow what others do, and a reconnection catches up on what was missed.
+5. **Talk about it.** Every card has a timeline: comments written in Markdown with `@` mentions, and a short history of who moved it, renamed it, dated it, labelled it or assigned it. Authors edit and delete their own comments, admins can delete any, and a new comment appears for everyone at once.
+6. **Add blocks.** A calendar, an agenda, a counter, a progress ring, a note, a picture, a video or a link sit beside the lists and draw on the cards of the board.
+7. **See it four ways.** The same cards as columns, on a free canvas, in a sortable table or in a calendar of due dates.
+8. **Do it from the keyboard.** `Ctrl+K` jumps to anything and adds, moves, assigns or schedules without touching the mouse.
+9. **Work together.** Nothing needs a refresh: cards, layouts and members follow what others do, and a reconnection catches up on what was missed.
 
 ![A short tour: a tile is dragged to a new place with its dashed outline, another is resized from its corner, Fit arranges everything and Undo fit brings the previous layout back](docs/assets/layout.gif)
 
@@ -298,7 +299,7 @@ LekThik is built as part of the Simulated Professional Work program, to show tha
 
 - **Offline use and multi-site replication are not in yet.** That is what ZamSync is meant to add, and the backend is shaped to allow it.
 - **Exporting and deleting a whole account is not in the app.** [docs/privacy.md](docs/privacy.md) says so.
-- **No comments or activity history on cards yet**, and no notifications other than the live updates and invitation emails.
+- **No notifications other than the live updates and invitation emails.** A mention highlights a name in a comment, it does not send anything to the person yet.
 - **Ownership of a workspace cannot be transferred**, and a username cannot be edited.
 - **Searching is done from the command palette** over what is loaded: the open board, your assigned cards and your boards. There is no search across every card of every workspace.
 - **A pointer drag is checked in a real browser, but touch dragging on tablets has had less testing** than the keyboard and form alternatives.

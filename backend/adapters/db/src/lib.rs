@@ -1,10 +1,12 @@
 #[macro_use]
 mod scope;
 
+mod activity;
 mod block_image_repo;
 mod board_repo;
 mod board_seed;
 mod card_repo;
+mod comment_repo;
 mod invitation_repo;
 mod label_repo;
 mod list_repo;
@@ -19,6 +21,7 @@ mod workspace_repo;
 pub use block_image_repo::PgBlockImageRepo;
 pub use board_repo::PgBoardRepo;
 pub use card_repo::PgCardRepo;
+pub use comment_repo::PgCommentRepo;
 pub use invitation_repo::PgInvitationRepo;
 pub use label_repo::PgLabelRepo;
 pub use list_repo::PgListRepo;
