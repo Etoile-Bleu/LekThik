@@ -14,6 +14,10 @@ pub const CAPTION_MAX_CHARS: usize = 300;
 pub const BLOCK_TITLE_MAX_CHARS: usize = 100;
 pub const SNIPPET_MAX_CHARS: usize = 12_000;
 pub const SNIPPET_MAX_LINES: usize = 500;
+pub const TABLE_MAX_ROWS: usize = 100;
+pub const TABLE_MAX_COLUMNS: usize = 12;
+pub const TABLE_CELL_MAX_CHARS: usize = 200;
+pub const TABLE_MAX_BYTES: usize = 40_000;
 
 /// What a panel of a board is. Only a list holds cards, the others show something.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,6 +34,7 @@ pub enum ListKind {
     Overdue,
     Chart,
     Snippet,
+    Table,
 }
 
 impl ListKind {
@@ -47,6 +52,7 @@ impl ListKind {
             Self::Overdue => "overdue",
             Self::Chart => "chart",
             Self::Snippet => "snippet",
+            Self::Table => "table",
         }
     }
 
@@ -64,6 +70,7 @@ impl ListKind {
             "overdue" => Ok(Self::Overdue),
             "chart" => Ok(Self::Chart),
             "snippet" => Ok(Self::Snippet),
+            "table" => Ok(Self::Table),
             _ => Err(BoardsError::Invalid(format!("unknown block kind {value}"))),
         }
     }
@@ -153,6 +160,24 @@ pub struct ProgressConfig {
 #[serde(default, deny_unknown_fields)]
 pub struct OverdueConfig {
     pub size: BlockSize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default, deny_unknown_fields)]
+pub struct TableConfig {
+    pub size: BlockSize,
+    pub header: bool,
+    pub rows: Vec<Vec<String>>,
+}
+
+impl Default for TableConfig {
+    fn default() -> Self {
+        Self {
+            size: BlockSize::Wide,
+            header: true,
+            rows: Vec::new(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
@@ -280,6 +305,7 @@ pub enum BlockConfig {
     Overdue(OverdueConfig),
     Chart(ChartConfig),
     Snippet(SnippetConfig),
+    Table(TableConfig),
 }
 
 fn invalid(message: impl Into<String>) -> BoardsError {
@@ -314,6 +340,7 @@ impl BlockConfig {
             Self::Overdue(_) => ListKind::Overdue,
             Self::Chart(_) => ListKind::Chart,
             Self::Snippet(_) => ListKind::Snippet,
+            Self::Table(_) => ListKind::Table,
         }
     }
 
@@ -433,6 +460,28 @@ impl BlockConfig {
                 }
                 Ok(Self::Snippet(snippet))
             }
+            ListKind::Table => {
+                let mut table: TableConfig = serde_json::from_value(value).map_err(from)?;
+                if table.rows.len() > TABLE_MAX_ROWS {
+                    return Err(invalid(format!("at most {TABLE_MAX_ROWS} rows")));
+                }
+                let width = table.rows.iter().map(Vec::len).max().unwrap_or(0);
+                if width > TABLE_MAX_COLUMNS {
+                    return Err(invalid(format!("at most {TABLE_MAX_COLUMNS} columns")));
+                }
+                let mut bytes = 0;
+                for row in &mut table.rows {
+                    row.resize(width, String::new());
+                    for cell in row.iter() {
+                        clean_text(cell, TABLE_CELL_MAX_CHARS, false)?;
+                        bytes += cell.len();
+                    }
+                }
+                if bytes > TABLE_MAX_BYTES {
+                    return Err(invalid("the table holds too much text"));
+                }
+                Ok(Self::Table(table))
+            }
         }
     }
 
@@ -450,6 +499,7 @@ impl BlockConfig {
             Self::Overdue(config) => serde_json::to_value(config),
             Self::Chart(config) => serde_json::to_value(config),
             Self::Snippet(config) => serde_json::to_value(config),
+            Self::Table(config) => serde_json::to_value(config),
         };
         value.unwrap_or(Value::Null)
     }
@@ -492,6 +542,7 @@ mod tests {
             ListKind::Overdue,
             ListKind::Chart,
             ListKind::Snippet,
+            ListKind::Table,
         ] {
             assert_eq!(ListKind::parse(kind.as_str()), Ok(kind));
         }
@@ -775,6 +826,69 @@ mod tests {
                 "{bad}"
             );
         }
+    }
+
+    #[test]
+    fn a_table_starts_empty_with_a_header_row() {
+        let config = BlockConfig::parse(ListKind::Table, json!({})).expect("parse");
+
+        assert_eq!(config, BlockConfig::Table(TableConfig::default()));
+        assert_eq!(
+            config.to_value(),
+            json!({ "size": "wide", "header": true, "rows": [] })
+        );
+    }
+
+    #[test]
+    fn a_table_keeps_its_cells_exactly_and_pads_short_rows() {
+        let config = BlockConfig::parse(
+            ListKind::Table,
+            json!({ "rows": [["Name", "Cost", "Note"], ["Rent", "800"], ["=SUM(A1)", " 5 ", "é"]] }),
+        )
+        .expect("parse");
+
+        assert_eq!(
+            config.to_value()["rows"],
+            json!([
+                ["Name", "Cost", "Note"],
+                ["Rent", "800", ""],
+                ["=SUM(A1)", " 5 ", "é"]
+            ])
+        );
+    }
+
+    #[test]
+    fn a_table_refuses_too_many_rows_columns_text_and_hidden_characters() {
+        let cell = "x".repeat(TABLE_CELL_MAX_CHARS + 1);
+        let wide_row: Vec<String> = (0..=TABLE_MAX_COLUMNS).map(|_| "a".to_string()).collect();
+        let tall: Vec<Vec<String>> = (0..=TABLE_MAX_ROWS)
+            .map(|_| vec!["a".to_string()])
+            .collect();
+        let heavy_cell = "é".repeat(TABLE_CELL_MAX_CHARS);
+        let heavy: Vec<Vec<String>> = (0..TABLE_MAX_ROWS)
+            .map(|_| vec![heavy_cell.clone(); 3])
+            .collect();
+        for bad in [
+            json!({ "rows": [[cell]] }),
+            json!({ "rows": [wide_row] }),
+            json!({ "rows": tall }),
+            json!({ "rows": heavy }),
+            json!({ "rows": [["a\tb"]] }),
+            json!({ "rows": [["a\nb"]] }),
+            json!({ "rows": [["nul\u{0}"]] }),
+            json!({ "rows": [[5]] }),
+            json!({ "rows": "a,b" }),
+            json!({ "formula": "SUM" }),
+            json!([]),
+        ] {
+            assert!(
+                BlockConfig::parse(ListKind::Table, bad.clone()).is_err(),
+                "{bad}"
+            );
+        }
+        let widest: Vec<String> = (0..TABLE_MAX_COLUMNS).map(|_| "a".to_string()).collect();
+        let tallest: Vec<Vec<String>> = (0..TABLE_MAX_ROWS).map(|_| widest.clone()).collect();
+        assert!(BlockConfig::parse(ListKind::Table, json!({ "rows": tallest })).is_ok());
     }
 
     #[test]

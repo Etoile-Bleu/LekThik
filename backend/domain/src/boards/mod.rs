@@ -25,7 +25,8 @@ pub use block::{
     CAPTION_MAX_CHARS, COUNTER_LABEL_MAX_CHARS, CalendarConfig, ChartConfig, ChartSource,
     ChartStyle, CounterConfig, CounterMetric, EmbedConfig, ImageConfig, LinkConfig, ListKind,
     NOTE_MAX_CHARS, NoteConfig, OverdueConfig, ProgressConfig, ProgressStyle, SNIPPET_MAX_CHARS,
-    SNIPPET_MAX_LINES, SnippetConfig, SnippetLanguage,
+    SNIPPET_MAX_LINES, SnippetConfig, SnippetLanguage, TABLE_CELL_MAX_CHARS, TABLE_MAX_BYTES,
+    TABLE_MAX_COLUMNS, TABLE_MAX_ROWS, TableConfig,
 };
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};

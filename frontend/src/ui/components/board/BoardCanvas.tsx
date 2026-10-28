@@ -27,7 +27,13 @@ import { useBackdropGestures } from '@hooks/useBackdropGestures';
 import { useCanvasToolStore } from '@lib/canvasToolStore';
 
 import { findCard, moveCard } from '@lib/boardModel';
-import type { BoardList as BoardListData, CardSummary, Label } from '@lib/boardsApi';
+import type {
+  BoardList as BoardListData,
+  CardSummary,
+  Label,
+  PanelConfig,
+  PanelKind,
+} from '@lib/boardsApi';
 import type { Layout } from '@lib/grid';
 import type { ColumnWidth } from '@lib/prefs';
 
@@ -51,6 +57,7 @@ interface BoardCanvasProps {
   onEditLimit: (listId: string) => void;
   onBlockSettings: (blockId: string) => void;
   onSaveNote: (blockId: string, text: string) => void;
+  onSaveConfig: (blockId: string, kind: PanelKind, config: PanelConfig) => void;
   onAddBlock: () => void;
   onRenameList: (listId: string, name: string) => void;
   onMoveList: (listId: string, index: number) => void;
@@ -82,6 +89,7 @@ export function BoardCanvas({
   onEditLimit,
   onBlockSettings,
   onSaveNote,
+  onSaveConfig,
   onAddBlock,
   onRenameList,
   onMoveList,
@@ -342,6 +350,7 @@ export function BoardCanvas({
                   onDelete={onDeleteList}
                   onSettings={onBlockSettings}
                   onSaveNote={onSaveNote}
+                  onSaveConfig={onSaveConfig}
                   onOpenCard={onOpenCard}
                   readOnly={readOnly}
                   tile={tile}
@@ -399,6 +408,7 @@ export function BoardCanvas({
                     onDelete={onDeleteList}
                     onSettings={onBlockSettings}
                     onSaveNote={onSaveNote}
+                    onSaveConfig={onSaveConfig}
                     onOpenCard={onOpenCard}
                     readOnly={readOnly}
                   />
