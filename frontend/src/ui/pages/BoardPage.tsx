@@ -4,6 +4,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BoardMetaProvider } from '@hooks/useBoardMeta';
 import { useEffectiveTheme } from '@hooks/useEffectiveTheme';
 import { useDocumentTitle } from '@hooks/useDocumentTitle';
+import { useUndoShortcuts } from '@hooks/useUndoShortcuts';
 import { useToday } from '@hooks/useToday';
 import { announce } from '@lib/announcer';
 import { notifyError } from '@lib/toastStore';
@@ -59,6 +60,7 @@ import { CardDialog } from '../components/board/CardDialog';
 import { FilterBar } from '../components/board/FilterBar';
 import { FieldsDialog } from '../components/board/FieldsDialog';
 import { LabelsDialog } from '../components/board/LabelsDialog';
+import { UndoRedoButtons } from '../components/board/UndoRedoButtons';
 import { ViewSwitcher } from '../components/board/ViewSwitcher';
 import { WipLimitDialog } from '../components/board/WipLimitDialog';
 import { DisplayMenu } from '../components/appearance/DisplayMenu';
@@ -80,6 +82,7 @@ function addDaysTo(day: string, amount: number): string {
 type PlainBlockKind = Exclude<PanelKind, 'list' | 'image' | 'embed' | 'link'>;
 
 export function BoardPage() {
+  useUndoShortcuts();
   const { boardId = '' } = useParams();
   const navigate = useNavigate();
 
@@ -410,6 +413,7 @@ export function BoardPage() {
           </div>
           <div className="board-header__actions">
             {!editable && <span className="board-header__readonly">View only</span>}
+            <UndoRedoButtons />
             <DisplayMenu
               boardId={view.board.id}
               look={view.look}

@@ -647,3 +647,11 @@ export function FolderMoveIcon(props: IconProps) {
     </Base>
   );
 }
+
+export function RedoIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m13.5 4.5 3 3-3 3M16 7.5H8.5a4.5 4.5 0 0 0 0 9H12" />
+    </Base>
+  );
+}

@@ -2,6 +2,7 @@ import { BLOCK_KIND_IDS, KIND_LABEL, isCardList } from '@lib/blocks';
 import type { BoardView, PanelKind } from '@lib/boardsApi';
 import { type CardFilter, EMPTY_FILTER, isFiltering } from '@lib/boardModel';
 import { type Command, parseQuickDate } from '@lib/commandStore';
+import { redoLast, undoLast } from '@lib/history';
 import type { BoardViewKind } from '@lib/prefs';
 
 import {
@@ -15,10 +16,12 @@ import {
   NoteIcon,
   PencilIcon,
   PlusIcon,
+  RedoIcon,
   SettingsIcon,
   TableIcon,
   TagIcon,
   TrashIcon,
+  UndoIcon,
   UsersIcon,
 } from '../ui/Icons';
 
@@ -224,6 +227,24 @@ export function boardCommands(context: BoardCommandContext): Command[] {
       finish: ([kind]) => {
         context.addBlock(kind as Exclude<PanelKind, 'list'>);
       },
+    },
+    {
+      id: 'board:undo',
+      title: 'Undo',
+      group: 'This board',
+      keywords: ['revert', 'back', 'cancel last change', 'ctrl z'],
+      icon: <UndoIcon size={16} />,
+      shortcut: ['Ctrl', 'Z'],
+      run: () => undoLast(),
+    },
+    {
+      id: 'board:redo',
+      title: 'Redo',
+      group: 'This board',
+      keywords: ['again', 'forward', 'restore change', 'ctrl y'],
+      icon: <RedoIcon size={16} />,
+      shortcut: ['Ctrl', 'Y'],
+      run: () => redoLast(),
     },
     {
       id: 'board:fit',
