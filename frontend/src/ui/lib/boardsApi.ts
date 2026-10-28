@@ -69,7 +69,8 @@ export type PanelKind =
   | 'overdue'
   | 'chart'
   | 'snippet'
-  | 'table';
+  | 'table'
+  | 'clocks';
 export type EmbedProvider =
   'youtube' | 'vimeo' | 'google_calendar' | 'excalidraw' | 'figma' | 'notion';
 export type BlockSize = 'normal' | 'wide';
@@ -100,6 +101,16 @@ export interface CounterConfig {
 }
 export interface OverdueConfig {
   size: BlockSize;
+}
+export interface ClockPlace {
+  name: string;
+  latitude_centi: number;
+  longitude_centi: number;
+}
+export interface ClocksConfig {
+  size: BlockSize;
+  zones: string[];
+  place: ClockPlace | null;
 }
 export interface TableConfig {
   size: BlockSize;
@@ -177,7 +188,8 @@ export type PanelConfig =
   | OverdueConfig
   | ChartConfig
   | SnippetConfig
-  | TableConfig;
+  | TableConfig
+  | ClocksConfig;
 
 /**
  * One panel of a board: a list of cards, or a block that shows something else.

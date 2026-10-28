@@ -1,6 +1,7 @@
 import { announce } from '@lib/announcer';
 import { useEmbedConsent } from '@lib/embedConsent';
 import { PROVIDERS, PROVIDER_ORDER } from '@lib/embeds';
+import { WEATHER_PROVIDER } from '@lib/weather';
 
 import { Switch } from '../ui/Switch';
 import './PrivacySection.css';
@@ -17,7 +18,9 @@ export function PrivacySection() {
   const allow = useEmbedConsent((state) => state.allow);
   const withdraw = useEmbedConsent((state) => state.withdraw);
   const withdrawAll = useEmbedConsent((state) => state.withdrawAll);
-  const anyAllowed = PROVIDER_ORDER.some((provider) => allowed[provider]);
+  const anyAllowed = [...PROVIDER_ORDER, 'open_meteo' as const].some(
+    (provider) => allowed[provider]
+  );
 
   return (
     <div className="privacy">
@@ -95,6 +98,26 @@ export function PrivacySection() {
               />
             </div>
           ))}
+          <div className="setting-row setting-row--toggle">
+            <Switch
+              label={`${WEATHER_PROVIDER.name}, for the weather in a clocks block`}
+              hint={
+                allowed.open_meteo
+                  ? 'Loads without asking on this device.'
+                  : 'Asks each time before loading.'
+              }
+              checked={allowed.open_meteo === true}
+              onChange={(on) => {
+                if (on) allow('open_meteo');
+                else withdraw('open_meteo');
+                announce(
+                  on
+                    ? `${WEATHER_PROVIDER.name} will load without asking.`
+                    : `${WEATHER_PROVIDER.name} will ask before loading.`
+                );
+              }}
+            />
+          </div>
         </div>
         <button
           type="button"

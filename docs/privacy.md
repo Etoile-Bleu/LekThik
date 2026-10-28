@@ -74,11 +74,29 @@ company the reader's address, and may set cookies, which is why it needs the rea
   withdrawn in Settings, Privacy.
 - Links are plain links: LekThik fetches nothing from the page, not a preview, not an icon.
 
+### Weather in a clocks block
+
+A clocks block can show the weather of one place. Time zones are worked out by the browser from its own
+data and ask no one. The weather is the only part that goes out, and it follows the same rule as the
+frames above.
+
+- Nothing is requested until someone presses Show the weather, under a notice that says Open-Meteo
+  will receive their IP address and the position. The choice can be remembered per device and
+  withdrawn in Settings, Privacy.
+- Choosing the place is a search on Open-Meteo, sent only when the button is pressed, with a notice
+  in the dialog. The block keeps the name and a position rounded to hundredths of a degree, about a
+  kilometre, never more precise.
+- Requests carry no cookies and no referrer, and Open-Meteo sets no cookie in return. Answers are
+  checked for shape before they are used and kept in memory for fifteen minutes.
+- Open-Meteo asks for attribution, which the block shows, and its free service is meant for
+  non-commercial use.
+
 If LekThik is served with a Content Security Policy, allow only what the features need:
 
 ```
 frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://calendar.google.com
   https://excalidraw.com https://www.figma.com https://*.notion.site;
+connect-src 'self' https://api.open-meteo.com https://geocoding-api.open-meteo.com;
 img-src 'self' blob: data:;
 ```
 
