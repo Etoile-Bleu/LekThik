@@ -1,3 +1,4 @@
+mod account;
 mod code_email;
 mod issue_verification_code;
 mod login;
@@ -9,6 +10,7 @@ mod reset_password;
 mod verification_code;
 mod verify_email;
 
+pub use account::{DeleteAccount, ExportAccount};
 pub use issue_verification_code::{IssueVerificationCode, IssueVerificationCodeError};
 pub use login::{LoginUser, LoginUserError};
 pub use me::{GetCurrentUser, GetCurrentUserError};
