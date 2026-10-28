@@ -10,6 +10,7 @@ import { useSelectionStore } from '@lib/selectionStore';
 import { ChatIcon, GripIcon, TextLinesIcon } from '../ui/Icons';
 import { useBoardMeta } from '@hooks/useBoardMeta';
 
+import { PresenceOnCard } from '../collab/PresenceOnCard';
 import { AssigneeStack } from './AssigneeStack';
 import { DueBadge } from './DueBadge';
 import { LabelChip } from './LabelChip';
@@ -162,6 +163,7 @@ function BoardCardComponent({
         <CardFace card={card} labels={labels} />
         {selected && <span className="sr-only">Selected</span>}
       </button>
+      <PresenceOnCard cardId={card.id} />
       {!readOnly && (
         <button
           type="button"
