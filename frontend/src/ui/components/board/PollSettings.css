@@ -1,0 +1,45 @@
+.poll-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.poll-settings__options {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.poll-settings__options legend {
+  margin-bottom: 0.35rem;
+  padding: 0;
+  color: var(--color-ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.poll-settings__option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.poll-settings__option input {
+  flex: 1;
+  min-width: 0;
+}
+
+.poll-settings__hint {
+  color: var(--color-text-muted);
+  font-size: 0.84rem;
+}
+
+.poll-settings__problem {
+  color: var(--color-danger-ink);
+  font-size: 0.86rem;
+}
