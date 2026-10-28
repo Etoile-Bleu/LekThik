@@ -24,7 +24,8 @@ pub use block::{
     ALT_MAX_CHARS, AgendaConfig, AgendaRange, BLOCK_TITLE_MAX_CHARS, BlockConfig, BlockSize,
     CAPTION_MAX_CHARS, COUNTER_LABEL_MAX_CHARS, CalendarConfig, ChartConfig, ChartSource,
     ChartStyle, CounterConfig, CounterMetric, EmbedConfig, ImageConfig, LinkConfig, ListKind,
-    NOTE_MAX_CHARS, NoteConfig, OverdueConfig, ProgressConfig, ProgressStyle,
+    NOTE_MAX_CHARS, NoteConfig, OverdueConfig, ProgressConfig, ProgressStyle, SNIPPET_MAX_CHARS,
+    SNIPPET_MAX_LINES, SnippetConfig, SnippetLanguage,
 };
 pub use board::{Board, BoardMember, BoardRepo, BoardSummary, BoardView};
 pub use card::{AssignedCard, Card, CardRepo, CardSummary, CardUpdate};

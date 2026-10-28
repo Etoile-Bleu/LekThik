@@ -102,6 +102,28 @@ function Preview({ kind }: { kind: Exclude<PanelKind, 'list'> }) {
           <rect x="12" y="50" width="26" height="4" rx="2" className="add-block__accent" />
         </svg>
       );
+    case 'snippet':
+      return (
+        <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">
+          <rect x="8" y="8" width="80" height="48" rx="4" className="add-block__code-bg" />
+          {[
+            [14, 40, 'add-block__accent'],
+            [26, 26, 'add-block__ink'],
+            [26, 34, 'add-block__faint'],
+            [14, 18, 'add-block__accent'],
+          ].map(([x, width, tone], row) => (
+            <rect
+              key={row}
+              x={Number(x) + 4}
+              y={16 + row * 9}
+              width={Number(width)}
+              height="4"
+              rx="2"
+              className={String(tone)}
+            />
+          ))}
+        </svg>
+      );
     case 'chart':
       return (
         <svg viewBox="0 0 96 64" aria-hidden="true" focusable="false">

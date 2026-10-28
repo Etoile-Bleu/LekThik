@@ -11,6 +11,7 @@ import { CounterBlock } from './CounterBlock';
 import { NoteBlock } from './NoteBlock';
 import { OverdueBlock } from './OverdueBlock';
 import { ProgressBlock } from './ProgressBlock';
+import { SnippetBlock } from './SnippetBlock';
 
 function card(id: string, due: string | null, extra: Partial<CardSummary> = {}): CardSummary {
   return {
@@ -317,6 +318,59 @@ describe('ProgressBlock', () => {
     const meter = screen.getByRole('progressbar');
     expect(meter).not.toHaveAttribute('aria-valuenow');
     expect(screen.getByText(/Choose the list that means done/)).toBeInTheDocument();
+  });
+});
+
+describe('SnippetBlock', () => {
+  const code = 'SELECT *\nFROM cards;\n<b>not markup</b>';
+
+  it('shows the code as text with its file name, line numbers and a copy button', async () => {
+    inBoard(
+      <SnippetBlock
+        block={block('snippet', {
+          language: 'sql',
+          filename: 'cards.sql',
+          code,
+          line_numbers: true,
+        })}
+        editable
+        onAddCode={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole('region', { name: 'Code, cards.sql' })).toBeInTheDocument();
+    expect(screen.getByText('cards.sql')).toBeInTheDocument();
+    expect(document.querySelector('.rt-code__gutter')).toHaveTextContent('1 2 3');
+    expect(document.querySelector('.rt-code__gutter')).toHaveAttribute('aria-hidden', 'true');
+    expect(await screen.findByRole('button', { name: /Copy/ })).toBeInTheDocument();
+    expect(document.querySelector('b')).toBeNull();
+  });
+
+  it('has no line numbers unless asked', () => {
+    inBoard(
+      <SnippetBlock
+        block={block('snippet', { language: 'text', code: 'ls -la' })}
+        editable
+        onAddCode={vi.fn()}
+      />
+    );
+
+    expect(document.querySelector('.rt-code__gutter')).toBeNull();
+    expect(screen.getByRole('region', { name: 'Code, text' })).toBeInTheDocument();
+  });
+
+  it('invites a writer to add code and tells a reader nothing to press', () => {
+    const onAddCode = vi.fn();
+    const empty = block('snippet', {});
+    const { unmount } = inBoard(<SnippetBlock block={empty} editable onAddCode={onAddCode} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add code' }));
+    expect(onAddCode).toHaveBeenCalledWith('blk');
+    unmount();
+
+    inBoard(<SnippetBlock block={empty} editable={false} onAddCode={onAddCode} />);
+    expect(screen.getByText('No code yet')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add code' })).toBeNull();
   });
 });
 

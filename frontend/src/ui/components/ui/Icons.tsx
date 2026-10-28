@@ -389,6 +389,14 @@ export function HashIcon(props: IconProps) {
   );
 }
 
+export function CodeIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="m7 6-4 4 4 4M13 6l4 4-4 4M11.2 4.5l-2.4 11" />
+    </Base>
+  );
+}
+
 export function BarsIcon(props: IconProps) {
   return (
     <Base {...props}>
