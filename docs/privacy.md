@@ -26,6 +26,7 @@ whoever runs it. It describes how the code behaves today, so it changes with the
 | Votes in a poll (which option a member chose) | Deciding together | Counts for the members of the workspace; names only when the poll shows them | Until withdrawn, or deleted with the account, the poll or the board |
 | Embed identifiers (a video or calendar id) | Embed blocks | Members of the workspace | Deleted with their block |
 | Where you are right now (which board, which card) | Showing the others who is here | Members of the same workspace, while it lasts | Not stored: it lives in the server's memory and expires about a minute after you close the page |
+| Calendar feed token | Letting a calendar app ask for your assigned cards, once you turn the feed on | Nobody by name: whoever holds the address can read the titles and due dates it answers with | Until you turn the feed off or make a new address |
 
 Not stored: what anyone reads, watches or clicks, device fingerprints, locations, or anything about
 use that is not part of the work.
@@ -35,6 +36,12 @@ use that is not part of the work.
 While a board is open, the people of the workspace see your avatar and which card you have open. The page tells the server where it is every 20 seconds and when it leaves. The server keeps that in memory only: it is never written to the database or to a log, it is forgotten about 50 seconds after the last report, and it is gone when the server restarts. Only members of the workspace can ask who is on a board, and a stranger cannot tell whether the board exists.
 
 You can hide yourself in Settings, Privacy, "Show when I am on a board or a card". Once you do, nothing is recorded, on this device or any other, and you still see who else is there. The page also leaves the board by itself when its tab is hidden.
+
+## The calendar feed
+
+Off until you turn it on, in Settings, Calendar feed: opening that page never turns it on by itself. Once on, its address is a long random token (256 bits) that works like a password, not an account: whoever has it can ask for a plain, unauthenticated text file of the titles and due dates of your assigned cards, with no login and no way to see anything else of yours. Making a new address replaces the old one at once, and the old one then answers nobody, not even you.
+
+The token is kept as plain text next to your account, the same as any other address you could regenerate yourself at will; it is never logged, and the feed response carries `Cache-Control: private, no-store` so no shared cache keeps a copy. Cards with no due date are left out, since the feed only writes one all day event per card.
 
 ## Comments and history
 
