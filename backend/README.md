@@ -113,6 +113,10 @@ emails) so a client can draw avatars without another request.
 | `PATCH /api/cards/{id}` with `due_date` | Set a day, send `null` to clear it, leave it out to keep it |
 | `PUT /api/cards/{id}/assignees` | Replace the assignees of a card |
 | `GET /api/users/me/cards` | Cards assigned to me across workspaces, soonest due first |
+| `GET /api/users/me/calendar-token` | Whether the calendar feed is on, and its token. Never turns it on |
+| `POST /api/users/me/calendar-token` | Turn the calendar feed on, or make a new token, replacing the old one |
+| `DELETE /api/users/me/calendar-token` | Turn the calendar feed off |
+| `GET /api/calendar/{token}.ics` | The feed itself: one all day event per assigned card with a due date. No session needed, the token is the credential |
 | `POST /api/boards/{id}/blocks` | Add a calendar, agenda, note, counter, progress, overdue, chart, snippet, table, clocks or timer block |
 | `PUT /api/blocks/{id}/image` | Set the picture of an image block (the file as the body) |
 | `GET /api/blocks/{id}/image` | The picture of an image block, for members only |
@@ -123,6 +127,25 @@ emails) so a client can draw avatars without another request.
 | `PUT /api/boards/{id}/presence` | Report where this tab is on the board (and the open card), or that it left |
 | `GET /api/boards/{id}/presence` | Who is on the board right now, one person each, with the card each has open |
 | `PUT /api/boards/{id}/layout` | Place lists and blocks on the free layout grid, shared with the board |
+
+### Calendar feed
+
+A `.ics` feed of a person's own assigned cards, built by hand (`adapters/http/src/ics.rs`), with no
+external calendar crate: the shape needed is one line of fields and a flat list of all day events,
+never a recurrence rule. Everything a parser needs is written there, tested on its own: line folding
+at 75 octets with CRLF, escaping the four reserved TEXT characters, an exclusive `DTEND` one day
+after `DTSTART`, and `DTSTAMP` from a hand rolled civil calendar date, since the workspace carries no
+date crate.
+
+The feed is a capability URL, the same model as a Google Calendar "secret address": `users.calendar_token`
+is a 256 bit value from two `Uuid::new_v4()`s, generated only when a person turns the feed on
+(`GET /api/users/me/calendar-token` never writes one), kept as plain text next to the account so it
+can be shown again, and replaced wholesale by `POST`. The feed route itself
+(`GET /api/calendar/{token}.ics`, tag `calendar`) takes no session, answers a plain 404 for an
+unknown token, and sends `Cache-Control: private, no-store` so nothing in between keeps a copy. It
+reads the same `CardRepo::assigned_to` the "My cards" page uses, keeps only the cards with a due
+date, and sits behind its own rate limit (`calendar_router`, 30 requests a minute) since it has no
+per-session budget to lean on.
 
 ### Preferences and board look
 
