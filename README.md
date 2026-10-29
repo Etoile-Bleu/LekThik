@@ -131,6 +131,8 @@ The first Rust build takes a couple of minutes because the cargo cache starts em
 
 **Views.** The board, the canvas, a sortable table and a calendar share the filters (by label, mine, overdue). **My cards** gathers everything assigned to you across workspaces, grouped overdue, today, next seven days and later.
 
+**A calendar feed.** Off by default, in Settings, Calendar feed: a private `.ics` address of your assigned cards that have a due date, for Google Calendar, Apple Calendar or Outlook to subscribe to. Turning it on is the only thing that makes it exist, a new address replaces the old one at once, and it is kept as plain text next to your account, never written anywhere else.
+
 ## The command palette
 
 `Ctrl+K` (or `Cmd+K`, or the search button in the top bar) opens one field that goes anywhere and does anything.
