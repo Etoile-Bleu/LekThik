@@ -4,6 +4,7 @@ pub mod db;
 pub mod dto;
 pub mod events;
 pub mod handlers;
+pub mod ics;
 pub mod jwt;
 pub mod notify;
 pub mod presence;

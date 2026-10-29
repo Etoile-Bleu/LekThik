@@ -33,7 +33,7 @@ describe('SettingsPage', () => {
     renderAt('/settings/reading');
 
     const nav = screen.getByRole('navigation', { name: 'Settings sections' });
-    expect(within(nav).getAllByRole('link')).toHaveLength(7);
+    expect(within(nav).getAllByRole('link')).toHaveLength(8);
     expect(within(nav).getByRole('link', { name: /Reading/ })).toHaveAttribute(
       'aria-current',
       'page'

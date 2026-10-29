@@ -46,6 +46,14 @@ pub trait UserRepo: Send + Sync {
     async fn find_by_id(&self, id: Uuid) -> Result<Option<User>, UserRepoError>;
     async fn set_password_hash(&self, id: Uuid, password_hash: &str) -> Result<(), UserRepoError>;
     async fn mark_email_verified(&self, id: Uuid) -> Result<(), UserRepoError>;
+    /// The token behind this person's calendar feed, if they ever asked for one.
+    async fn calendar_token(&self, id: Uuid) -> Result<Option<String>, UserRepoError>;
+    /// Replaces the calendar token, dropping the old one from service at once.
+    async fn set_calendar_token(&self, id: Uuid, token: &str) -> Result<(), UserRepoError>;
+    /// Turns the feed off: nothing answers for the old token any more.
+    async fn clear_calendar_token(&self, id: Uuid) -> Result<(), UserRepoError>;
+    /// Who a calendar token belongs to, for the feed itself, which has no session to check.
+    async fn find_by_calendar_token(&self, token: &str) -> Result<Option<User>, UserRepoError>;
 }
 
 #[async_trait]
@@ -75,5 +83,21 @@ impl UserRepo for Arc<dyn UserRepo> {
 
     async fn mark_email_verified(&self, id: Uuid) -> Result<(), UserRepoError> {
         self.as_ref().mark_email_verified(id).await
+    }
+
+    async fn calendar_token(&self, id: Uuid) -> Result<Option<String>, UserRepoError> {
+        self.as_ref().calendar_token(id).await
+    }
+
+    async fn set_calendar_token(&self, id: Uuid, token: &str) -> Result<(), UserRepoError> {
+        self.as_ref().set_calendar_token(id, token).await
+    }
+
+    async fn clear_calendar_token(&self, id: Uuid) -> Result<(), UserRepoError> {
+        self.as_ref().clear_calendar_token(id).await
+    }
+
+    async fn find_by_calendar_token(&self, token: &str) -> Result<Option<User>, UserRepoError> {
+        self.as_ref().find_by_calendar_token(token).await
     }
 }

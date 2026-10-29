@@ -43,8 +43,8 @@ pub use template::{
     WorkspaceTemplateDto,
 };
 pub use user::{
-    DeleteAccountRequestDto, ForgotPasswordRequestDto, LoginUserRequestDto, RegisterUserRequestDto,
-    RegisteredUserResponseDto, ResendVerificationRequestDto, ResetPasswordRequestDto,
-    UserResponseDto, VerifyEmailRequestDto,
+    CalendarTokenResponseDto, DeleteAccountRequestDto, ForgotPasswordRequestDto,
+    LoginUserRequestDto, RegisterUserRequestDto, RegisteredUserResponseDto,
+    ResendVerificationRequestDto, ResetPasswordRequestDto, UserResponseDto, VerifyEmailRequestDto,
 };
 pub use workspace::{WorkspaceResponseDto, WorkspaceWithBoardsDto};
