@@ -27,6 +27,13 @@ pub struct UserResponseDto {
     pub username: String,
 }
 
+#[derive(Serialize, ToSchema)]
+pub struct CalendarTokenResponseDto {
+    /// The token itself, not a full link: the frontend already knows the API's own address.
+    /// `null` when the feed has never been turned on, or has been turned off since.
+    pub token: Option<String>,
+}
+
 #[derive(Deserialize, Validate, ToSchema)]
 pub struct LoginUserRequestDto {
     #[validate(email)]

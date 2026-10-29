@@ -6,6 +6,7 @@ import { ensureFont } from '@lib/appearance';
 import { DEFAULT_PREFERENCES } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 
+import { CalendarSection } from '../components/settings/CalendarSection';
 import { CardDialogSection } from '../components/settings/CardDialogSection';
 import { PrivacySection } from '../components/settings/PrivacySection';
 import {
@@ -18,6 +19,7 @@ import {
 import { SaveStatus } from '../components/settings/SaveStatus';
 import { SettingsPreview } from '../components/settings/SettingsPreview';
 import {
+  CalendarIcon,
   ColumnsIcon,
   EyeIcon,
   KeyboardIcon,
@@ -72,6 +74,13 @@ const SECTIONS = [
     content: <PrivacySection />,
   },
   {
+    id: 'calendar',
+    label: 'Calendar feed',
+    blurb: 'A private address of your assigned cards.',
+    icon: <CalendarIcon size={18} />,
+    content: <CalendarSection />,
+  },
+  {
     id: 'help',
     label: 'Keyboard and help',
     blurb: 'Shortcuts, and how to move cards without dragging.',
@@ -117,7 +126,7 @@ export function SettingsPage() {
     update(defaults);
   }
 
-  const showsPreview = !['help', 'card', 'privacy'].includes(section.id);
+  const showsPreview = !['help', 'card', 'privacy', 'calendar'].includes(section.id);
 
   return (
     <div className="settings">

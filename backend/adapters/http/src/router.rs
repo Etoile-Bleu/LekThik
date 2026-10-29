@@ -36,6 +36,7 @@ use crate::state::AppState;
         (name = "events", description = "Live change notifications"),
         (name = "presence", description = "Who is on a board and on which card, right now"),
         (name = "templates", description = "Ready made workspaces and boards to start from"),
+        (name = "calendar", description = "The .ics feed of a person's assigned cards"),
     )
 )]
 struct ApiDoc;
@@ -54,6 +55,12 @@ const MEDIA_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
 /// A little above the largest picture, for the request around it.
 const MEDIA_BODY_LIMIT_BYTES: usize = domain::boards::IMAGE_MAX_UPLOAD_BYTES + 16 * 1024;
 
+/// No session guards this one, so its own, tighter limit stands in for the per-session budget
+/// the rest of the API gets from a signed in person. A calendar app polling every few hours
+/// never comes close to it.
+const CALENDAR_RATE_LIMIT_MAX_REQUESTS: u32 = 30;
+const CALENDAR_RATE_LIMIT_WINDOW_SECONDS: u64 = 60;
+
 /// Pictures travel on their own routes, with a larger body limit than the rest of the API.
 fn media_router() -> OpenApiRouter<AppState> {
     let rate_limiter = Arc::new(RateLimiter::new(
@@ -64,6 +71,18 @@ fn media_router() -> OpenApiRouter<AppState> {
     OpenApiRouter::<AppState>::new()
         .routes(routes!(set_block_image, get_block_image))
         .layer(DefaultBodyLimit::max(MEDIA_BODY_LIMIT_BYTES))
+        .layer(middleware::from_fn_with_state(rate_limiter, rate_limit))
+}
+
+/// Public: a calendar token is its own credential, so this never asks for a session.
+fn calendar_router() -> OpenApiRouter<AppState> {
+    let rate_limiter = Arc::new(RateLimiter::new(
+        CALENDAR_RATE_LIMIT_MAX_REQUESTS,
+        Duration::from_secs(CALENDAR_RATE_LIMIT_WINDOW_SECONDS),
+    ));
+
+    OpenApiRouter::<AppState>::new()
+        .routes(routes!(get_calendar_feed))
         .layer(middleware::from_fn_with_state(rate_limiter, rate_limit))
 }
 
@@ -91,6 +110,11 @@ fn boards_router(state: AppState) -> OpenApiRouter<AppState> {
         .routes(routes!(get_current_user))
         .routes(routes!(get_preferences, save_preferences))
         .routes(routes!(list_my_cards))
+        .routes(routes!(
+            get_calendar_token,
+            regenerate_calendar_token,
+            revoke_calendar_token
+        ))
         .routes(routes!(logout))
         .routes(routes!(list_workspaces, create_workspace))
         .routes(routes!(rename_workspace, delete_workspace))
@@ -156,7 +180,8 @@ pub fn build(state: AppState) -> Router {
         auth_router
             .merge(boards_router(state.clone()))
             .merge(media_router())
-            .merge(account_router()),
+            .merge(account_router())
+            .merge(calendar_router()),
     );
 
     let (router, api) = OpenApiRouter::<AppState>::with_openapi(ApiDoc::openapi())

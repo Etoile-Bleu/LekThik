@@ -132,6 +132,15 @@ this board", the list says which card each person looks at, and arrivals are ann
 and only to people who turned announcements on. Leaving items stay for a moment to fade out unless motion is
 reduced. Hiding is a privacy setting, read once per tab by the server, so nothing is recorded for someone who hides.
 
+Calendar feed (`lib/calendarApi.ts`, `components/settings/CalendarSection.tsx`). Settings, Calendar feed: a
+switch, off by default, that turns a private `.ics` address of the signed in person's assigned cards on or off.
+Opening the page only reads whether it is already on (`GET /api/users/me/calendar-token`); only pressing the
+switch writes anything. The address box is a read only, selectable input next to a Copy button, and the panel
+below the switch opens and closes on a 0fr/1fr grid row, instant with reduced motion. "New address" asks first,
+with the same `ConfirmDialog` as other destructive choices, because the old subscription stops working with
+nothing to undo it. The three short lines for Google Calendar, Apple Calendar and Outlook sit behind a native
+`<details>`, so they cost nothing until opened.
+
 Selecting, the hand and the right click (`hooks/useBackdropGestures.ts`, `lib/selectionStore.ts`,
 `components/ui/ContextMenu.tsx`). Dragging on the background of the board or the canvas draws a rectangle that picks
 the lists and blocks it touches, or the cards when it starts in the empty part of a list, with no text selected on the

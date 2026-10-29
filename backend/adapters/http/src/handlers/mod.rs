@@ -1,5 +1,7 @@
 mod account;
 mod boards;
+mod calendar_feed;
+mod calendar_token;
 mod cards;
 mod fields;
 mod forgot_password;
@@ -22,6 +24,8 @@ mod workspaces;
 
 pub use account::*;
 pub use boards::*;
+pub use calendar_feed::*;
+pub use calendar_token::*;
 pub use cards::*;
 pub use fields::*;
 pub use forgot_password::*;

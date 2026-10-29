@@ -117,6 +117,52 @@ impl UserRepo for PgUserRepo {
 
         Ok(Some((user, password_hash)))
     }
+
+    async fn calendar_token(&self, id: Uuid) -> Result<Option<String>, UserRepoError> {
+        sqlx::query_scalar::<_, Option<String>>("SELECT calendar_token FROM users WHERE id = $1")
+            .bind(id)
+            .fetch_optional(&self.pool)
+            .await
+            .map(Option::flatten)
+            .map_err(|error| UserRepoError::Repository(error.to_string()))
+    }
+
+    async fn set_calendar_token(&self, id: Uuid, token: &str) -> Result<(), UserRepoError> {
+        sqlx::query("UPDATE users SET calendar_token = $2 WHERE id = $1")
+            .bind(id)
+            .bind(token)
+            .execute(&self.pool)
+            .await
+            .map_err(|error| UserRepoError::Repository(error.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn clear_calendar_token(&self, id: Uuid) -> Result<(), UserRepoError> {
+        sqlx::query("UPDATE users SET calendar_token = NULL WHERE id = $1")
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|error| UserRepoError::Repository(error.to_string()))?;
+
+        Ok(())
+    }
+
+    async fn find_by_calendar_token(&self, token: &str) -> Result<Option<User>, UserRepoError> {
+        let row = sqlx::query(
+            "SELECT id, email, username, (email_verified_at IS NOT NULL) AS email_verified \
+                FROM users WHERE calendar_token = $1",
+        )
+        .bind(token)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|error| UserRepoError::Repository(error.to_string()))?;
+
+        row.as_ref()
+            .map(row_to_user)
+            .transpose()
+            .map_err(UserRepoError::Repository)
+    }
 }
 
 fn row_to_user(row: &sqlx::postgres::PgRow) -> Result<User, String> {

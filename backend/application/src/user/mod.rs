@@ -1,4 +1,6 @@
 mod account;
+mod calendar_feed;
+mod calendar_token;
 mod code_email;
 mod issue_verification_code;
 mod login;
@@ -11,6 +13,8 @@ mod verification_code;
 mod verify_email;
 
 pub use account::{DeleteAccount, ExportAccount};
+pub use calendar_feed::{CalendarFeedError, GetCalendarFeed};
+pub use calendar_token::{GetCalendarToken, RegenerateCalendarToken, RevokeCalendarToken};
 pub use issue_verification_code::{IssueVerificationCode, IssueVerificationCodeError};
 pub use login::{LoginUser, LoginUserError};
 pub use me::{GetCurrentUser, GetCurrentUserError};

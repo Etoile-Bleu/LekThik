@@ -15,8 +15,9 @@ pub use boards::{
 };
 pub use preferences::{GetPreferences, SavePreferences};
 pub use user::{
-    DeleteAccount, ExportAccount, GetCurrentUser, GetCurrentUserError, IssueVerificationCode,
-    IssueVerificationCodeError, LoginUser, LoginUserError, RegisterUser, RegisterUserError,
+    CalendarFeedError, DeleteAccount, ExportAccount, GetCalendarFeed, GetCalendarToken,
+    GetCurrentUser, GetCurrentUserError, IssueVerificationCode, IssueVerificationCodeError,
+    LoginUser, LoginUserError, RegenerateCalendarToken, RegisterUser, RegisterUserError,
     RegisteredUser, RequestPasswordReset, ResendEmailVerification, ResetPassword,
-    ResetPasswordError, VerifyEmail, VerifyEmailError,
+    ResetPasswordError, RevokeCalendarToken, VerifyEmail, VerifyEmailError,
 };
