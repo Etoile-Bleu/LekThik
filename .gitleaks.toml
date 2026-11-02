@@ -1,2 +1,9 @@
 [extend]
 useDefault = true
+
+[allowlist]
+description = "Not secrets: a constant name that merely contains the word key, flagged since gitleaks's default rules picked up a stricter generic-api-key heuristic."
+regexTarget = "match"
+regexes = [
+  '''APPEARANCE_CACHE_KEY''',
+]
