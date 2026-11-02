@@ -243,6 +243,8 @@ The OpenAPI description is served by the backend: Swagger UI at `/swagger-ui` an
 
 Endpoint details and limits are in [backend/README.md](backend/README.md).
 
+**For Claude.** [mcp-server/](mcp-server/README.md) is an MCP server built on this same API: point Claude Code or Claude Desktop at it, signed in as your own account, and ask it to create a workspace, add a board, a list, a block or a card, straight from a chat.
+
 ## Testing
 
 ```bash
@@ -297,6 +299,9 @@ LekThik/
 │       ├── lib/              Stores, API client, grid maths, fuzzy search, helpers
 │       ├── hooks/            Shared hooks
 │       └── styles/           Design tokens, themes, accessibility rules
+├── mcp-server/                An MCP server: lets Claude create and edit boards, lists and
+│                               cards in a real account by calling the API above
+│                               (mcp-server/README.md)
 ├── docs/                     Privacy notes and images
 └── docker-compose*.yml       Development, production and server stacks
 ```
