@@ -1,0 +1,25 @@
+{
+  "name": "lekthik-mcp",
+  "version": "1.0.0",
+  "description": "An MCP server that lets Claude create and edit workspaces, boards, lists, blocks, cards and labels in a real LekThik account.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "lekthik-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^5.9.3"
+  }
+}
