@@ -1,0 +1,61 @@
+.blocked-field {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: clip;
+}
+
+.blocked-field:has(.blocked-field__reason) {
+  border-color: var(--label-pink-dot);
+}
+
+.blocked-field__reason {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0 0.75rem 0.75rem;
+  animation: blocked-reason-in var(--duration-base) var(--ease-out);
+}
+
+.blocked-field__textarea {
+  width: 100%;
+  min-height: 3.6rem;
+  padding: 0.55rem 0.65rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  line-height: 1.45;
+  resize: vertical;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.blocked-field__textarea:hover:not(:read-only) {
+  border-color: var(--color-border-strong);
+}
+
+.blocked-field__textarea:focus-visible {
+  border-color: var(--color-focus);
+  outline: none;
+}
+
+.blocked-field__textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+.blocked-field__count {
+  align-self: flex-end;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes blocked-reason-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
