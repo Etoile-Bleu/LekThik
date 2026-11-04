@@ -150,6 +150,29 @@ export function registerCardTools(server: McpServer, client: LekThikClient): voi
   );
 
   server.registerTool(
+    'set_card_blocked',
+    {
+      title: 'Flag a card as blocked, or clear the flag',
+      description:
+        'Marks a card as blocked, with an optional reason shown next to the flag, or clears ' +
+        'it by sending blocked: false. Re-blocking an already blocked card keeps its original ' +
+        'blocked-since time and only updates the reason.',
+      inputSchema: {
+        card_id: z.string().uuid().describe('The card to flag or unflag.'),
+        blocked: z.boolean().describe('True to flag it as blocked, false to clear the flag.'),
+        reason: z
+          .string()
+          .max(200)
+          .optional()
+          .describe('Why it is blocked. Ignored when blocked is false.'),
+      },
+      annotations: { idempotentHint: true, openWorldHint: false },
+    },
+    async ({ card_id, blocked, reason }) =>
+      json(await client.request<Card>('PUT', `/cards/${card_id}/blocked`, { blocked, reason }))
+  );
+
+  server.registerTool(
     'add_card_comment',
     {
       title: 'Comment on a card',
