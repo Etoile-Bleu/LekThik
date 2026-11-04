@@ -95,6 +95,7 @@ export function BoardPage() {
   const reset = useBoardStore((state) => state.reset);
   const renameBoard = useBoardStore((state) => state.renameBoard);
   const setLook = useBoardStore((state) => state.setLook);
+  const setDoneList = useBoardStore((state) => state.setDoneList);
   const prefs = usePrefsStore((state) => state.prefs);
   const updateBoardPrefs = usePrefsStore((state) => state.updateBoard);
   const toggleListCollapsed = usePrefsStore((state) => state.toggleListCollapsed);
@@ -438,8 +439,14 @@ export function BoardPage() {
               look={view.look}
               view={own.view}
               listIds={view.lists.map((list) => list.id)}
+              doneListOptions={view.lists.filter(isCardList).map((list) => ({
+                id: list.id,
+                name: list.name,
+              }))}
+              doneListId={view.board.done_list_id ?? null}
               canStyle={editable}
               onLookChange={(look) => void setLook(look)}
+              onDoneListChange={(listId) => void setDoneList(listId)}
             />
             <button
               type="button"
