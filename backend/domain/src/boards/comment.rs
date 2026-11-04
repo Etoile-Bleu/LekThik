@@ -71,6 +71,8 @@ pub enum ActivityKind {
     LabelRemoved,
     Assigned,
     Unassigned,
+    Blocked,
+    Unblocked,
 }
 
 impl ActivityKind {
@@ -86,6 +88,8 @@ impl ActivityKind {
             Self::LabelRemoved => "label_removed",
             Self::Assigned => "assigned",
             Self::Unassigned => "unassigned",
+            Self::Blocked => "blocked",
+            Self::Unblocked => "unblocked",
         }
     }
 
@@ -101,6 +105,8 @@ impl ActivityKind {
             "label_removed" => Ok(Self::LabelRemoved),
             "assigned" => Ok(Self::Assigned),
             "unassigned" => Ok(Self::Unassigned),
+            "blocked" => Ok(Self::Blocked),
+            "unblocked" => Ok(Self::Unblocked),
             _ => Err(BoardsError::Repository(format!(
                 "unknown activity kind {value}"
             ))),
