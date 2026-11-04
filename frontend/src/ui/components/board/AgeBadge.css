@@ -1,0 +1,34 @@
+.age-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 22px;
+  padding: 0 0.5rem 0 0.4rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  animation: age-in var(--duration-base) var(--ease-out);
+  transition:
+    background-color var(--duration-base) ease,
+    color var(--duration-base) ease,
+    border-color var(--duration-base) ease;
+}
+
+.age-badge[data-state='stale'] {
+  border-color: var(--label-orange-dot);
+  background: var(--label-orange-bg);
+  color: var(--label-orange-fg);
+  font-weight: 600;
+}
+
+@keyframes age-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px) scale(0.94);
+  }
+}

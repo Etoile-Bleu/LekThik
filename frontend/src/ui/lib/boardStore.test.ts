@@ -14,6 +14,8 @@ vi.mock('./boardsApi', () => ({
   moveCard: vi.fn(),
   deleteCard: vi.fn(),
   setCardLabels: vi.fn(),
+  setCardBlocked: vi.fn(),
+  setDoneList: vi.fn(),
   createLabel: vi.fn(),
   updateLabel: vi.fn(),
   deleteLabel: vi.fn(),
@@ -240,5 +242,65 @@ describe('useBoardStore', () => {
     expect(
       useBoardStore.getState().view?.lists.find((list) => list.id === 'todo')?.layout
     ).toBeUndefined();
+  });
+
+  it('blocks a card optimistically, then settles on what the server actually stored', async () => {
+    vi.mocked(api.setCardBlocked).mockResolvedValueOnce({
+      id: 'a',
+      list_id: 'todo',
+      title: 'A',
+      description: '',
+      label_ids: ['urgent'],
+      assignee_ids: [],
+      due_date: null,
+      blocked_since: '2026-10-20T00:00:00Z',
+      blocked_reason: 'Waiting on design',
+    });
+
+    const pending = useBoardStore.getState().setCardBlocked('a', true, 'Waiting on design');
+
+    expect(cardIds(0)).toEqual(['a', 'b']);
+    expect(
+      useBoardStore.getState().view?.lists[0].cards[0].blocked_reason
+    ).toBe('Waiting on design');
+    await pending;
+
+    expect(api.setCardBlocked).toHaveBeenCalledWith('a', true, 'Waiting on design');
+    expect(
+      useBoardStore.getState().view?.lists[0].cards[0].blocked_since
+    ).toBe('2026-10-20T00:00:00Z');
+  });
+
+  it('clears the blocked flag and reloads the board when the server refuses', async () => {
+    vi.mocked(api.setCardBlocked).mockRejectedValueOnce(new Error('nope'));
+    vi.mocked(api.fetchBoard).mockResolvedValueOnce(sampleView());
+
+    await useBoardStore.getState().setCardBlocked('a', false, null);
+
+    expect(api.fetchBoard).toHaveBeenCalledWith('b1');
+  });
+
+  it('picks the done list and shows it on the board at once', async () => {
+    vi.mocked(api.setDoneList).mockResolvedValueOnce({
+      id: 'b1',
+      workspace_id: 'w1',
+      name: 'Roadmap',
+      done_list_id: 'done',
+    });
+
+    await useBoardStore.getState().setDoneList('done');
+
+    expect(useBoardStore.getState().view?.board.done_list_id).toBe('done');
+    expect(api.setDoneList).toHaveBeenCalledWith('b1', 'done');
+  });
+
+  it('reloads the board and warns when choosing the done list is refused', async () => {
+    vi.mocked(api.setDoneList).mockRejectedValueOnce(new ApiError(403, 'No.'));
+    vi.mocked(api.fetchBoard).mockResolvedValueOnce(sampleView());
+
+    await useBoardStore.getState().setDoneList('done');
+
+    expect(api.fetchBoard).toHaveBeenCalledWith('b1');
+    expect(useToastStore.getState().toasts).toHaveLength(1);
   });
 });

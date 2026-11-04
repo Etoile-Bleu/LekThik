@@ -19,12 +19,18 @@ import {
 } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 
-import { SlidersIcon } from '../ui/Icons';
+import { FlagIcon, SlidersIcon } from '../ui/Icons';
 import { Popover } from '../ui/Popover';
 import { Segmented } from '../ui/Segmented';
 import { Switch } from '../ui/Switch';
 import { Swatches } from './Swatches';
 import './DisplayMenu.css';
+
+/** A card list a done list can be chosen from. */
+interface DoneListOption {
+  id: string;
+  name: string;
+}
 
 interface DisplayMenuProps {
   boardId: string;
@@ -32,9 +38,13 @@ interface DisplayMenuProps {
   view: BoardViewKind;
   /** The lists of the board, in order, for folding them all at once. */
   listIds: string[];
+  /** The card lists a done list can be chosen from. */
+  doneListOptions: DoneListOption[];
+  doneListId: string | null;
   /** Writers and above can change what the whole board looks like. */
   canStyle: boolean;
   onLookChange: (look: BoardLook) => void;
+  onDoneListChange: (listId: string | null) => void;
 }
 
 const DENSITIES: Array<{ value: Density; label: string }> = [
@@ -67,8 +77,11 @@ export function DisplayMenu({
   look,
   view,
   listIds,
+  doneListOptions,
+  doneListId,
   canStyle,
   onLookChange,
+  onDoneListChange,
 }: DisplayMenuProps) {
   const prefs = usePrefsStore((state) => state.prefs);
   const update = usePrefsStore((state) => state.update);
@@ -77,6 +90,7 @@ export function DisplayMenu({
   const updateBoard = usePrefsStore((state) => state.updateBoard);
   const navigate = useNavigate();
   const headingId = useId();
+  const doneListFieldId = useId();
 
   const display = cardDisplayFor(prefs, boardId);
   const ownDisplay = hasBoardDisplay(prefs, boardId);
@@ -210,6 +224,39 @@ export function DisplayMenu({
             ) : (
               <p className="display-menu__note">
                 Writers, admins and the owner choose how this board looks.
+              </p>
+            )}
+          </section>
+
+          <section className="display-menu__section" aria-label="Cycle time">
+            <h3 className="display-menu__heading">
+              <FlagIcon size={15} /> Cycle time
+            </h3>
+            {canStyle ? (
+              <>
+                <p className="display-menu__note">
+                  Pick the list that means done, to measure how long a card takes to get there.
+                </p>
+                <label className="display-menu__field" htmlFor={doneListFieldId}>
+                  <span className="sr-only">Done list</span>
+                  <select
+                    id={doneListFieldId}
+                    className="display-menu__select"
+                    value={doneListId ?? ''}
+                    onChange={(event) => onDoneListChange(event.target.value || null)}
+                  >
+                    <option value="">Not set</option>
+                    {doneListOptions.map((list) => (
+                      <option key={list.id} value={list.id}>
+                        {list.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </>
+            ) : (
+              <p className="display-menu__note">
+                Writers, admins and the owner choose the done list.
               </p>
             )}
           </section>

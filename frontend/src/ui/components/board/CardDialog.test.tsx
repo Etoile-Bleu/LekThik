@@ -14,6 +14,7 @@ vi.mock('@lib/boardsApi', async (importOriginal) => {
     deleteCard: vi.fn(),
     setCardLabels: vi.fn(),
     setCardAssignees: vi.fn(),
+    setCardBlocked: vi.fn(),
   };
 });
 
@@ -117,6 +118,82 @@ describe('CardDialog', () => {
     await screen.findByRole('dialog', { name: 'Card Write the spec' });
 
     expect(screen.getByRole('button', { name: 'Move card' })).toBeDisabled();
+  });
+
+  describe('blocked flag', () => {
+    it('blocks the card when the switch is turned on', async () => {
+      vi.mocked(api.setCardBlocked).mockResolvedValueOnce({
+        ...detail,
+        blocked_since: '2026-10-01T00:00:00Z',
+        blocked_reason: null,
+      });
+      setup();
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      fireEvent.click(within(dialog).getByRole('switch', { name: /^Blocked/ }));
+
+      await waitFor(() => expect(api.setCardBlocked).toHaveBeenCalledWith('c1', true, null));
+    });
+
+    it('reveals a reason field once blocked, and saves it on blur', async () => {
+      useBoardStore.setState({
+        view: {
+          ...sampleBoardView(),
+          lists: sampleBoardView().lists.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) =>
+              card.id === 'c1' ? { ...card, blocked_since: '2026-10-01T00:00:00Z' } : card
+            ),
+          })),
+        },
+        status: 'ready',
+        freshIds: [],
+      });
+      vi.mocked(api.setCardBlocked).mockResolvedValue({
+        ...detail,
+        blocked_since: '2026-10-01T00:00:00Z',
+        blocked_reason: 'Waiting on design',
+      });
+      setup();
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      const reason = within(dialog).getByRole('textbox', { name: /why this card is blocked/i });
+      fireEvent.change(reason, { target: { value: 'Waiting on design' } });
+      fireEvent.blur(reason);
+
+      await waitFor(() =>
+        expect(api.setCardBlocked).toHaveBeenCalledWith('c1', true, 'Waiting on design')
+      );
+    });
+
+    it('clears the reason when unblocked', async () => {
+      useBoardStore.setState({
+        view: {
+          ...sampleBoardView(),
+          lists: sampleBoardView().lists.map((list) => ({
+            ...list,
+            cards: list.cards.map((card) =>
+              card.id === 'c1'
+                ? { ...card, blocked_since: '2026-10-01T00:00:00Z', blocked_reason: 'Stuck' }
+                : card
+            ),
+          })),
+        },
+        status: 'ready',
+        freshIds: [],
+      });
+      vi.mocked(api.setCardBlocked).mockResolvedValueOnce({
+        ...detail,
+        blocked_since: null,
+        blocked_reason: null,
+      });
+      setup();
+      const dialog = await screen.findByRole('dialog', { name: 'Card Write the spec' });
+
+      fireEvent.click(within(dialog).getByRole('switch', { name: /^Blocked/ }));
+
+      await waitFor(() => expect(api.setCardBlocked).toHaveBeenCalledWith('c1', false, null));
+    });
   });
 
   describe('description', () => {

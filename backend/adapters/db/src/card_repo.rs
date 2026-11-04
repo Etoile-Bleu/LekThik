@@ -11,6 +11,16 @@ use crate::activity::{Entry, record};
 use crate::ordering::{insert_at, renumber_cards};
 use crate::scope::{Kind, denial, repository_error};
 
+macro_rules! iso {
+    ($column:literal) => {
+        concat!(
+            "to_char(",
+            $column,
+            " AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"')"
+        )
+    };
+}
+
 pub struct PgCardRepo {
     pool: PgPool,
 }
@@ -49,6 +59,10 @@ impl PgCardRepo {
             label_ids: self.label_ids_of(id).await?,
             assignee_ids: self.assignee_ids_of(id).await?,
             due_date: row.try_get("due_date").map_err(repository_error)?,
+            created_at: row.try_get("created_at").map_err(repository_error)?,
+            list_entered_at: row.try_get("list_entered_at").map_err(repository_error)?,
+            blocked_since: row.try_get("blocked_since").map_err(repository_error)?,
+            blocked_reason: row.try_get("blocked_reason").map_err(repository_error)?,
         })
     }
 }
@@ -95,11 +109,15 @@ impl CardRepo for PgCardRepo {
             return Err(BoardsError::LimitReached("cards"));
         }
 
-        let row = sqlx::query(
+        let row = sqlx::query(concat!(
             "INSERT INTO cards (list_id, title, position) \
                 VALUES ($1, $2, (SELECT COALESCE(MAX(position), -1) + 1 FROM cards WHERE list_id = $1)) \
-                RETURNING id, list_id, title",
-        )
+                RETURNING id, list_id, title, ",
+            iso!("created_at"),
+            " AS created_at, ",
+            iso!("list_entered_at"),
+            " AS list_entered_at"
+        ))
         .bind(list_id)
         .bind(title.as_str())
         .fetch_one(&mut *transaction)
@@ -127,6 +145,10 @@ impl CardRepo for PgCardRepo {
             assignee_ids: Vec::new(),
             due_date: None,
             comment_count: 0,
+            created_at: row.try_get("created_at").map_err(repository_error)?,
+            list_entered_at: row.try_get("list_entered_at").map_err(repository_error)?,
+            blocked_since: None,
+            blocked_reason: None,
         })
     }
 
@@ -176,10 +198,14 @@ impl CardRepo for PgCardRepo {
         .await
         .map_err(repository_error)?;
 
-        let new_id: Uuid = sqlx::query_scalar(
+        let new_row = sqlx::query(concat!(
             "INSERT INTO cards (list_id, title, description, due_date, position) \
-                VALUES ($1, $2, $3, $4::date, $5) RETURNING id",
-        )
+                VALUES ($1, $2, $3, $4::date, $5) RETURNING id, ",
+            iso!("created_at"),
+            " AS created_at, ",
+            iso!("list_entered_at"),
+            " AS list_entered_at"
+        ))
         .bind(list_id)
         .bind(copy_title.as_str())
         .bind(&description)
@@ -188,6 +214,7 @@ impl CardRepo for PgCardRepo {
         .fetch_one(&mut *transaction)
         .await
         .map_err(repository_error)?;
+        let new_id: Uuid = new_row.try_get("id").map_err(repository_error)?;
 
         sqlx::query(
             "INSERT INTO card_labels (card_id, label_id) \
@@ -241,12 +268,24 @@ impl CardRepo for PgCardRepo {
             assignee_ids: self.assignee_ids_of(new_id).await?,
             due_date,
             comment_count: 0,
+            created_at: new_row.try_get("created_at").map_err(repository_error)?,
+            list_entered_at: new_row
+                .try_get("list_entered_at")
+                .map_err(repository_error)?,
+            blocked_since: None,
+            blocked_reason: None,
         })
     }
 
     async fn get(&self, user_id: Uuid, id: Uuid) -> Result<Card, BoardsError> {
         let row = sqlx::query(concat!(
-            "SELECT c.id, c.list_id, c.title, c.description, c.due_date::text AS due_date FROM ",
+            "SELECT c.id, c.list_id, c.title, c.description, c.due_date::text AS due_date, ",
+            iso!("c.created_at"),
+            " AS created_at, ",
+            iso!("c.list_entered_at"),
+            " AS list_entered_at, ",
+            iso!("c.blocked_at"),
+            " AS blocked_since, c.blocked_reason FROM ",
             owned_card!(),
             " WHERE c.id = $1 AND ",
             member_of!("$2")
@@ -332,7 +371,13 @@ impl CardRepo for PgCardRepo {
                 WHERE c.id = $2 AND l.id = c.list_id AND b.id = l.board_id \
                     AND w.id = b.workspace_id AND ",
             writer_of!("$1"),
-            " RETURNING c.id, c.list_id, c.title, c.description, c.due_date::text AS due_date"
+            " RETURNING c.id, c.list_id, c.title, c.description, c.due_date::text AS due_date, ",
+            iso!("c.created_at"),
+            " AS created_at, ",
+            iso!("c.list_entered_at"),
+            " AS list_entered_at, ",
+            iso!("c.blocked_at"),
+            " AS blocked_since, c.blocked_reason"
         ))
         .bind(user_id)
         .bind(id)
@@ -443,12 +488,16 @@ impl CardRepo for PgCardRepo {
             return Err(BoardsError::LimitReached("cards"));
         }
 
-        sqlx::query("UPDATE cards SET list_id = $1 WHERE id = $2")
-            .bind(list_id)
-            .bind(id)
-            .execute(&mut *transaction)
-            .await
-            .map_err(repository_error)?;
+        sqlx::query(
+            "UPDATE cards SET list_id = $1, \
+                list_entered_at = CASE WHEN list_id <> $1 THEN now() ELSE list_entered_at END \
+                WHERE id = $2",
+        )
+        .bind(list_id)
+        .bind(id)
+        .execute(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
 
         let ordered = insert_at(siblings, id, index);
         renumber_cards(&mut transaction, &ordered).await?;
@@ -700,5 +749,75 @@ impl CardRepo for PgCardRepo {
         transaction.commit().await.map_err(repository_error)?;
 
         Ok(assignee_ids)
+    }
+
+    async fn set_blocked(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        blocked: bool,
+        reason: Option<String>,
+    ) -> Result<Card, BoardsError> {
+        let mut transaction = self.pool.begin().await.map_err(repository_error)?;
+
+        let Some(before) = sqlx::query(concat!(
+            "SELECT c.blocked_at IS NOT NULL AS was_blocked FROM ",
+            owned_card!(),
+            " WHERE c.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF c"
+        ))
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?
+        else {
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
+        };
+        let was_blocked: bool = before.try_get("was_blocked").map_err(repository_error)?;
+
+        let Some(row) = sqlx::query(concat!(
+            "UPDATE cards c SET \
+                blocked_at = CASE WHEN $3 THEN COALESCE(c.blocked_at, now()) ELSE NULL END, \
+                blocked_reason = CASE WHEN $3 THEN $4 ELSE NULL END \
+                FROM lists l, boards b, workspaces w \
+                WHERE c.id = $2 AND l.id = c.list_id AND b.id = l.board_id \
+                    AND w.id = b.workspace_id AND ",
+            writer_of!("$1"),
+            " RETURNING c.id, c.list_id, c.title, c.description, c.due_date::text AS due_date, ",
+            iso!("c.created_at"),
+            " AS created_at, ",
+            iso!("c.list_entered_at"),
+            " AS list_entered_at, ",
+            iso!("c.blocked_at"),
+            " AS blocked_since, c.blocked_reason"
+        ))
+        .bind(user_id)
+        .bind(id)
+        .bind(blocked)
+        .bind(&reason)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?
+        else {
+            return Err(denial(&self.pool, Kind::Card, user_id, id).await);
+        };
+
+        if blocked != was_blocked {
+            let entry = if blocked {
+                match &reason {
+                    Some(reason) => Entry::naming(ActivityKind::Blocked, reason),
+                    None => Entry::plain(ActivityKind::Blocked),
+                }
+            } else {
+                Entry::plain(ActivityKind::Unblocked)
+            };
+            record(&mut transaction, id, user_id, entry).await?;
+        }
+
+        transaction.commit().await.map_err(repository_error)?;
+
+        self.card_from_row(&row).await
     }
 }

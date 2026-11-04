@@ -53,6 +53,8 @@ interface BoardState {
   reset: () => void;
   renameBoard: (name: string) => Promise<void>;
   setLook: (look: BoardLook) => Promise<void>;
+  /** Picks the list that means done, for cycle time. `null` turns it off. */
+  setDoneList: (listId: string | null) => Promise<void>;
   deleteBoard: () => Promise<boolean>;
   createList: (name: string) => Promise<void>;
   createBlock: (
@@ -85,6 +87,8 @@ interface BoardState {
   setCardLabels: (cardId: string, labelIds: string[]) => Promise<void>;
   setCardAssignees: (cardId: string, userIds: string[]) => Promise<void>;
   setCardDueDate: (cardId: string, day: string | null) => Promise<void>;
+  /** Flags a card as blocked, with an optional reason, or clears the flag. */
+  setCardBlocked: (cardId: string, blocked: boolean, reason: string | null) => Promise<void>;
   setCardFieldValue: (
     cardId: string,
     fieldId: string,
@@ -241,6 +245,28 @@ export const useBoardStore = create<BoardState>((set, get) => {
             label: 'Change the look',
             undo: () => get().setLook(before),
             redo: () => get().setLook(look),
+          });
+        }
+      } catch (error) {
+        await recoverFrom(error);
+      }
+    },
+
+    setDoneList: async (listId) => {
+      const view = get().view;
+      if (!view) return;
+      const before = view.board.done_list_id ?? null;
+      update((current) => ({
+        ...current,
+        board: { ...current.board, done_list_id: listId },
+      }));
+      try {
+        await api.setDoneList(view.board.id, listId);
+        if (before !== listId) {
+          record({
+            label: 'Change the done list',
+            undo: () => get().setDoneList(before),
+            redo: () => get().setDoneList(listId),
           });
         }
       } catch (error) {
@@ -693,6 +719,44 @@ export const useBoardStore = create<BoardState>((set, get) => {
             label: 'Change date',
             undo: () => get().setCardDueDate(resolveId(cardId), before),
             redo: () => get().setCardDueDate(resolveId(cardId), day),
+          });
+        }
+      } catch (error) {
+        await recoverFrom(error);
+      }
+    },
+
+    setCardBlocked: async (cardId, blocked, reason) => {
+      const before = cardNow(cardId);
+      const beforeState = before
+        ? { blocked_since: before.blocked_since, blocked_reason: before.blocked_reason }
+        : undefined;
+      update((current) => ({
+        ...current,
+        lists: patchCard(current.lists, cardId, {
+          blocked_since: blocked ? (before?.blocked_since ?? new Date().toISOString()) : null,
+          blocked_reason: blocked ? reason : null,
+        }),
+      }));
+      try {
+        const saved = await api.setCardBlocked(cardId, blocked, reason);
+        update((current) => ({
+          ...current,
+          lists: patchCard(current.lists, cardId, {
+            blocked_since: saved.blocked_since ?? null,
+            blocked_reason: saved.blocked_reason ?? null,
+          }),
+        }));
+        if (beforeState && !same(beforeState.blocked_since, saved.blocked_since ?? null)) {
+          record({
+            label: blocked ? 'Block card' : 'Unblock card',
+            undo: () =>
+              get().setCardBlocked(
+                resolveId(cardId),
+                beforeState.blocked_since !== null && beforeState.blocked_since !== undefined,
+                beforeState.blocked_reason ?? null
+              ),
+            redo: () => get().setCardBlocked(resolveId(cardId), blocked, reason),
           });
         }
       } catch (error) {

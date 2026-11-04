@@ -20,6 +20,11 @@ export interface BoardSummary {
   name: string;
 }
 
+export interface Board extends BoardSummary {
+  /** The list that means "done", for cycle time. `null` until someone chooses one. */
+  done_list_id: string | null;
+}
+
 export interface BoardLook {
   background: string;
   accent: string;
@@ -40,6 +45,11 @@ export interface CardSummary {
   assignee_ids: string[];
   due_date: string | null;
   comment_count: number;
+  created_at: string;
+  /** When the card arrived in whichever list it currently sits in; how its age is measured. */
+  list_entered_at: string;
+  blocked_since: string | null;
+  blocked_reason: string | null;
 }
 
 export interface ListWithCards {
@@ -60,7 +70,7 @@ export interface Label {
 }
 
 export interface BoardView {
-  board: BoardSummary;
+  board: Board;
   role: string;
   look: BoardLook;
   members: BoardMember[];
@@ -76,6 +86,10 @@ export interface Card {
   due_date: string | null;
   label_ids: string[];
   assignee_ids: string[];
+  created_at: string;
+  list_entered_at: string;
+  blocked_since: string | null;
+  blocked_reason: string | null;
 }
 
 export interface Member {

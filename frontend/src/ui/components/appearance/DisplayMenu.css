@@ -26,6 +26,9 @@
 }
 
 .display-menu__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--color-text-muted);
   font-family: var(--font-body);
   font-size: 0.74rem;
@@ -66,6 +69,27 @@
   color: var(--color-text-soft-on-light);
   font-size: 0.86rem;
   font-weight: 500;
+}
+
+.display-menu__field {
+  display: flex;
+  flex-direction: column;
+}
+
+.display-menu__select {
+  min-height: 36px;
+  padding: 0 1.8rem 0 0.65rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-paper-card);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  transition: border-color var(--duration-fast) ease;
+}
+
+.display-menu__select:hover {
+  border-color: var(--color-border-strong);
 }
 
 .display-menu__footer {

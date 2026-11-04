@@ -53,4 +53,24 @@ describe('the face of a card', () => {
     expect(screen.getByText('Ship it')).toBeInTheDocument();
     expect(document.querySelector('.board-card__comments')).toBeNull();
   });
+
+  it('flags a blocked card in words, not only in colour', () => {
+    face({ blocked_since: new Date().toISOString(), blocked_reason: 'Waiting on design' });
+
+    expect(screen.getByText('Blocked', { selector: '[aria-hidden="true"]' })).toBeInTheDocument();
+    expect(document.querySelector('.blocked-badge')).toHaveAttribute(
+      'title',
+      expect.stringContaining('Waiting on design')
+    );
+  });
+
+  it('says nothing about a fresh card, and shows age once it has sat a while', () => {
+    const daysAgo = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+
+    face({ list_entered_at: daysAgo(0.1) });
+    expect(document.querySelector('.age-badge')).toBeNull();
+
+    face({ list_entered_at: daysAgo(6) });
+    expect(document.querySelector('.age-badge')).toHaveAttribute('data-state', 'stale');
+  });
 });

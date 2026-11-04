@@ -10,11 +10,11 @@ mod workspace;
 
 pub use board::{
     CreateBoard, DeleteBoard, GetBoard, PanelPlacementInput, RenameBoard, SetBoardLayout,
-    SetBoardLook,
+    SetBoardLook, SetDoneList,
 };
 pub use card::{
     CreateCard, DeleteCard, DuplicateCard, GetCard, ListMyCards, MoveCard, SetCardAssignees,
-    SetCardLabels, UpdateCard,
+    SetCardBlocked, SetCardLabels, UpdateCard,
 };
 pub use comment::{AddComment, DeleteComment, EditComment, GetTimeline};
 pub use field::{

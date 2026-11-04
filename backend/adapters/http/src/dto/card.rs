@@ -16,6 +16,11 @@ pub struct CardSummaryDto {
     /// Calendar day, `YYYY-MM-DD`.
     pub due_date: Option<String>,
     pub comment_count: i64,
+    pub created_at: String,
+    /// When the card arrived in whichever list it currently sits in; how its age is measured.
+    pub list_entered_at: String,
+    pub blocked_since: Option<String>,
+    pub blocked_reason: Option<String>,
 }
 
 impl From<CardSummary> for CardSummaryDto {
@@ -30,6 +35,10 @@ impl From<CardSummary> for CardSummaryDto {
             assignee_ids: card.assignee_ids,
             due_date: card.due_date,
             comment_count: card.comment_count,
+            created_at: card.created_at,
+            list_entered_at: card.list_entered_at,
+            blocked_since: card.blocked_since,
+            blocked_reason: card.blocked_reason,
         }
     }
 }
@@ -75,6 +84,11 @@ pub struct CardResponseDto {
     pub assignee_ids: Vec<Uuid>,
     /// Calendar day, `YYYY-MM-DD`.
     pub due_date: Option<String>,
+    pub created_at: String,
+    /// When the card arrived in whichever list it currently sits in; how its age is measured.
+    pub list_entered_at: String,
+    pub blocked_since: Option<String>,
+    pub blocked_reason: Option<String>,
 }
 
 impl From<Card> for CardResponseDto {
@@ -87,6 +101,10 @@ impl From<Card> for CardResponseDto {
             label_ids: card.label_ids,
             assignee_ids: card.assignee_ids,
             due_date: card.due_date,
+            created_at: card.created_at,
+            list_entered_at: card.list_entered_at,
+            blocked_since: card.blocked_since,
+            blocked_reason: card.blocked_reason,
         }
     }
 }
@@ -143,4 +161,13 @@ pub struct SetCardAssigneesRequestDto {
 #[derive(Serialize, ToSchema)]
 pub struct CardAssigneesResponseDto {
     pub assignee_ids: Vec<Uuid>,
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SetCardBlockedRequestDto {
+    pub blocked: bool,
+    /// Ignored when `blocked` is false.
+    #[serde(default)]
+    pub reason: Option<String>,
 }

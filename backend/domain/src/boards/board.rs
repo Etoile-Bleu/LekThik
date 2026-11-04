@@ -17,6 +17,8 @@ pub struct Board {
     pub id: Uuid,
     pub workspace_id: Uuid,
     pub name: String,
+    /// The list that means "done", for cycle time. `None` until someone chooses one.
+    pub done_list_id: Option<Uuid>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -72,4 +74,12 @@ pub trait BoardRepo: Send + Sync {
         id: Uuid,
         items: Vec<PanelPlacement>,
     ) -> Result<(), BoardsError>;
+    /// Chooses which list means "done", for cycle time; `None` turns it off. The list, if any,
+    /// must belong to this board and be an actual list, not a block.
+    async fn set_done_list(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        list_id: Option<Uuid>,
+    ) -> Result<Board, BoardsError>;
 }

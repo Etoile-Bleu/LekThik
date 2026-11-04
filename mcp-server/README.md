@@ -82,18 +82,19 @@ has: see [What is not covered](#what-is-not-covered).
 
 ## What it can do
 
-32 tools, grouped the way the web app itself is:
+33 tools, grouped the way the web app itself is:
 
 - **Account** — `whoami`.
 - **Workspaces** — `list_workspaces`, `create_workspace`, `rename_workspace`,
   `delete_workspace`, `list_templates`.
 - **Boards** — `create_board`, `get_board` (the full state of one board: its lists, blocks,
-  cards, labels and members, in one call), `rename_board`, `delete_board`, `set_board_look`.
+  cards, labels and members, in one call), `rename_board`, `delete_board`, `set_board_look`,
+  `set_done_list` (picks which list means done, for cycle time).
 - **Lists and blocks** — `create_list`, `create_block` (calendar, agenda, note, counter,
-  progress, overdue, chart, snippet, table, clocks or timer), `rename_list`, `delete_list`,
-  `move_list`, `set_wip_limit`.
+  progress, overdue, chart, snippet, table, clocks or timer), `set_block_config`, `rename_list`,
+  `delete_list`, `move_list`, `set_wip_limit`.
 - **Cards** — `create_card`, `get_card`, `update_card`, `move_card`, `duplicate_card`,
-  `delete_card`, `set_card_labels`, `set_card_assignees`, `add_card_comment`.
+  `delete_card`, `set_card_labels`, `set_card_assignees`, `set_card_blocked`, `add_card_comment`.
 - **Labels** — `create_label`, `update_label`, `delete_label`.
 - **Members** — `list_members`, `invite_member`.
 

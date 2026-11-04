@@ -1,0 +1,23 @@
+.blocked-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 22px;
+  padding: 0 0.55rem 0 0.4rem;
+  border: 1px solid var(--label-pink-dot);
+  border-radius: 999px;
+  background: var(--label-pink-bg);
+  color: var(--label-pink-fg);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  animation: blocked-in var(--duration-base) var(--ease-out);
+}
+
+@keyframes blocked-in {
+  from {
+    opacity: 0;
+    transform: translateY(2px) scale(0.94);
+  }
+}

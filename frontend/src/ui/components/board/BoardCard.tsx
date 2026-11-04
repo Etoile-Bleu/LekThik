@@ -3,15 +3,19 @@ import { CSS } from '@dnd-kit/utilities';
 import { type MouseEvent, memo } from 'react';
 
 import type { CardSummary, Label } from '@lib/boardsApi';
+import { isNoteworthyAge } from '@lib/cardAge';
 import { splitDragListeners } from '@lib/dragListeners';
 import { displayValue, optionOf, shownOnCard } from '@lib/fields';
 import { useSelectionStore } from '@lib/selectionStore';
 
 import { ChatIcon, GripIcon, TextLinesIcon } from '../ui/Icons';
 import { useBoardMeta } from '@hooks/useBoardMeta';
+import { useMinuteClock } from '@hooks/useMinuteClock';
 
 import { PresenceOnCard } from '../collab/PresenceOnCard';
+import { AgeBadge } from './AgeBadge';
 import { AssigneeStack } from './AssigneeStack';
+import { BlockedBadge } from './BlockedBadge';
 import { DueBadge } from './DueBadge';
 import { LabelChip } from './LabelChip';
 import './BoardCard.css';
@@ -38,9 +42,17 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
   const showDue = display.due_date && card.due_date !== null;
   const showPeople = display.assignees && card.assignee_ids.length > 0;
   const comments = card.comment_count ?? 0;
+  const blockedSince = card.blocked_since ?? null;
+  const now = useMinuteClock().getTime();
+  const showAge = Boolean(card.list_entered_at) && isNoteworthyAge(card.list_entered_at ?? '', now);
 
   return (
     <>
+      {blockedSince && (
+        <span className="board-card__status">
+          <BlockedBadge since={blockedSince} reason={card.blocked_reason ?? null} now={now} />
+        </span>
+      )}
       <span className="board-card__title">{card.title}</span>
       {preview && <span className="board-card__preview">{preview}</span>}
       {shownFields.length > 0 && (
@@ -77,9 +89,10 @@ export function CardFace({ card, labels }: { card: CardSummary; labels: Label[] 
           )}
         </span>
       )}
-      {(showDue || showPeople || comments > 0) && (
+      {(showDue || showAge || showPeople || comments > 0) && (
         <span className="board-card__foot">
           {showDue && card.due_date && <DueBadge day={card.due_date} />}
+          {showAge && <AgeBadge since={card.list_entered_at ?? ''} now={now} />}
           {comments > 0 && (
             <span className="board-card__comments">
               <ChatIcon size={14} />
@@ -142,6 +155,7 @@ function BoardCardComponent({
       data-dragging={isDragging || undefined}
       data-card-id={card.id}
       data-selected={selected || undefined}
+      data-blocked={Boolean(card.blocked_since) || undefined}
     >
       <button
         type="button"

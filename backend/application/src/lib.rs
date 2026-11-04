@@ -10,8 +10,9 @@ pub use boards::{
     InviteMember, ListMembers, ListMyCards, ListMyInvitations, ListWorkspaces, MembersOverview,
     MoveCard, MoveList, NewOption, PanelPlacementInput, RemoveMember, RenameBoard, RenameList,
     RenameWorkspace, RespondToInvitation, RevokeInvitation, SetBlockConfig, SetBlockImage,
-    SetBoardLayout, SetBoardLook, SetCardAssignees, SetCardField, SetCardLabels, SetListWipLimit,
-    UpdateCard, UpdateField, UpdateFieldOption, UpdateLabel, VoteInPoll, WithdrawVote,
+    SetBoardLayout, SetBoardLook, SetCardAssignees, SetCardBlocked, SetCardField, SetCardLabels,
+    SetDoneList, SetListWipLimit, UpdateCard, UpdateField, UpdateFieldOption, UpdateLabel,
+    VoteInPoll, WithdrawVote,
 };
 pub use preferences::{GetPreferences, SavePreferences};
 pub use user::{

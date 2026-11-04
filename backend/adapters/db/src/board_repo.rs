@@ -14,6 +14,16 @@ use crate::board_seed::insert_board;
 use crate::label_repo::row_to_label;
 use crate::scope::{Kind, denial, repository_error};
 
+macro_rules! iso {
+    ($column:literal) => {
+        concat!(
+            "to_char(",
+            $column,
+            " AT TIME ZONE 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"')"
+        )
+    };
+}
+
 pub struct PgBoardRepo {
     pool: PgPool,
 }
@@ -29,6 +39,7 @@ fn row_to_board(row: &PgRow) -> Result<Board, BoardsError> {
         id: row.try_get("id").map_err(repository_error)?,
         workspace_id: row.try_get("workspace_id").map_err(repository_error)?,
         name: row.try_get("name").map_err(repository_error)?,
+        done_list_id: row.try_get("done_list_id").map_err(repository_error)?,
     })
 }
 
@@ -122,7 +133,7 @@ impl BoardRepo for PgBoardRepo {
             .map_err(repository_error)?;
 
         let board_row = sqlx::query(concat!(
-            "SELECT b.id, b.workspace_id, b.name, b.background, b.accent FROM ",
+            "SELECT b.id, b.workspace_id, b.name, b.background, b.accent, b.done_list_id FROM ",
             owned_board!(),
             " WHERE b.id = $1 AND ",
             member_of!("$2")
@@ -160,13 +171,19 @@ impl BoardRepo for PgBoardRepo {
         .await
         .map_err(repository_error)?;
 
-        let card_rows = sqlx::query(
+        let card_rows = sqlx::query(concat!(
             "SELECT c.id, c.list_id, c.title, c.description <> '' AS has_description, \
                 c.due_date::text AS due_date, left(c.description, 140) AS preview, \
-                (SELECT count(*) FROM card_comments cc WHERE cc.card_id = c.id) AS comment_count \
+                (SELECT count(*) FROM card_comments cc WHERE cc.card_id = c.id) AS comment_count, ",
+            iso!("c.created_at"),
+            " AS created_at, ",
+            iso!("c.list_entered_at"),
+            " AS list_entered_at, ",
+            iso!("c.blocked_at"),
+            " AS blocked_since, c.blocked_reason \
                 FROM cards c JOIN lists l ON l.id = c.list_id \
-                WHERE l.board_id = $1 ORDER BY c.position, c.created_at, c.id",
-        )
+                WHERE l.board_id = $1 ORDER BY c.position, c.created_at, c.id"
+        ))
         .bind(board.id)
         .fetch_all(&mut *transaction)
         .await
@@ -273,6 +290,10 @@ impl BoardRepo for PgBoardRepo {
                 assignee_ids: assignees_by_card.remove(&card_id).unwrap_or_default(),
                 due_date: row.try_get("due_date").map_err(repository_error)?,
                 comment_count: row.try_get("comment_count").map_err(repository_error)?,
+                created_at: row.try_get("created_at").map_err(repository_error)?,
+                list_entered_at: row.try_get("list_entered_at").map_err(repository_error)?,
+                blocked_since: row.try_get("blocked_since").map_err(repository_error)?,
+                blocked_reason: row.try_get("blocked_reason").map_err(repository_error)?,
             };
             if let Some(index) = list_positions.get(&list_id) {
                 lists[*index].cards.push(card);
@@ -302,7 +323,7 @@ impl BoardRepo for PgBoardRepo {
             "UPDATE boards b SET name = $3 FROM workspaces w \
                 WHERE b.id = $2 AND w.id = b.workspace_id AND ",
             writer_of!("$1"),
-            " RETURNING b.id, b.workspace_id, b.name"
+            " RETURNING b.id, b.workspace_id, b.name, b.done_list_id"
         ))
         .bind(user_id)
         .bind(id)
@@ -407,5 +428,67 @@ impl BoardRepo for PgBoardRepo {
         }
 
         transaction.commit().await.map_err(repository_error)
+    }
+
+    async fn set_done_list(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        list_id: Option<Uuid>,
+    ) -> Result<Board, BoardsError> {
+        let mut transaction = self.pool.begin().await.map_err(repository_error)?;
+
+        let board = sqlx::query(concat!(
+            "SELECT b.id FROM ",
+            owned_board!(),
+            " WHERE b.id = $1 AND ",
+            writer_of!("$2"),
+            " FOR UPDATE OF b"
+        ))
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+        if board.is_none() {
+            return Err(denial(&self.pool, Kind::Board, user_id, id).await);
+        }
+
+        if let Some(list_id) = list_id {
+            let kind: Option<String> =
+                sqlx::query_scalar("SELECT kind FROM lists WHERE id = $1 AND board_id = $2")
+                    .bind(list_id)
+                    .bind(id)
+                    .fetch_optional(&mut *transaction)
+                    .await
+                    .map_err(repository_error)?;
+            match kind {
+                Some(kind) if kind == "list" => {}
+                Some(_) => {
+                    return Err(BoardsError::Invalid(
+                        "the done list must be an actual list, not a block".to_string(),
+                    ));
+                }
+                None => {
+                    return Err(BoardsError::Invalid(
+                        "the done list must belong to this board".to_string(),
+                    ));
+                }
+            }
+        }
+
+        let row = sqlx::query(
+            "UPDATE boards SET done_list_id = $2 WHERE id = $1 \
+                RETURNING id, workspace_id, name, done_list_id",
+        )
+        .bind(id)
+        .bind(list_id)
+        .fetch_one(&mut *transaction)
+        .await
+        .map_err(repository_error)?;
+
+        transaction.commit().await.map_err(repository_error)?;
+
+        row_to_board(&row)
     }
 }

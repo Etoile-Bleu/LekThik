@@ -28,6 +28,7 @@ pub(crate) async fn insert_board(
         id: row.try_get("id").map_err(repository_error)?,
         workspace_id: row.try_get("workspace_id").map_err(repository_error)?,
         name: row.try_get("name").map_err(repository_error)?,
+        done_list_id: None,
     };
 
     match template {

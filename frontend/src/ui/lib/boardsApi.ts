@@ -24,6 +24,8 @@ export interface BoardSummary {
   id: string;
   workspace_id: string;
   name: string;
+  /** The list that means "done", for cycle time. `null` or absent until someone chooses one. */
+  done_list_id?: string | null;
 }
 
 export type Role = 'owner' | 'admin' | 'writer' | 'reader';
@@ -55,6 +57,11 @@ export interface CardSummary {
   assignee_ids: string[];
   /** Calendar day, `YYYY-MM-DD`. */
   due_date: string | null;
+  created_at?: string;
+  /** When the card arrived in whichever list it currently sits in; how its age is measured. */
+  list_entered_at?: string;
+  blocked_since?: string | null;
+  blocked_reason?: string | null;
 }
 
 export type PanelKind =
@@ -313,6 +320,10 @@ export interface CardDetail {
   label_ids: string[];
   assignee_ids: string[];
   due_date: string | null;
+  created_at?: string;
+  list_entered_at?: string;
+  blocked_since?: string | null;
+  blocked_reason?: string | null;
 }
 
 export interface TemplateLabel {
@@ -409,6 +420,11 @@ export function createBoard(
 
 export function setBoardLook(id: string, look: BoardLook): Promise<BoardLook> {
   return send<BoardLook>(`/api/boards/${id}/look`, 'PUT', look);
+}
+
+/** Picks the list that means done, for cycle time. `null` turns it off. */
+export function setDoneList(id: string, listId: string | null): Promise<BoardSummary> {
+  return send<BoardSummary>(`/api/boards/${id}/done-list`, 'PUT', { list_id: listId });
 }
 
 export function fetchBoard(id: string): Promise<BoardView> {
@@ -530,6 +546,15 @@ export function setCardAssignees(
   return send<{ assignee_ids: string[] }>(`/api/cards/${id}/assignees`, 'PUT', {
     user_ids: userIds,
   });
+}
+
+/** Flags a card as blocked, with an optional reason, or clears the flag. */
+export function setCardBlocked(
+  id: string,
+  blocked: boolean,
+  reason: string | null
+): Promise<CardDetail> {
+  return send<CardDetail>(`/api/cards/${id}/blocked`, 'PUT', { blocked, reason });
 }
 
 export function createLabel(

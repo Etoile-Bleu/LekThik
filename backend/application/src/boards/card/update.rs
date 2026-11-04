@@ -47,6 +47,10 @@ mod tests {
             label_ids: Vec::new(),
             assignee_ids: Vec::new(),
             due_date: None,
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+            list_entered_at: "2024-01-01T00:00:00Z".to_string(),
+            blocked_since: None,
+            blocked_reason: None,
         }
     }
 
