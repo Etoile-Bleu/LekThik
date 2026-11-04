@@ -6,6 +6,7 @@ import { toggleTask } from '@lib/richText';
 import { findCard } from '@lib/boardModel';
 import { indexValues } from '@lib/fields';
 import { type CardDetail, fetchCard, updateCard } from '@lib/boardsApi';
+import { isNoteworthyAge, longElapsed } from '@lib/cardAge';
 import { recordDescription } from '@lib/cardDescription';
 import { useBoardStore } from '@lib/boardStore';
 import { useHistoryStore } from '@lib/history';
@@ -15,6 +16,7 @@ import { type CardProperty, normalizeDialogLayout } from '@lib/prefs';
 import { usePrefsStore } from '@lib/prefsStore';
 import { canEdit, canManage } from '@lib/roles';
 
+import { useMinuteClock } from '@hooks/useMinuteClock';
 import { PresenceHere } from '../collab/PresenceOnCard';
 import { Dialog } from '../ui/Dialog';
 import {
@@ -31,6 +33,7 @@ import { RichEditor } from '../richtext/RichEditor';
 import { RichText } from '../richtext/RichText';
 import { InlineEdit } from '../ui/InlineEdit';
 import { AssigneePicker } from './AssigneePicker';
+import { BlockedField } from './BlockedField';
 import { CardFields } from './CardFields';
 import { CardTimeline } from './CardTimeline';
 import { DueDateField } from './DueDateField';
@@ -59,7 +62,9 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
   const setCardLabels = useBoardStore((state) => state.setCardLabels);
   const setCardAssignees = useBoardStore((state) => state.setCardAssignees);
   const setCardDueDate = useBoardStore((state) => state.setCardDueDate);
+  const setCardBlocked = useBoardStore((state) => state.setCardBlocked);
   const markHasDescription = useBoardStore((state) => state.markHasDescription);
+  const now = useMinuteClock().getTime();
 
   const [detail, setDetail] = useState<CardDetail | null>(null);
   const [description, setDescription] = useState('');
@@ -308,9 +313,26 @@ export function CardDialog({ cardId, onClose, onManageLabels, onCustomize }: Car
             />
             <p className="card-dialog__location">
               In list <strong>{currentList.name}</strong>
+              {summary.list_entered_at && isNoteworthyAge(summary.list_entered_at, now) && (
+                <span className="card-dialog__age">
+                  {' '}
+                  · here for {longElapsed(summary.list_entered_at, now)}
+                </span>
+              )}
             </p>
             <PresenceHere cardId={summary.id} />
           </header>
+
+          <BlockedField
+            editable={editable}
+            blockedSince={summary.blocked_since ?? null}
+            reason={summary.blocked_reason ?? null}
+            now={now}
+            onToggle={(blocked) =>
+              void setCardBlocked(summary.id, blocked, blocked ? (summary.blocked_reason ?? null) : null)
+            }
+            onReasonChange={(reason) => void setCardBlocked(summary.id, true, reason)}
+          />
 
           <div className="card-dialog__props">
             {shown.map((property, position) => (
