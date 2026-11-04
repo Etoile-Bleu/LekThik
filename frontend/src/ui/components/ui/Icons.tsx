@@ -655,3 +655,21 @@ export function RedoIcon(props: IconProps) {
     </Base>
   );
 }
+
+/** An octagon, the universal "stop" shape, so the blocked flag reads at a glance. */
+export function BlockedIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M6.5 3h7L17 6.5v7L13.5 17h-7L3 13.5v-7Z" />
+      <path d="M7.3 7.3 12.7 12.7" />
+    </Base>
+  );
+}
+
+export function FlagIcon(props: IconProps) {
+  return (
+    <Base {...props}>
+      <path d="M5.5 17V3.8c1.3-.9 2.6-.9 4-.1 1.4.8 2.8.8 4-.1v6.6c-1.2.9-2.6.9-4 .1-1.4-.8-2.7-.8-4 .1" />
+    </Base>
+  );
+}
