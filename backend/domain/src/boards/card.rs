@@ -17,6 +17,11 @@ pub struct CardSummary {
     pub assignee_ids: Vec<Uuid>,
     pub due_date: Option<String>,
     pub comment_count: i64,
+    pub created_at: String,
+    /// When the card arrived in whichever list it currently sits in; how its age is measured.
+    pub list_entered_at: String,
+    pub blocked_since: Option<String>,
+    pub blocked_reason: Option<String>,
 }
 
 /// A card assigned to someone, with where it lives, for the "my cards" page.
@@ -42,6 +47,10 @@ pub struct Card {
     pub label_ids: Vec<Uuid>,
     pub assignee_ids: Vec<Uuid>,
     pub due_date: Option<String>,
+    pub created_at: String,
+    pub list_entered_at: String,
+    pub blocked_since: Option<String>,
+    pub blocked_reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -92,4 +101,12 @@ pub trait CardRepo: Send + Sync {
         id: Uuid,
         assignee_ids: Vec<Uuid>,
     ) -> Result<Vec<Uuid>, BoardsError>;
+    /// Flags a card as blocked, with an optional reason, or clears the flag.
+    async fn set_blocked(
+        &self,
+        user_id: Uuid,
+        id: Uuid,
+        blocked: bool,
+        reason: Option<String>,
+    ) -> Result<Card, BoardsError>;
 }
