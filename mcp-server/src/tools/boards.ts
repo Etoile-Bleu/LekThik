@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import type { LekThikClient } from '../client.js';
-import type { BoardSummary, BoardView } from '../types.js';
+import type { Board, BoardSummary, BoardView } from '../types.js';
 import { json, ok } from './helpers.js';
 
 const BACKGROUNDS = ['default', 'mist', 'sage', 'sand', 'blush', 'lilac', 'slate', 'dusk'] as const;
@@ -99,5 +99,28 @@ export function registerBoardTools(server: McpServer, client: LekThikClient): vo
     },
     async ({ board_id, background, accent }) =>
       json(await client.request('PUT', `/boards/${board_id}/look`, { background, accent }))
+  );
+
+  server.registerTool(
+    'set_done_list',
+    {
+      title: 'Choose the list that means done, for cycle time',
+      description:
+        "Picks which list on a board counts as finished, so a card's cycle time can be read " +
+        "from when it entered the board to when it last moved into that list. Pass null for " +
+        'list_id to turn cycle time off. The list must already exist on this board (from ' +
+        'get_board) and be an actual list, not a block.',
+      inputSchema: {
+        board_id: z.string().uuid().describe('The board to set the done list on.'),
+        list_id: z
+          .string()
+          .uuid()
+          .nullable()
+          .describe('The list that means done, or null to turn cycle time off.'),
+      },
+      annotations: { idempotentHint: true, openWorldHint: false },
+    },
+    async ({ board_id, list_id }) =>
+      json(await client.request<Board>('PUT', `/boards/${board_id}/done-list`, { list_id }))
   );
 }
