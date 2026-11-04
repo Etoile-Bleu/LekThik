@@ -45,9 +45,14 @@ export function registerListTools(server: McpServer, client: LekThikClient): voi
         'Adds a block beside the lists of a board: a calendar, an agenda, a note, a counter, ' +
         'a progress ring or bar, an overdue list, a chart, a code or text snippet, a small ' +
         'table, world clocks, or a focus timer. Blocks draw live from the cards of the board, ' +
-        'so most need no `config` at all; leave it out for sensible defaults. For a counter, ' +
-        'for example, `config` can set `{"metric": "late_cards"}` or `{"metric": "share_done"}`; ' +
-        'call get_board afterwards to see exactly what was made.',
+        'so most need no `config` at all; leave it out for sensible defaults, or use ' +
+        'set_block_config afterwards once you know the block\'s id. A few real shapes: a ' +
+        'note takes `{"text": "...markdown, with - [ ] checklists..."}`; a chart takes ' +
+        '`{"source": "list"|"label"|"assignee"|"due", "style": "bars"|"donut"}`; a table takes ' +
+        '`{"header": true, "rows": [["a","b"],["c","d"]]}`; a snippet takes `{"language": "bash", ' +
+        '"filename": "run.sh", "code": "..."}`; a counter takes `{"metric": "overdue"|' +
+        '"done_percent"|"days_left"|"total_cards", "label": "..."}` (done_percent needs a ' +
+        '`done_list_id`, days_left needs a `date`). Call get_board afterwards to see what was made.',
       inputSchema: {
         board_id: z.string().uuid().describe('The board to add the block to.'),
         kind: z.enum(BLOCK_KINDS).describe('Which kind of block to add.'),
@@ -61,6 +66,29 @@ export function registerListTools(server: McpServer, client: LekThikClient): voi
     },
     async ({ board_id, kind, name, config }) =>
       json(await client.request('POST', `/boards/${board_id}/blocks`, { kind, name, config }))
+  );
+
+  server.registerTool(
+    'set_block_config',
+    {
+      title: "Change a block's settings",
+      description:
+        'Replaces the whole settings object of an existing block: a note\'s text, a chart\'s ' +
+        'source and style, a table\'s rows, a snippet\'s code and language, a counter\'s metric ' +
+        'and label, and so on. `kind` must match the kind the block was made with (from ' +
+        'get_board); every field not sent resets to its default, so send the whole shape, not a ' +
+        'partial patch. Call get_board first if unsure what the block already holds.',
+      inputSchema: {
+        list_id: z.string().uuid().describe('The id of the block to configure (from get_board).'),
+        kind: z.enum(BLOCK_KINDS).describe('The kind this block was made with.'),
+        config: z
+          .record(z.string(), z.unknown())
+          .describe('The block\'s whole settings object for that kind. Unknown fields are refused.'),
+      },
+      annotations: { idempotentHint: true, openWorldHint: false },
+    },
+    async ({ list_id, kind, config }) =>
+      json(await client.request('PUT', `/blocks/${list_id}/config`, { kind, config }))
   );
 
   server.registerTool(
