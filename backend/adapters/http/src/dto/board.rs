@@ -13,6 +13,8 @@ pub struct BoardResponseDto {
     pub id: Uuid,
     pub workspace_id: Uuid,
     pub name: String,
+    /// The list that means "done", for cycle time. `None` until someone chooses one.
+    pub done_list_id: Option<Uuid>,
 }
 
 impl From<Board> for BoardResponseDto {
@@ -21,6 +23,7 @@ impl From<Board> for BoardResponseDto {
             id: board.id,
             workspace_id: board.workspace_id,
             name: board.name,
+            done_list_id: board.done_list_id,
         }
     }
 }
@@ -59,6 +62,13 @@ impl From<BoardLook> for BoardLookDto {
             accent: look.accent.as_str().to_string(),
         }
     }
+}
+
+#[derive(Deserialize, ToSchema)]
+#[serde(deny_unknown_fields)]
+pub struct SetDoneListRequestDto {
+    /// `null` turns cycle time off.
+    pub list_id: Option<Uuid>,
 }
 
 #[derive(Serialize, ToSchema)]
