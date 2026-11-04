@@ -12,11 +12,14 @@ mod template;
 mod user;
 mod workspace;
 
-pub use board::{BoardLookDto, BoardMemberDto, BoardResponseDto, BoardSummaryDto, BoardViewDto};
+pub use board::{
+    BoardLookDto, BoardMemberDto, BoardResponseDto, BoardSummaryDto, BoardViewDto,
+    SetDoneListRequestDto,
+};
 pub use card::{
     AssignedCardDto, CardAssigneesResponseDto, CardLabelsResponseDto, CardResponseDto,
     CardSummaryDto, CreateCardRequestDto, MoveCardRequestDto, SetCardAssigneesRequestDto,
-    SetCardLabelsRequestDto, UpdateCardRequestDto,
+    SetCardBlockedRequestDto, SetCardLabelsRequestDto, UpdateCardRequestDto,
 };
 pub use comment::{
     ActivityDto, CommentDto, CommentRequestDto, PersonDto, TimelineItemDto, TimelineResponseDto,
