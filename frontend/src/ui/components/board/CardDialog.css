@@ -25,6 +25,10 @@
   font-size: 0.88rem;
 }
 
+.card-dialog__age {
+  font-variant-numeric: tabular-nums;
+}
+
 /* Properties: one aligned grid between two hairlines, the page's quiet backbone. */
 .card-dialog__props {
   display: flex;
