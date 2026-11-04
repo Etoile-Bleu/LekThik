@@ -35,6 +35,7 @@ mod tests {
                     id,
                     workspace_id: Uuid::new_v4(),
                     name: name.into_string(),
+                    done_list_id: None,
                 })
             });
 
