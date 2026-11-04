@@ -32,6 +32,7 @@ mod tests {
                 id,
                 workspace_id: Uuid::new_v4(),
                 name: "Roadmap".to_string(),
+                done_list_id: None,
             },
             role: domain::boards::Role::Owner,
             look: domain::boards::BoardLook::default(),
