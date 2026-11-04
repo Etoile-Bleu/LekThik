@@ -247,6 +247,8 @@ html[data-motion='reduce'] *::after {
   .shell .filter-pill,
   .shell .due-field__chip,
   .shell .due-badge,
+  .shell .age-badge,
+  .shell .blocked-badge,
   .shell .label-chip,
   .shell .segmented,
   .shell .switch-row__track {
