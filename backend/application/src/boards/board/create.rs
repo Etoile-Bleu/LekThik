@@ -45,6 +45,7 @@ mod tests {
             id: Uuid::new_v4(),
             workspace_id,
             name,
+            done_list_id: None,
         }
     }
 
