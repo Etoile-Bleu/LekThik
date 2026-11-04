@@ -16,7 +16,8 @@ import { DisplayMenu } from './DisplayMenu';
 function setup(
   canStyle = true,
   onLookChange = vi.fn(),
-  view: 'board' | 'list' | 'calendar' = 'board'
+  view: 'board' | 'list' | 'calendar' = 'board',
+  onDoneListChange = vi.fn()
 ) {
   render(
     <MemoryRouter initialEntries={['/b/b1']}>
@@ -29,8 +30,14 @@ function setup(
               look={DEFAULT_LOOK}
               view={view}
               listIds={['l1', 'l2']}
+              doneListOptions={[
+                { id: 'l1', name: 'To do' },
+                { id: 'l2', name: 'Done' },
+              ]}
+              doneListId={null}
               canStyle={canStyle}
               onLookChange={onLookChange}
+              onDoneListChange={onDoneListChange}
             />
           }
         />
@@ -39,7 +46,11 @@ function setup(
     </MemoryRouter>
   );
   fireEvent.click(screen.getByRole('button', { name: /Display/ }));
-  return { panel: screen.getByRole('dialog', { name: 'Display options' }), onLookChange };
+  return {
+    panel: screen.getByRole('dialog', { name: 'Display options' }),
+    onLookChange,
+    onDoneListChange,
+  };
 }
 
 describe('DisplayMenu', () => {
@@ -132,5 +143,24 @@ describe('DisplayMenu', () => {
 
     expect(within(panel).queryByRole('radio', { name: 'Wide' })).not.toBeInTheDocument();
     expect(within(panel).queryByRole('button', { name: 'Collapse all' })).not.toBeInTheDocument();
+  });
+
+  it('lets writers choose the done list, from the card lists only', () => {
+    const { panel, onDoneListChange } = setup();
+
+    const select = within(panel).getByRole('combobox', { name: 'Done list' });
+    expect(within(select).getByRole('option', { name: 'To do' })).toBeInTheDocument();
+    expect(within(select).getByRole('option', { name: 'Done' })).toBeInTheDocument();
+
+    fireEvent.change(select, { target: { value: 'l2' } });
+
+    expect(onDoneListChange).toHaveBeenCalledWith('l2');
+  });
+
+  it('tells readers who sets the done list instead of offering it', () => {
+    const { panel } = setup(false);
+
+    expect(within(panel).queryByRole('combobox', { name: 'Done list' })).not.toBeInTheDocument();
+    expect(within(panel).getByText(/choose the done list/)).toBeInTheDocument();
   });
 });
